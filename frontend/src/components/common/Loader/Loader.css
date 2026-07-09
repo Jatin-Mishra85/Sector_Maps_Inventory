@@ -1,0 +1,32 @@
+.loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-6);
+}
+
+.loader--full-page {
+  min-height: 60vh;
+}
+
+.loader__spinner {
+  border-radius: 50%;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-primary);
+  animation: loader-spin 0.7s linear infinite;
+}
+
+.loader__spinner--sm { width: 18px; height: 18px; border-width: 2px; }
+.loader__spinner--md { width: 32px; height: 32px; }
+.loader__spinner--lg { width: 48px; height: 48px; border-width: 4px; }
+
+@keyframes loader-spin {
+  to { transform: rotate(360deg); }
+}
+
+.loader__label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}

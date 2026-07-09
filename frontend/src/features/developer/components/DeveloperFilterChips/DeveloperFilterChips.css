@@ -1,0 +1,45 @@
+.dev-chips {
+  margin-bottom: var(--space-5);
+}
+
+.dev-chips__scroll {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+  padding-bottom: var(--space-2);
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.dev-chips__scroll::-webkit-scrollbar {
+  height: 4px;
+}
+.dev-chips__scroll::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.dev-chip {
+  flex: 0 0 auto;
+  padding: var(--space-2) var(--space-4);
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.dev-chip:hover {
+  border-color: var(--color-primary);
+}
+
+.dev-chip--active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-on-primary);
+  box-shadow: var(--shadow-soft);
+}

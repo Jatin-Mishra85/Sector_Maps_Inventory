@@ -1,0 +1,49 @@
+.img-preview {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-toast);
+  background: rgba(15, 16, 20, 0.94);
+  display: flex;
+  flex-direction: column;
+}
+
+.img-preview__toolbar {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  padding: var(--space-4);
+}
+
+.img-preview__btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.img-preview__btn:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.img-preview__stage {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  touch-action: none;
+}
+
+.img-preview__image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  transition: transform 0.15s ease-out;
+  cursor: zoom-in;
+  user-select: none;
+}

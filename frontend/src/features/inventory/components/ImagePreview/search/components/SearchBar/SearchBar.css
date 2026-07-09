@@ -1,0 +1,14 @@
+.search-bar {
+  margin-bottom: var(--space-5);
+}
+
+.search-bar__input.field {
+  margin-bottom: 0;
+}
+
+.search-bar .field__input {
+  padding: var(--space-4) var(--space-5);
+  font-size: var(--font-size-base);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+}

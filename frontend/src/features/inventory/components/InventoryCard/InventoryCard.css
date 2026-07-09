@@ -1,0 +1,101 @@
+.inv-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+  overflow: hidden;
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+.inv-card:hover {
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-2px);
+}
+
+.inv-card__image-wrap {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border: none;
+  padding: 0;
+  cursor: zoom-in;
+  background: var(--color-surface-hover);
+}
+
+.inv-card__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.inv-card__image-wrap:hover .inv-card__image {
+  transform: scale(1.03);
+}
+
+.inv-card__image-fallback {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, var(--color-surface-hover), var(--color-border));
+}
+
+.inv-card__badge-slot {
+  position: absolute;
+  top: var(--space-3);
+  left: var(--space-3);
+}
+
+.inv-card__body {
+  padding: var(--space-4);
+}
+
+.inv-card__title {
+  font-family: var(--font-heading);
+  font-size: var(--font-size-lg);
+  color: var(--color-text);
+  margin-bottom: var(--space-1);
+}
+
+.inv-card__meta {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.inv-card__actions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-2);
+  padding: 0 var(--space-4) var(--space-4);
+}
+
+.inv-card__action-btn {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.inv-card__action-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.inv-card__bookmark[aria-pressed="true"] {
+  background: var(--color-primary-tint);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+@media (min-width: 480px) {
+  .inv-card__actions {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}

@@ -1,0 +1,36 @@
+.admin-form {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+  padding: var(--space-6);
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.admin-form__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0 var(--space-4);
+}
+
+@media (min-width: 640px) {
+  .admin-form__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.admin-form__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+@media (min-width: 480px) {
+  .admin-form__actions {
+    flex-direction: row;
+  }
+  .admin-form__actions .btn {
+    flex: 1;
+  }
+}

@@ -1,0 +1,15 @@
+.field__select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%236b7280'><path d='M5.5 7.5l4.5 4.5 4.5-4.5z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right var(--space-4) center;
+  background-size: 14px;
+  padding-right: var(--space-8);
+  cursor: pointer;
+}
+
+.field__select:disabled {
+  background-color: var(--color-surface-hover);
+  cursor: not-allowed;
+  color: var(--color-text-muted);
+}
