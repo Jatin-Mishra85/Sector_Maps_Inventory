@@ -5,28 +5,27 @@ const InventoryModel = require('../models/inventory.model');
 const ApiError = require('../utils/apiError.util');
 const HTTP_STATUS = require('../constants/httpStatusCodes.constant');
 
-const validateDeveloperAndSector = async (developerId, sectorId) => {
-  const developer = await developerRepository.findById(developerId);
-  if (!developer) {
-    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Invalid DeveloperId. Developer does not exist');
-  }
-
-  const sector = await sectorRepository.findById(sectorId);
-  if (!sector) {
-    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Invalid SectorId. Sector does not exist');
-  }
-
-  if (sector.DeveloperId !== developerId) {
-    throw new ApiError(
-      HTTP_STATUS.BAD_REQUEST,
-      'SectorId does not belong to the given DeveloperId'
-    );
-  }
+/**
+ * Finds developer + sector by name, creates them if they don't exist yet.
+ * Used for create/update flows where user types the name freely.
+ */
+const resolveDeveloperAndSector = async (developerName, sectorName) => {
+  const developer = await developerRepository.findOrCreateByName(developerName);
+  const sector = await sectorRepository.findOrCreateByName(sectorName, developer.DeveloperId);
+  return { developerId: developer.DeveloperId, sectorId: sector.SectorId };
 };
 
 const createInventory = async (payload) => {
-  await validateDeveloperAndSector(payload.developerId, payload.sectorId);
-  const row = await inventoryRepository.create(payload);
+  const { developerId, sectorId } = await resolveDeveloperAndSector(
+    payload.developerName,
+    payload.sectorName
+  );
+
+  const row = await inventoryRepository.create({
+    ...payload,
+    developerId,
+    sectorId,
+  });
   return InventoryModel.fromRow(row);
 };
 
@@ -64,12 +63,15 @@ const updateInventory = async (inventoryId, payload) => {
     throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Inventory not found');
   }
 
-  const developerId = existing.DeveloperId;
-  const sectorId = payload.sectorId;
+  const { developerId, sectorId } = await resolveDeveloperAndSector(
+    payload.developerName,
+    payload.sectorName
+  );
 
-  await validateDeveloperAndSector(developerId, sectorId);
-
-  const row = await inventoryRepository.update(inventoryId, payload);
+  const row = await inventoryRepository.update(inventoryId, {
+    ...payload,
+    sectorId,
+  });
   return InventoryModel.fromRow(row);
 };
 

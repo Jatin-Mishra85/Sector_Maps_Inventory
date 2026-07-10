@@ -1,6 +1,6 @@
 const { getPool, sql } = require('../database/connection');
 
-const TABLE = 'Inventory';
+const TABLE = 'Inventories';
 
 const create = async ({
   developerId,

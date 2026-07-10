@@ -1,28 +1,19 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import './AdminInventoryForm.css';
 
-import Select from '../../../../components/common/Select/Select';
 import Input from '../../../../components/common/Input/Input';
 import TextArea from '../../../../components/common/TextArea/TextArea';
 import FileUpload from '../../../../components/common/FileUpload/FileUpload';
 import Button from '../../../../components/common/Button/Button';
 
-import { useDevelopers } from '../../../developer/hooks/useDevelopers';
-import { useSectorsByDeveloper } from '../../../sector/hooks/useSectorsByDeveloper';
 import { adminService } from '../../services/adminService';
 import { parseApiError } from '../../../../services/errorHandler';
 import { useToast } from '../../../../context/ToastContext';
-import { INVENTORY_TYPES, INVENTORY_TYPE_LABELS } from '../../../../constants/appConstants';
-
-const INVENTORY_TYPE_OPTIONS = Object.values(INVENTORY_TYPES).map((type) => ({
-  value: type,
-  label: INVENTORY_TYPE_LABELS[type],
-}));
 
 const defaultValues = {
-  developerId: '',
-  sectorId: '',
+  developerName: '',
+  sectorName: '',
   type: '',
   name: '',
   description: '',
@@ -34,34 +25,15 @@ export default function AdminInventoryForm({ onSuccess }) {
   const { showToast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const {
-    control,
-    register,
-    handleSubmit,
-    watch,
-    reset,
-    setValue,
-  } = useForm({ defaultValues, mode: 'onBlur' });
-  // No validation rules anywhere below — every field is optional now.
-
-  const selectedDeveloperId = watch('developerId');
-
-  const { developers, loading: developersLoading } = useDevelopers();
-  const { sectors, loading: sectorsLoading } = useSectorsByDeveloper(selectedDeveloperId);
-
-  useEffect(() => {
-    setValue('sectorId', '');
-  }, [selectedDeveloperId, setValue]);
-
-  const developerOptions = developers.map((d) => ({ value: d.id, label: d.name }));
-  const sectorOptions = sectors.map((s) => ({ value: s.id, label: s.name }));
+  const { control, register, handleSubmit, reset } = useForm({ defaultValues, mode: 'onBlur' });
+  // No validation rules — every field remains optional, as requested earlier.
 
   const onSubmit = async (data) => {
     setIsSubmitting(true);
     try {
       const formData = new FormData();
-      formData.append('developerId', data.developerId || '');
-      formData.append('sectorId', data.sectorId || '');
+      formData.append('developerName', data.developerName || '');
+      formData.append('sectorName', data.sectorName || '');
       formData.append('type', data.type || '');
       formData.append('name', data.name || '');
       formData.append('description', data.description || '');
@@ -72,15 +44,12 @@ export default function AdminInventoryForm({ onSuccess }) {
 
       const response = await adminService.createInventory(formData);
 
-      const developerName = developerOptions.find((o) => o.value === data.developerId)?.label;
-      const sectorName = sectorOptions.find((o) => o.value === data.sectorId)?.label;
-
       const createdInventory = {
         id: response?.id ?? response?.data?.id ?? crypto.randomUUID(),
         name: response?.name ?? data.name ?? 'Untitled Inventory',
-        type: response?.type ?? data.type ?? INVENTORY_TYPES.PROJECT,
-        developerName: response?.developerName ?? developerName ?? '-',
-        sectorName: response?.sectorName ?? sectorName ?? '-',
+        type: response?.type ?? data.type ?? '',
+        developerName: response?.developerName ?? data.developerName ?? '-',
+        sectorName: response?.sectorName ?? data.sectorName ?? '-',
         imageUrl: response?.imageUrl ?? (data.image ? URL.createObjectURL(data.image) : null),
         latitude: response?.latitude ?? null,
         longitude: response?.longitude ?? null,
@@ -104,51 +73,22 @@ export default function AdminInventoryForm({ onSuccess }) {
   return (
     <form className="admin-form" onSubmit={handleSubmit(onSubmit)} noValidate>
       <div className="admin-form__grid">
-        <Controller
-          name="developerId"
-          control={control}
-          render={({ field }) => (
-            <Select
-              {...field}
-              label="Developer"
-              placeholder={developersLoading ? 'Loading developers...' : 'Select developer'}
-              options={developerOptions}
-              disabled={developersLoading}
-            />
-          )}
+        <Input
+          label="Developer"
+          placeholder="e.g. BPTP"
+          {...register('developerName')}
         />
 
-        <Controller
-          name="sectorId"
-          control={control}
-          render={({ field }) => (
-            <Select
-              {...field}
-              label="Sector"
-              placeholder={
-                !selectedDeveloperId
-                  ? 'Select a developer first'
-                  : sectorsLoading
-                  ? 'Loading sectors...'
-                  : 'Select sector'
-              }
-              options={sectorOptions}
-              disabled={!selectedDeveloperId || sectorsLoading}
-            />
-          )}
+        <Input
+          label="Sector"
+          placeholder="e.g. Sector 37D"
+          {...register('sectorName')}
         />
 
-        <Controller
-          name="type"
-          control={control}
-          render={({ field }) => (
-            <Select
-              {...field}
-              label="Inventory Type"
-              placeholder="Select type"
-              options={INVENTORY_TYPE_OPTIONS}
-            />
-          )}
+        <Input
+          label="Inventory Type"
+          placeholder="e.g. Plot, Villa, Apartment — kuch bhi likh sakte ho"
+          {...register('type')}
         />
 
         <Input

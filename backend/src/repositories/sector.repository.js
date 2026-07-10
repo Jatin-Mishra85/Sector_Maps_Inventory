@@ -2,17 +2,16 @@ const { getPool, sql } = require('../database/connection');
 
 const TABLE = 'Sectors';
 
-const create = async ({ developerId, sectorName, description }) => {
+const create = async ({ developerId, sectorName }) => {
   const pool = getPool();
   const result = await pool
     .request()
     .input('DeveloperId', sql.Int, developerId)
     .input('SectorName', sql.NVarChar(200), sectorName)
-    .input('Description', sql.NVarChar(sql.MAX), description || null)
     .query(`
-      INSERT INTO ${TABLE} (DeveloperId, SectorName, Description, CreatedAt, UpdatedAt, IsDeleted)
+      INSERT INTO ${TABLE} (DeveloperId, SectorName, CreatedAt, UpdatedAt, IsDeleted)
       OUTPUT INSERTED.*
-      VALUES (@DeveloperId, @SectorName, @Description, GETDATE(), GETDATE(), 0)
+      VALUES (@DeveloperId, @SectorName, GETDATE(), GETDATE(), 0)
     `);
   return result.recordset[0];
 };
@@ -69,17 +68,40 @@ const findById = async (sectorId) => {
   return result.recordset[0];
 };
 
-const update = async (sectorId, { sectorName, description }) => {
+const findByNameAndDeveloper = async (sectorName, developerId) => {
+  const pool = getPool();
+  const result = await pool
+    .request()
+    .input('SectorName', sql.NVarChar(200), sectorName)
+    .input('DeveloperId', sql.Int, developerId)
+    .query(`
+      SELECT * FROM ${TABLE}
+      WHERE SectorName = @SectorName AND DeveloperId = @DeveloperId AND IsDeleted = 0
+    `);
+  return result.recordset[0];
+};
+
+const findOrCreateByName = async (sectorName, developerId) => {
+  const trimmedName = (sectorName || '').trim();
+  if (!trimmedName) {
+    throw new Error('Sector name is required');
+  }
+
+  const existing = await findByNameAndDeveloper(trimmedName, developerId);
+  if (existing) return existing;
+
+  return create({ developerId, sectorName: trimmedName });
+};
+
+const update = async (sectorId, { sectorName }) => {
   const pool = getPool();
   const result = await pool
     .request()
     .input('SectorId', sql.Int, sectorId)
     .input('SectorName', sql.NVarChar(200), sectorName)
-    .input('Description', sql.NVarChar(sql.MAX), description || null)
     .query(`
       UPDATE ${TABLE}
       SET SectorName = @SectorName,
-          Description = @Description,
           UpdatedAt = GETDATE()
       OUTPUT INSERTED.*
       WHERE SectorId = @SectorId AND IsDeleted = 0
@@ -105,6 +127,8 @@ module.exports = {
   create,
   findAll,
   findById,
+  findByNameAndDeveloper,
+  findOrCreateByName,
   update,
   softDelete,
 };
