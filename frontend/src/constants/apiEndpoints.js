@@ -14,7 +14,10 @@ export const API_ENDPOINTS = {
     BY_ID: (id) => `/inventories/${id}`,
     BY_SECTOR: (sectorId) => `/sectors/${sectorId}/inventories`,
     RECENT: '/inventories/recent',
-    SEARCH: '/inventories/search',
     DOWNLOAD: (id) => `/inventories/${id}/download`,
+  },
+  SEARCH: {
+    INVENTORIES: '/search/inventories',
+    SUGGEST: '/search/suggest',
   },
 };

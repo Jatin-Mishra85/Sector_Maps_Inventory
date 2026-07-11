@@ -1,10 +1,6 @@
 const inventoryRepository = require('../repositories/inventory.repository');
 const InventoryModel = require('../models/inventory.model');
 
-/**
- * Partial search across Developer Name, Sector Name, Inventory Name, Inventory Type.
- * Optional exact filter on InventoryType.
- */
 const searchInventories = async ({ keyword, inventoryType, page = 1, limit = 20 }) => {
   const { rows, total } = await inventoryRepository.search({
     keyword,
@@ -24,6 +20,14 @@ const searchInventories = async ({ keyword, inventoryType, page = 1, limit = 20 
   };
 };
 
+const suggestInventories = async ({ keyword, limitPerCategory = 5 }) => {
+  if (!keyword || !keyword.trim()) {
+    return [];
+  }
+  return inventoryRepository.suggest({ keyword: keyword.trim(), limitPerCategory });
+};
+
 module.exports = {
   searchInventories,
+  suggestInventories,
 };

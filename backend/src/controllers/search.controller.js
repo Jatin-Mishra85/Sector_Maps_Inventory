@@ -13,6 +13,13 @@ const searchInventories = asyncHandler(async (req, res) => {
   return ApiResponse.success(res, HTTP_STATUS.OK, 'Search results fetched successfully', result);
 });
 
+const suggestInventories = asyncHandler(async (req, res) => {
+  const keyword = req.query.keyword || '';
+  const result = await searchService.suggestInventories({ keyword, limitPerCategory: 5 });
+  return ApiResponse.success(res, HTTP_STATUS.OK, 'Suggestions fetched successfully', result);
+});
+
 module.exports = {
   searchInventories,
+  suggestInventories,
 };

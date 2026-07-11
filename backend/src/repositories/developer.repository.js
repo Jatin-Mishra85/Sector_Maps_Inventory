@@ -2,16 +2,15 @@ const { getPool, sql } = require('../database/connection');
 
 const TABLE = 'Developers';
 
-const create = async ({ developerName, description }) => {
+const create = async ({ developerName }) => {
   const pool = getPool();
   const result = await pool
     .request()
     .input('DeveloperName', sql.NVarChar(200), developerName)
-    .input('Description', sql.NVarChar(sql.MAX), description || null)
     .query(`
-      INSERT INTO ${TABLE} (DeveloperName, Description, CreatedAt, UpdatedAt, IsDeleted)
+      INSERT INTO ${TABLE} (DeveloperName, CreatedAt, UpdatedAt, IsDeleted)
       OUTPUT INSERTED.*
-      VALUES (@DeveloperName, @Description, GETDATE(), GETDATE(), 0)
+      VALUES (@DeveloperName, GETDATE(), GETDATE(), 0)
     `);
   return result.recordset[0];
 };
@@ -25,11 +24,13 @@ const findAll = async ({ page, limit }) => {
     .input('Offset', sql.Int, offset)
     .input('Limit', sql.Int, limit)
     .query(`
-      SELECT *
-      FROM ${TABLE}
-      WHERE IsDeleted = 0
-      ORDER BY CreatedAt DESC
-      OFFSET @Offset ROWS FETCH NEXT @Limit ROWS ONLY
+      SELECT * FROM (
+        SELECT *, ROW_NUMBER() OVER (ORDER BY CreatedAt DESC) AS RowNum
+        FROM ${TABLE}
+        WHERE IsDeleted = 0
+      ) AS Sub
+      WHERE RowNum > @Offset AND RowNum <= (@Offset + @Limit)
+      ORDER BY RowNum
     `);
 
   const countResult = await pool
@@ -66,31 +67,24 @@ const findByName = async (developerName) => {
   return result.recordset[0];
 };
 
-/**
- * Finds a developer by exact name (case-insensitive via default SQL collation),
- * or creates it if it doesn't exist. Used by inventory create/update flows
- * where the temporary form submits free-text developer names.
- */
 const findOrCreateByName = async (developerName) => {
   const trimmedName = (developerName || '').trim();
   const existing = await findByName(trimmedName);
   if (existing) {
     return existing;
   }
-  return create({ developerName: trimmedName, description: null });
+  return create({ developerName: trimmedName });
 };
 
-const update = async (developerId, { developerName, description }) => {
+const update = async (developerId, { developerName }) => {
   const pool = getPool();
   const result = await pool
     .request()
     .input('DeveloperId', sql.Int, developerId)
     .input('DeveloperName', sql.NVarChar(200), developerName)
-    .input('Description', sql.NVarChar(sql.MAX), description || null)
     .query(`
       UPDATE ${TABLE}
       SET DeveloperName = @DeveloperName,
-          Description = @Description,
           UpdatedAt = GETDATE()
       OUTPUT INSERTED.*
       WHERE DeveloperId = @DeveloperId AND IsDeleted = 0

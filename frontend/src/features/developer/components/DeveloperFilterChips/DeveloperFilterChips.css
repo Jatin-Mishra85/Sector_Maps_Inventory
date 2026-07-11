@@ -1,5 +1,7 @@
 .dev-chips {
   margin-bottom: var(--space-5);
+  min-width: 0;
+  overflow: hidden;
 }
 
 .dev-chips__scroll {
@@ -9,6 +11,7 @@
   padding-bottom: var(--space-2);
   scrollbar-width: thin;
   -webkit-overflow-scrolling: touch;
+  min-width: 0;
 }
 
 .dev-chips__scroll::-webkit-scrollbar {

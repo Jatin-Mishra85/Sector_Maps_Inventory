@@ -10,7 +10,7 @@ const startServer = async () => {
   try {
     await connectDB();
 
-    server = app.listen(appConfig.port, () => {
+    server = app.listen(appConfig.port, '0.0.0.0', () => {
       logger.info(`${MESSAGES.SERVER_STARTED} on port ${appConfig.port} [${appConfig.env}]`);
     });
   } catch (error) {

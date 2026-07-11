@@ -1,51 +1,55 @@
 :root {
-  /* Colors — premium, neutral, real-estate register (no flashy tones) */
-  --color-bg: #f7f7f5;
+  /* ===== Colors — light ocean blue, eye-friendly, calm ===== */
+ --color-bg: #f2f9fc;
+--color-bg-gradient: linear-gradient(180deg, #f2f9fc 0%, #eaf5fa 45%, #e4f1f8 100%);
   --color-surface: #ffffff;
-  --color-surface-hover: #f1f0ec;
-  --color-text: #1f2430;
-  --color-text-muted: #6b7280;
-  --color-border: #e4e2dc;
+  --color-surface-hover: #f2f8fc;
+  --color-text: #1c2b3a;
+  --color-text-muted: #5c7185;
+  --color-border: #d9e7f0;
 
-  --color-primary: #1c2b45;      /* deep navy — trust, professionalism */
-  --color-primary-hover: #172236;
-  --color-primary-tint: rgba(28, 43, 69, 0.10);
+  --color-primary: #2f6690;        /* ocean blue — calm, trustworthy */
+  --color-primary-hover: #265575;
+  --color-primary-tint: rgba(47, 102, 144, 0.10);
   --color-on-primary: #ffffff;
 
-  --color-accent: #b08d57;       /* muted gold — premium accent, used sparingly */
+  --color-accent: #5fb0c9;         /* soft aqua accent, used sparingly */
   --color-success: #2f7d4f;
   --color-warning: #b7791f;
   --color-danger: #b3392c;
 
-  /* Typography */
-  --font-heading: 'Georgia', 'Times New Roman', serif;
-  --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  /* ===== Typography ===== */
+  --font-heading: 'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
-  --font-size-xs: 0.75rem;
-  --font-size-sm: 0.875rem;
-  --font-size-base: 1rem;
-  --font-size-lg: 1.25rem;
-  --font-size-xl: 1.75rem;
-  --font-size-2xl: 2.25rem;
+  --font-size-xs: clamp(0.72rem, 0.7rem + 0.1vw, 0.78rem);
+  --font-size-sm: clamp(0.82rem, 0.8rem + 0.15vw, 0.9rem);
+  --font-size-base: clamp(0.92rem, 0.9rem + 0.2vw, 1rem);
+  --font-size-lg: clamp(1.1rem, 1rem + 0.5vw, 1.25rem);
+  --font-size-xl: clamp(1.4rem, 1.2rem + 1vw, 1.75rem);
+  --font-size-2xl: clamp(1.7rem, 1.4rem + 1.5vw, 2.25rem);
 
-  /* Spacing scale */
+  /* ===== Spacing scale (fluid — safe from 280px up) ===== */
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
   --space-4: 16px;
-  --space-5: 24px;
-  --space-6: 32px;
-  --space-8: 48px;
+  --space-5: clamp(16px, 3vw, 24px);
+  --space-6: clamp(20px, 4vw, 32px);
+  --space-8: clamp(28px, 5vw, 48px);
 
-  /* Radius & shadow */
+  /* Safe horizontal page padding — never lets content touch the edge, even on Fold cover screen */
+  --page-padding-inline: clamp(12px, 4vw, 32px);
+
+  /* ===== Radius & shadow ===== */
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 16px;
 
-  --shadow-soft: 0 2px 10px rgba(20, 20, 30, 0.06);
-  --shadow-hover: 0 6px 18px rgba(20, 20, 30, 0.10);
+  --shadow-soft: 0 2px 10px rgba(47, 102, 144, 0.08);
+  --shadow-hover: 0 6px 20px rgba(47, 102, 144, 0.14);
 
-  /* Z-index scale */
+  /* ===== Z-index scale ===== */
   --z-header: 100;
   --z-toast: 1000;
 }

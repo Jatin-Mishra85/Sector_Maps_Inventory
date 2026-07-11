@@ -1,12 +1,18 @@
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useRef, useState } from 'react';
 import './SearchBar.css';
 import Input from '../../../../components/common/Input/Input';
 import { useVoiceSearch } from '../../hooks/useVoiceSearch';
+import { useSuggestions } from '../../hooks/useSuggestions';
 import { useToast } from '../../../../context/ToastContext';
 import { classNames } from '../../../../utils/classNames';
 
 function SearchBar({ value, onChange, placeholder = 'Search by project, sector, or developer' }) {
   const { showToast } = useToast();
+  const [isFocused, setIsFocused] = useState(false);
+  const wrapRef = useRef(null);
+
+  const { suggestions } = useSuggestions(value);
+  const showDropdown = isFocused && value.trim().length > 0 && suggestions.length > 0;
 
   const handleVoiceResult = useCallback(
     (transcript) => {
@@ -31,16 +37,24 @@ function SearchBar({ value, onChange, placeholder = 'Search by project, sector, 
     showToast('Microphone access was denied. Please allow it to use voice search.', 'error');
   }
 
+  const handleSuggestionClick = (label) => {
+    onChange(label);
+    setIsFocused(false);
+  };
+
   return (
-    <div className="search-bar">
+    <div className="search-bar" ref={wrapRef}>
       <div className="search-bar__field-wrap">
         <Input
           name="search"
           value={value}
           onChange={(e) => onChange(e.target.value)}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setTimeout(() => setIsFocused(false), 150)}
           placeholder={isListening ? 'Listening...' : placeholder}
           aria-label="Search inventories"
           className="search-bar__input"
+          autoComplete="off"
         />
 
         {isSupported && (
@@ -76,6 +90,24 @@ function SearchBar({ value, onChange, placeholder = 'Search by project, sector, 
           </button>
         )}
       </div>
+
+      {showDropdown && (
+        <ul className="search-bar__dropdown" role="listbox">
+          {suggestions.map((s, i) => (
+            <li key={`${s.category}-${s.label}-${i}`}>
+              <button
+                type="button"
+                className="search-bar__suggestion"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => handleSuggestionClick(s.label)}
+              >
+                <span className="search-bar__suggestion-label">{s.label}</span>
+                <span className="search-bar__suggestion-category">{s.category}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

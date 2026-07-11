@@ -6,11 +6,10 @@ export const inventoryService = {
   getById: (id) => apiClient.get(API_ENDPOINTS.INVENTORY.BY_ID(id)),
   getBySector: (sectorId) => apiClient.get(API_ENDPOINTS.INVENTORY.BY_SECTOR(sectorId)),
   getRecent: (params) => apiClient.get(API_ENDPOINTS.INVENTORY.RECENT, { params }),
-  search: (params) => apiClient.get(API_ENDPOINTS.INVENTORY.SEARCH, { params }),
+  search: (params) => apiClient.get(API_ENDPOINTS.SEARCH.INVENTORIES, { params }),
+  suggest: (keyword) => apiClient.get(API_ENDPOINTS.SEARCH.SUGGEST, { params: { keyword } }),
   create: (payload) => apiClient.post(API_ENDPOINTS.INVENTORY.BASE, payload),
   update: (id, payload) => apiClient.put(API_ENDPOINTS.INVENTORY.BY_ID(id), payload),
-  // Multipart update — used by the temporary Edit modal to add/replace an image
-  // and other editable fields once the team has real photos ready.
   updateWithImage: (id, formData) =>
     apiClient.put(API_ENDPOINTS.INVENTORY.BY_ID(id), formData, {
       headers: { 'Content-Type': 'multipart/form-data' },

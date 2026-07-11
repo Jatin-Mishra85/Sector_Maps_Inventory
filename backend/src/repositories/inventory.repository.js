@@ -1,6 +1,6 @@
 const { getPool, sql } = require('../database/connection');
 
-const TABLE = 'Inventory'; // FIXED — was 'Inventories', which caused the 1-record bug
+const TABLE = 'Inventories'; // FIXED — was 'Inventories', which caused the 1-record bug
 
 const create = async ({
   developerId,
@@ -60,13 +60,16 @@ const findAll = async ({ page, limit, developerId, sectorId, inventoryType }) =>
   const whereClause = `WHERE ${conditions.join(' AND ')}`;
 
   const result = await request.query(`
-    SELECT i.*, d.DeveloperName, s.SectorName
-    FROM ${TABLE} i
-    INNER JOIN Developers d ON d.DeveloperId = i.DeveloperId
-    INNER JOIN Sectors s ON s.SectorId = i.SectorId
-    ${whereClause}
-    ORDER BY i.CreatedAt DESC
-    OFFSET @Offset ROWS FETCH NEXT @Limit ROWS ONLY
+    SELECT * FROM (
+      SELECT i.*, d.DeveloperName, s.SectorName,
+             ROW_NUMBER() OVER (ORDER BY i.CreatedAt DESC) AS RowNum
+      FROM ${TABLE} i
+      INNER JOIN Developers d ON d.DeveloperId = i.DeveloperId
+      INNER JOIN Sectors s ON s.SectorId = i.SectorId
+      ${whereClause}
+    ) AS Sub
+    WHERE RowNum > @Offset AND RowNum <= (@Offset + @Limit)
+    ORDER BY RowNum
   `);
 
   const countRequest = pool.request();
@@ -144,6 +147,23 @@ const softDelete = async (inventoryId) => {
   return result.recordset[0];
 };
 
+// TEMPORARY — hard delete: permanently removes the row from the DB.
+// This is ONLY for cleaning up accidentally/wrongly entered data during
+// testing. Remove this function (and switch the service back to
+// softDelete) once the real Admin Panel is built with proper recovery.
+const hardDelete = async (inventoryId) => {
+  const pool = getPool();
+  const result = await pool
+    .request()
+    .input('InventoryId', sql.Int, inventoryId)
+    .query(`
+      DELETE FROM ${TABLE}
+      OUTPUT DELETED.*
+      WHERE InventoryId = @InventoryId
+    `);
+  return result.recordset[0];
+};
+
 const search = async ({ keyword, inventoryType, page, limit }) => {
   const pool = getPool();
   const offset = (page - 1) * limit;
@@ -171,13 +191,16 @@ const search = async ({ keyword, inventoryType, page, limit }) => {
   const whereClause = `WHERE ${conditions.join(' AND ')}`;
 
   const result = await request.query(`
-    SELECT i.*, d.DeveloperName, s.SectorName
-    FROM ${TABLE} i
-    INNER JOIN Developers d ON d.DeveloperId = i.DeveloperId
-    INNER JOIN Sectors s ON s.SectorId = i.SectorId
-    ${whereClause}
-    ORDER BY i.CreatedAt DESC
-    OFFSET @Offset ROWS FETCH NEXT @Limit ROWS ONLY
+    SELECT * FROM (
+      SELECT i.*, d.DeveloperName, s.SectorName,
+             ROW_NUMBER() OVER (ORDER BY i.CreatedAt DESC) AS RowNum
+      FROM ${TABLE} i
+      INNER JOIN Developers d ON d.DeveloperId = i.DeveloperId
+      INNER JOIN Sectors s ON s.SectorId = i.SectorId
+      ${whereClause}
+    ) AS Sub
+    WHERE RowNum > @Offset AND RowNum <= (@Offset + @Limit)
+    ORDER BY RowNum
   `);
 
   const countRequest = pool.request().input('Keyword', sql.NVarChar(200), likeKeyword);
@@ -237,6 +260,7 @@ module.exports = {
   findById,
   update,
   softDelete,
+  hardDelete,
   search,
   suggest,
 };

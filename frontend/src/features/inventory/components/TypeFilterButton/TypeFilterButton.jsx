@@ -1,21 +1,9 @@
 import { memo, useEffect, useRef, useState } from 'react';
 import './TypeFilterButton.css';
 import { classNames } from '../../../../utils/classNames';
-import {
-  INVENTORY_TYPES,
-  INVENTORY_TYPE_LABELS,
-  ALL_TYPES_ID,
-} from '../../../../constants/appConstants';
+import { ALL_TYPES_ID } from '../../../../constants/appConstants';
 
-const OPTIONS = [
-  { value: ALL_TYPES_ID, label: 'All Types' },
-  ...Object.values(INVENTORY_TYPES).map((type) => ({
-    value: type,
-    label: INVENTORY_TYPE_LABELS[type],
-  })),
-];
-
-function TypeFilterButton({ selectedType, onSelect }) {
+function TypeFilterButton({ selectedType, onSelect, options = [] }) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef(null);
 
@@ -28,6 +16,8 @@ function TypeFilterButton({ selectedType, onSelect }) {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const menuOptions = [{ value: ALL_TYPES_ID, label: 'All Types' }, ...options];
 
   const handleSelect = (value) => {
     onSelect(value);
@@ -58,7 +48,7 @@ function TypeFilterButton({ selectedType, onSelect }) {
 
       {isOpen && (
         <ul className="type-filter__menu" role="listbox">
-          {OPTIONS.map((opt) => (
+          {menuOptions.map((opt) => (
             <li key={opt.value}>
               <button
                 type="button"

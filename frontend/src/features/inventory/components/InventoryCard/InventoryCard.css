@@ -5,6 +5,7 @@
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-soft);
   padding: var(--space-3);
+  min-width: 0;
   transition: box-shadow 0.25s ease, transform 0.25s ease;
 }
 

@@ -2,17 +2,16 @@ const { getPool, sql } = require('../database/connection');
 
 const TABLE = 'Sectors';
 
-const create = async ({ developerId, sectorName, description }) => {
+const create = async ({ developerId, sectorName }) => {
   const pool = getPool();
   const result = await pool
     .request()
     .input('DeveloperId', sql.Int, developerId)
     .input('SectorName', sql.NVarChar(200), sectorName)
-    .input('Description', sql.NVarChar(sql.MAX), description || null)
     .query(`
-      INSERT INTO ${TABLE} (DeveloperId, SectorName, Description, CreatedAt, UpdatedAt, IsDeleted)
+      INSERT INTO ${TABLE} (DeveloperId, SectorName, CreatedAt, UpdatedAt, IsDeleted)
       OUTPUT INSERTED.*
-      VALUES (@DeveloperId, @SectorName, @Description, GETDATE(), GETDATE(), 0)
+      VALUES (@DeveloperId, @SectorName, GETDATE(), GETDATE(), 0)
     `);
   return result.recordset[0];
 };
@@ -33,12 +32,15 @@ const findAll = async ({ page, limit, developerId }) => {
   }
 
   const result = await request.query(`
-    SELECT s.*, d.DeveloperName
-    FROM ${TABLE} s
-    INNER JOIN Developers d ON d.DeveloperId = s.DeveloperId
-    ${whereClause}
-    ORDER BY s.CreatedAt DESC
-    OFFSET @Offset ROWS FETCH NEXT @Limit ROWS ONLY
+    SELECT * FROM (
+      SELECT s.*, d.DeveloperName,
+             ROW_NUMBER() OVER (ORDER BY s.CreatedAt DESC) AS RowNum
+      FROM ${TABLE} s
+      INNER JOIN Developers d ON d.DeveloperId = s.DeveloperId
+      ${whereClause}
+    ) AS Sub
+    WHERE RowNum > @Offset AND RowNum <= (@Offset + @Limit)
+    ORDER BY RowNum
   `);
 
   const countRequest = pool.request();
@@ -82,30 +84,24 @@ const findByNameAndDeveloper = async (sectorName, developerId) => {
   return result.recordset[0];
 };
 
-/**
- * Finds a sector by name scoped to a specific developer, or creates it.
- * Sector names are only unique WITHIN a developer, not globally.
- */
 const findOrCreateByName = async (sectorName, developerId) => {
   const trimmedName = (sectorName || '').trim();
   const existing = await findByNameAndDeveloper(trimmedName, developerId);
   if (existing) {
     return existing;
   }
-  return create({ developerId, sectorName: trimmedName, description: null });
+  return create({ developerId, sectorName: trimmedName });
 };
 
-const update = async (sectorId, { sectorName, description }) => {
+const update = async (sectorId, { sectorName }) => {
   const pool = getPool();
   const result = await pool
     .request()
     .input('SectorId', sql.Int, sectorId)
     .input('SectorName', sql.NVarChar(200), sectorName)
-    .input('Description', sql.NVarChar(sql.MAX), description || null)
     .query(`
       UPDATE ${TABLE}
       SET SectorName = @SectorName,
-          Description = @Description,
           UpdatedAt = GETDATE()
       OUTPUT INSERTED.*
       WHERE SectorId = @SectorId AND IsDeleted = 0

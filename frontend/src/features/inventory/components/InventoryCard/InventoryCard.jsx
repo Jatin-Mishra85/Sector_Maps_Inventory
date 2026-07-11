@@ -7,7 +7,7 @@ import { shareContent } from '../../../../utils/share';
 import { truncateText } from '../../../../utils/formatters';
 import { useToast } from '../../../../context/ToastContext';
 
-function InventoryCard({ inventory, isBookmarked, onToggleBookmark, onPreview, onEdit }) {
+function InventoryCard({ inventory, /* isBookmarked, onToggleBookmark, */ onPreview, onEdit, onDelete }) {
   const { showToast } = useToast();
   const [imgError, setImgError] = useState(false);
 
@@ -50,16 +50,27 @@ function InventoryCard({ inventory, isBookmarked, onToggleBookmark, onPreview, o
     window.open(googleMapsUrl, '_blank', 'noopener,noreferrer');
   };
 
-  const handleBookmarkClick = (e) => {
-    e.stopPropagation();
-    onToggleBookmark(id);
-  };
+  // TEMPORARILY DISABLED — BOOKMARK FEATURE
+  // Re-enable once login/authentication is added to the system.
+  // Just uncomment this function + the button block below.
+  // const handleBookmarkClick = (e) => {
+  //   e.stopPropagation();
+  //   onToggleBookmark(id);
+  // };
 
   // TEMPORARY — remove this handler + the Edit button below once the
   // real Admin Panel replaces per-card editing.
   const handleEditClick = (e) => {
     e.stopPropagation();
     onEdit?.(inventory);
+  };
+
+  // TEMPORARY — remove this handler + the Delete button below once the
+  // real Admin Panel replaces per-card deleting. This is only meant for
+  // cleaning up accidentally/wrongly entered data.
+  const handleDeleteClick = (e) => {
+    e.stopPropagation();
+    onDelete?.(inventory);
   };
 
   return (
@@ -104,6 +115,31 @@ function InventoryCard({ inventory, isBookmarked, onToggleBookmark, onPreview, o
               </svg>
             </button>
 
+            {/* TEMPORARY — remove this button when Admin Panel replaces it.
+                Hard-deletes the record permanently, only for fixing
+                wrongly-entered data. */}
+            <button
+              type="button"
+              className="inv-card__delete-btn"
+              onClick={handleDeleteClick}
+              aria-label={`Delete ${name}`}
+              title="Temporary: permanently delete this inventory"
+            >
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" aria-hidden="true">
+                <path
+                  d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m2 0-.8 12a2 2 0 0 1-2 1.9H9.8a2 2 0 0 1-2-1.9L7 7h10ZM10 11v6M14 11v6"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+
+            {/* TEMPORARILY DISABLED — BOOKMARK FEATURE
+                Re-enable once login/authentication is added.
+                Just uncomment this whole button block + handleBookmarkClick above,
+                and pass isBookmarked / onToggleBookmark props back in.
             <button
               type="button"
               className="inv-card__bookmark"
@@ -121,6 +157,7 @@ function InventoryCard({ inventory, isBookmarked, onToggleBookmark, onPreview, o
                 />
               </svg>
             </button>
+            */}
           </div>
         </div>
 

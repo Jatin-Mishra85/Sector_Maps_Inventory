@@ -51,21 +51,26 @@ const getInventoryById = async (req, res, next) => {
 
 const updateInventory = async (req, res, next) => {
   try {
-    let imageUrl = req.body.existingImageUrl || null;
-    if (req.file) {
-      imageUrl = `/uploads/${req.file.filename}`;
-    }
+    // IMPORTANT: only include fields that were actually sent by the form.
+    // Do NOT default missing fields to null/undefined placeholders here —
+    // the service layer decides what to keep vs overwrite based on
+    // whether a key is present at all in this payload.
+    const payload = {};
 
-    const payload = {
-      developerName: req.body.developerName,
-      sectorName: req.body.sectorName,
-      inventoryType: req.body.type,
-      inventoryName: req.body.name,
-      description: req.body.description,
-      googleMapUrl: req.body.googleMapUrl,
-      googleMapPolygon: req.body.polygon,
-      imageUrl,
-    };
+    if (req.body.developerName !== undefined) payload.developerName = req.body.developerName;
+    if (req.body.sectorName !== undefined) payload.sectorName = req.body.sectorName;
+    if (req.body.type !== undefined) payload.inventoryType = req.body.type;
+    if (req.body.name !== undefined) payload.inventoryName = req.body.name;
+    if (req.body.description !== undefined) payload.description = req.body.description;
+    if (req.body.googleMapUrl !== undefined) payload.googleMapUrl = req.body.googleMapUrl;
+    if (req.body.polygon !== undefined) payload.googleMapPolygon = req.body.polygon;
+
+    // Only touch imageUrl if a new file was actually uploaded.
+    // If no new file, we simply don't send imageUrl at all — so the
+    // existing image is preserved, not wiped out.
+    if (req.file) {
+      payload.imageUrl = `/uploads/${req.file.filename}`;
+    }
 
     const inventory = await inventoryService.updateInventory(parseInt(req.params.id, 10), payload);
     return ApiResponse.success(res, HTTP_STATUS.OK, 'Inventory updated successfully', inventory);

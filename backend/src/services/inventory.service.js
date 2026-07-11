@@ -10,8 +10,11 @@ const HTTP_STATUS = require('../constants/httpStatusCodes.constant');
  * Used for create/update flows where user types the name freely.
  */
 const resolveDeveloperAndSector = async (developerName, sectorName) => {
-  const developer = await developerRepository.findOrCreateByName(developerName);
-  const sector = await sectorRepository.findOrCreateByName(sectorName, developer.DeveloperId);
+  const finalDeveloperName = (developerName || '').trim() || 'Unknown Developer';
+  const finalSectorName = (sectorName || '').trim() || 'Unknown Sector';
+
+  const developer = await developerRepository.findOrCreateByName(finalDeveloperName);
+  const sector = await sectorRepository.findOrCreateByName(finalSectorName, developer.DeveloperId);
   return { developerId: developer.DeveloperId, sectorId: sector.SectorId };
 };
 
@@ -57,21 +60,49 @@ const getInventoryById = async (inventoryId) => {
   return InventoryModel.fromRow(row);
 };
 
+/**
+ * PARTIAL UPDATE LOGIC:
+ * The Edit modal (temporary admin tool) only sends a few fields at a time
+ * (e.g. just name + description + image). It does NOT send developerName,
+ * sectorName, type, googleMapUrl, etc. every time.
+ *
+ * So here we fetch the existing row first, and only override a field if
+ * the caller actually included that key in `payload`. Anything not sent
+ * keeps its old DB value. This prevents:
+ *   - InventoryType/InventoryName becoming NULL (DB crash)
+ *   - Developer/Sector silently getting reset to "Unknown Developer"/
+ *     "Unknown Sector" on every partial edit
+ *   - ImageUrl getting wiped out when no new image is uploaded
+ */
 const updateInventory = async (inventoryId, payload) => {
   const existing = await inventoryRepository.findById(inventoryId);
   if (!existing) {
     throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Inventory not found');
   }
 
-  const { developerId, sectorId } = await resolveDeveloperAndSector(
-    payload.developerName,
-    payload.sectorName
-  );
+  // Only re-resolve developer/sector if the caller actually sent a name.
+  // Otherwise keep the sector link exactly as it already is.
+  let sectorId = existing.SectorId;
+  const developerNameSent = payload.developerName !== undefined;
+  const sectorNameSent = payload.sectorName !== undefined;
 
-  const row = await inventoryRepository.update(inventoryId, {
-    ...payload,
+  if (developerNameSent || sectorNameSent) {
+    const resolved = await resolveDeveloperAndSector(payload.developerName, payload.sectorName);
+    sectorId = resolved.sectorId;
+  }
+
+  const mergedPayload = {
     sectorId,
-  });
+    inventoryType: payload.inventoryType !== undefined ? payload.inventoryType : existing.InventoryType,
+    inventoryName: payload.inventoryName !== undefined ? payload.inventoryName : existing.InventoryName,
+    description: payload.description !== undefined ? payload.description : existing.Description,
+    imageUrl: payload.imageUrl !== undefined ? payload.imageUrl : existing.ImageUrl,
+    googleMapUrl: payload.googleMapUrl !== undefined ? payload.googleMapUrl : existing.GoogleMapUrl,
+    googleMapPolygon:
+      payload.googleMapPolygon !== undefined ? payload.googleMapPolygon : existing.GoogleMapPolygon,
+  };
+
+  const row = await inventoryRepository.update(inventoryId, mergedPayload);
   return InventoryModel.fromRow(row);
 };
 
@@ -80,7 +111,13 @@ const deleteInventory = async (inventoryId) => {
   if (!existing) {
     throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Inventory not found');
   }
-  const row = await inventoryRepository.softDelete(inventoryId);
+
+  // TEMPORARY — hard delete (permanently removes the row from the DB,
+  // not just IsDeleted = 1). This is only for cleaning up wrongly-entered
+  // data during testing/manual entry. Once the real Admin Panel is built,
+  // switch this back to inventoryRepository.softDelete(inventoryId) so
+  // records can be recovered/audited instead of being lost forever.
+  const row = await inventoryRepository.hardDelete(inventoryId);
   return InventoryModel.fromRow(row);
 };
 
