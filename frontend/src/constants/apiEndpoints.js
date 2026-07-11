@@ -1,3 +1,4 @@
+export const ALL_TYPES_ID = 'ALL_TYPES';
 export const API_ENDPOINTS = {
   DEVELOPER: {
     BASE: '/developers',

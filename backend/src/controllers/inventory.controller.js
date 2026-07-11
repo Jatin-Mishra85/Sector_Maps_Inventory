@@ -1,4 +1,5 @@
 const inventoryService = require('../services/inventory.service');
+const ApiResponse = require('../utils/apiResponse.util');
 const HTTP_STATUS = require('../constants/httpStatusCodes.constant');
 
 const createInventory = async (req, res, next) => {
@@ -11,12 +12,13 @@ const createInventory = async (req, res, next) => {
       inventoryType: req.body.type,
       inventoryName: req.body.name,
       description: req.body.description,
+      googleMapUrl: req.body.googleMapUrl,
       googleMapPolygon: req.body.polygon,
       imageUrl,
     };
 
     const inventory = await inventoryService.createInventory(payload);
-    res.status(HTTP_STATUS.CREATED).json(inventory);
+    return ApiResponse.success(res, HTTP_STATUS.CREATED, 'Inventory created successfully', inventory);
   } catch (err) {
     next(err);
   }
@@ -32,7 +34,7 @@ const getAllInventories = async (req, res, next) => {
       sectorId: sectorId ? parseInt(sectorId, 10) : undefined,
       inventoryType,
     });
-    res.status(HTTP_STATUS.OK).json(result);
+    return ApiResponse.success(res, HTTP_STATUS.OK, 'Inventories fetched successfully', result);
   } catch (err) {
     next(err);
   }
@@ -41,7 +43,7 @@ const getAllInventories = async (req, res, next) => {
 const getInventoryById = async (req, res, next) => {
   try {
     const inventory = await inventoryService.getInventoryById(parseInt(req.params.id, 10));
-    res.status(HTTP_STATUS.OK).json(inventory);
+    return ApiResponse.success(res, HTTP_STATUS.OK, 'Inventory fetched successfully', inventory);
   } catch (err) {
     next(err);
   }
@@ -60,12 +62,13 @@ const updateInventory = async (req, res, next) => {
       inventoryType: req.body.type,
       inventoryName: req.body.name,
       description: req.body.description,
+      googleMapUrl: req.body.googleMapUrl,
       googleMapPolygon: req.body.polygon,
       imageUrl,
     };
 
     const inventory = await inventoryService.updateInventory(parseInt(req.params.id, 10), payload);
-    res.status(HTTP_STATUS.OK).json(inventory);
+    return ApiResponse.success(res, HTTP_STATUS.OK, 'Inventory updated successfully', inventory);
   } catch (err) {
     next(err);
   }
@@ -74,7 +77,7 @@ const updateInventory = async (req, res, next) => {
 const deleteInventory = async (req, res, next) => {
   try {
     const inventory = await inventoryService.deleteInventory(parseInt(req.params.id, 10));
-    res.status(HTTP_STATUS.OK).json(inventory);
+    return ApiResponse.success(res, HTTP_STATUS.OK, 'Inventory deleted successfully', inventory);
   } catch (err) {
     next(err);
   }

@@ -2,16 +2,17 @@ const { getPool, sql } = require('../database/connection');
 
 const TABLE = 'Sectors';
 
-const create = async ({ developerId, sectorName }) => {
+const create = async ({ developerId, sectorName, description }) => {
   const pool = getPool();
   const result = await pool
     .request()
     .input('DeveloperId', sql.Int, developerId)
     .input('SectorName', sql.NVarChar(200), sectorName)
+    .input('Description', sql.NVarChar(sql.MAX), description || null)
     .query(`
-      INSERT INTO ${TABLE} (DeveloperId, SectorName, CreatedAt, UpdatedAt, IsDeleted)
+      INSERT INTO ${TABLE} (DeveloperId, SectorName, Description, CreatedAt, UpdatedAt, IsDeleted)
       OUTPUT INSERTED.*
-      VALUES (@DeveloperId, @SectorName, GETDATE(), GETDATE(), 0)
+      VALUES (@DeveloperId, @SectorName, @Description, GETDATE(), GETDATE(), 0)
     `);
   return result.recordset[0];
 };
@@ -81,27 +82,30 @@ const findByNameAndDeveloper = async (sectorName, developerId) => {
   return result.recordset[0];
 };
 
+/**
+ * Finds a sector by name scoped to a specific developer, or creates it.
+ * Sector names are only unique WITHIN a developer, not globally.
+ */
 const findOrCreateByName = async (sectorName, developerId) => {
   const trimmedName = (sectorName || '').trim();
-  if (!trimmedName) {
-    throw new Error('Sector name is required');
-  }
-
   const existing = await findByNameAndDeveloper(trimmedName, developerId);
-  if (existing) return existing;
-
-  return create({ developerId, sectorName: trimmedName });
+  if (existing) {
+    return existing;
+  }
+  return create({ developerId, sectorName: trimmedName, description: null });
 };
 
-const update = async (sectorId, { sectorName }) => {
+const update = async (sectorId, { sectorName, description }) => {
   const pool = getPool();
   const result = await pool
     .request()
     .input('SectorId', sql.Int, sectorId)
     .input('SectorName', sql.NVarChar(200), sectorName)
+    .input('Description', sql.NVarChar(sql.MAX), description || null)
     .query(`
       UPDATE ${TABLE}
       SET SectorName = @SectorName,
+          Description = @Description,
           UpdatedAt = GETDATE()
       OUTPUT INSERTED.*
       WHERE SectorId = @SectorId AND IsDeleted = 0

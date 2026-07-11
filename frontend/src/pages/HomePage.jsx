@@ -2,16 +2,17 @@ import { useState } from 'react';
 import './HomePage.css';
 import SearchBar from '../features/search/components/SearchBar/SearchBar';
 import { useSearch } from '../features/search/hooks/useSearch';
-import RecentSection from '../features/inventory/components/RecentSection/RecentSection';
 import DeveloperFilterChips from '../features/developer/components/DeveloperFilterChips/DeveloperFilterChips';
 import { useDevelopers } from '../features/developer/hooks/useDevelopers';
+import TypeFilterButton from '../features/inventory/components/TypeFilterButton/TypeFilterButton';
 import InventoryGrid from '../features/inventory/components/InventoryGrid/InventoryGrid';
 import { useInventories } from '../features/inventory/hooks/useInventories';
-import { ALL_DEVELOPERS_ID } from '../constants/appConstants';
+import { ALL_DEVELOPERS_ID, ALL_TYPES_ID } from '../constants/appConstants';
 
 export default function HomePage() {
   const { term, setTerm, debouncedTerm } = useSearch();
   const [selectedDeveloperId, setSelectedDeveloperId] = useState(ALL_DEVELOPERS_ID);
+  const [selectedType, setSelectedType] = useState(ALL_TYPES_ID);
 
   const { developers, loading: developersLoading } = useDevelopers();
   const {
@@ -20,15 +21,18 @@ export default function HomePage() {
     loading: inventoriesLoading,
     error: inventoriesError,
     refetch,
-  } = useInventories({ developerId: selectedDeveloperId, searchTerm: debouncedTerm });
+  } = useInventories({
+    developerId: selectedDeveloperId,
+    type: selectedType,
+    searchTerm: debouncedTerm,
+  });
 
   return (
     <div className="home-page">
-      <section className="home-page__search">
+      <section className="home-page__search-row">
         <SearchBar value={term} onChange={setTerm} />
+        <TypeFilterButton selectedType={selectedType} onSelect={setSelectedType} />
       </section>
-
-      <RecentSection />
 
       {!developersLoading && (
         <DeveloperFilterChips

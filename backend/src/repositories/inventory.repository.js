@@ -1,6 +1,6 @@
 const { getPool, sql } = require('../database/connection');
 
-const TABLE = 'Inventories';
+const TABLE = 'Inventory'; // FIXED — was 'Inventories', which caused the 1-record bug
 
 const create = async ({
   developerId,
@@ -9,6 +9,7 @@ const create = async ({
   inventoryName,
   description,
   imageUrl,
+  googleMapUrl,
   googleMapPolygon,
 }) => {
   const pool = getPool();
@@ -20,20 +21,18 @@ const create = async ({
     .input('InventoryName', sql.NVarChar(200), inventoryName)
     .input('Description', sql.NVarChar(sql.MAX), description || null)
     .input('ImageUrl', sql.NVarChar(500), imageUrl || null)
+    .input('GoogleMapUrl', sql.NVarChar(500), googleMapUrl || null)
     .input('GoogleMapPolygon', sql.NVarChar(sql.MAX), googleMapPolygon || null)
     .query(`
       INSERT INTO ${TABLE}
-        (DeveloperId, SectorId, InventoryType, InventoryName, Description, ImageUrl, GoogleMapPolygon, CreatedAt, UpdatedAt, IsDeleted)
+        (DeveloperId, SectorId, InventoryType, InventoryName, Description, ImageUrl, GoogleMapUrl, GoogleMapPolygon, CreatedAt, UpdatedAt, IsDeleted)
       OUTPUT INSERTED.*
       VALUES
-        (@DeveloperId, @SectorId, @InventoryType, @InventoryName, @Description, @ImageUrl, @GoogleMapPolygon, GETDATE(), GETDATE(), 0)
+        (@DeveloperId, @SectorId, @InventoryType, @InventoryName, @Description, @ImageUrl, @GoogleMapUrl, @GoogleMapPolygon, GETDATE(), GETDATE(), 0)
     `);
   return result.recordset[0];
 };
 
-/**
- * Get all inventories with optional filtering by developerId, sectorId, inventoryType.
- */
 const findAll = async ({ page, limit, developerId, sectorId, inventoryType }) => {
   const pool = getPool();
   const offset = (page - 1) * limit;
@@ -102,7 +101,7 @@ const findById = async (inventoryId) => {
 
 const update = async (
   inventoryId,
-  { sectorId, inventoryType, inventoryName, description, imageUrl, googleMapPolygon }
+  { sectorId, inventoryType, inventoryName, description, imageUrl, googleMapUrl, googleMapPolygon }
 ) => {
   const pool = getPool();
   const result = await pool
@@ -113,6 +112,7 @@ const update = async (
     .input('InventoryName', sql.NVarChar(200), inventoryName)
     .input('Description', sql.NVarChar(sql.MAX), description || null)
     .input('ImageUrl', sql.NVarChar(500), imageUrl || null)
+    .input('GoogleMapUrl', sql.NVarChar(500), googleMapUrl || null)
     .input('GoogleMapPolygon', sql.NVarChar(sql.MAX), googleMapPolygon || null)
     .query(`
       UPDATE ${TABLE}
@@ -121,6 +121,7 @@ const update = async (
           InventoryName = @InventoryName,
           Description = @Description,
           ImageUrl = @ImageUrl,
+          GoogleMapUrl = @GoogleMapUrl,
           GoogleMapPolygon = @GoogleMapPolygon,
           UpdatedAt = GETDATE()
       OUTPUT INSERTED.*
@@ -143,9 +144,6 @@ const softDelete = async (inventoryId) => {
   return result.recordset[0];
 };
 
-/**
- * Partial search across Developer Name, Sector Name, Inventory Name, Inventory Type.
- */
 const search = async ({ keyword, inventoryType, page, limit }) => {
   const pool = getPool();
   const offset = (page - 1) * limit;
@@ -200,6 +198,39 @@ const search = async ({ keyword, inventoryType, page, limit }) => {
   };
 };
 
+/**
+ * Lightweight suggestions for search-as-you-type.
+ */
+const suggest = async ({ keyword, limitPerCategory = 5 }) => {
+  const pool = getPool();
+  const likeKeyword = `%${keyword || ''}%`;
+
+  const request = pool
+    .request()
+    .input('Keyword', sql.NVarChar(200), likeKeyword)
+    .input('LimitPerCategory', sql.Int, limitPerCategory);
+
+  const result = await request.query(`
+    SELECT TOP (@LimitPerCategory) DeveloperName AS label, 'DEVELOPER' AS category
+    FROM Developers
+    WHERE IsDeleted = 0 AND DeveloperName LIKE @Keyword
+
+    UNION ALL
+
+    SELECT TOP (@LimitPerCategory) SectorName AS label, 'SECTOR' AS category
+    FROM Sectors
+    WHERE IsDeleted = 0 AND SectorName LIKE @Keyword
+
+    UNION ALL
+
+    SELECT TOP (@LimitPerCategory) InventoryName AS label, 'INVENTORY' AS category
+    FROM ${TABLE}
+    WHERE IsDeleted = 0 AND InventoryName LIKE @Keyword
+  `);
+
+  return result.recordset;
+};
+
 module.exports = {
   create,
   findAll,
@@ -207,4 +238,5 @@ module.exports = {
   update,
   softDelete,
   search,
+  suggest,
 };

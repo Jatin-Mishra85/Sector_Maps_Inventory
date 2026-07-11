@@ -1,55 +1,78 @@
 const { body, param, query } = require('express-validator');
 const { runValidation } = require('./baseValidator.util');
+const { INVENTORY_TYPE_LIST } = require('../constants/inventoryTypes.constant');
 
 const createInventoryValidator = runValidation([
   body('developerName')
     .trim()
     .notEmpty()
-    .withMessage('Developer name is required')
+    .withMessage('developerName is required')
     .isLength({ max: 200 })
-    .withMessage('Developer name must not exceed 200 characters'),
+    .withMessage('developerName must not exceed 200 characters'),
   body('sectorName')
     .trim()
     .notEmpty()
-    .withMessage('Sector name is required')
+    .withMessage('sectorName is required')
     .isLength({ max: 200 })
-    .withMessage('Sector name must not exceed 200 characters'),
-  body('inventoryType').optional().trim().isString(),
-  body('inventoryName')
-    .optional()
+    .withMessage('sectorName must not exceed 200 characters'),
+  body('type')
     .trim()
+    .notEmpty()
+    .withMessage('type is required')
+    .isIn(INVENTORY_TYPE_LIST)
+    .withMessage(`type must be one of: ${INVENTORY_TYPE_LIST.join(', ')}`),
+  body('name')
+    .trim()
+    .notEmpty()
+    .withMessage('name is required')
     .isLength({ max: 200 })
-    .withMessage('inventoryName must not exceed 200 characters'),
+    .withMessage('name must not exceed 200 characters'),
   body('description').optional().trim().isString(),
-  body('imageUrl').optional().trim().isString(),
-  body('googleMapPolygon').optional().isString(),
+  body('googleMapUrl')
+    .trim()
+    .notEmpty()
+    .withMessage('googleMapUrl is required')
+    .isURL()
+    .withMessage('googleMapUrl must be a valid URL'),
+  body('polygon').optional().isString(),
+  // image is intentionally NOT required — company is entering data before images exist
 ]);
 
 const updateInventoryValidator = runValidation([
   param('id').isInt({ min: 1 }).withMessage('Invalid inventory id'),
   body('developerName')
-    .optional()
     .trim()
     .notEmpty()
-    .withMessage('Developer name cannot be empty')
+    .withMessage('developerName is required')
     .isLength({ max: 200 })
-    .withMessage('Developer name must not exceed 200 characters'),
+    .withMessage('developerName must not exceed 200 characters'),
   body('sectorName')
-    .optional()
     .trim()
     .notEmpty()
-    .withMessage('Sector name cannot be empty')
+    .withMessage('sectorName is required')
     .isLength({ max: 200 })
-    .withMessage('Sector name must not exceed 200 characters'),
-  body('inventoryType').optional().trim().isString(),
-  body('inventoryName')
-    .optional()
+    .withMessage('sectorName must not exceed 200 characters'),
+  body('type')
     .trim()
+    .notEmpty()
+    .withMessage('type is required')
+    .isIn(INVENTORY_TYPE_LIST)
+    .withMessage(`type must be one of: ${INVENTORY_TYPE_LIST.join(', ')}`),
+  body('name')
+    .trim()
+    .notEmpty()
+    .withMessage('name is required')
     .isLength({ max: 200 })
-    .withMessage('inventoryName must not exceed 200 characters'),
+    .withMessage('name must not exceed 200 characters'),
   body('description').optional().trim().isString(),
-  body('imageUrl').optional().trim().isString(),
-  body('googleMapPolygon').optional().isString(),
+  body('googleMapUrl')
+    .trim()
+    .notEmpty()
+    .withMessage('googleMapUrl is required')
+    .isURL()
+    .withMessage('googleMapUrl must be a valid URL'),
+  body('polygon').optional().isString(),
+  body('existingImageUrl').optional().trim().isString(),
 ]);
 
 const inventoryIdParamValidator = runValidation([
@@ -61,12 +84,18 @@ const getAllInventoriesValidator = runValidation([
   query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('limit must be between 1 and 100'),
   query('developerId').optional().isInt({ min: 1 }).withMessage('developerId must be a positive integer'),
   query('sectorId').optional().isInt({ min: 1 }).withMessage('sectorId must be a positive integer'),
-  query('inventoryType').optional().trim().isString(),
+  query('inventoryType')
+    .optional()
+    .isIn(INVENTORY_TYPE_LIST)
+    .withMessage(`inventoryType must be one of: ${INVENTORY_TYPE_LIST.join(', ')}`),
 ]);
 
 const searchInventoriesValidator = runValidation([
   query('keyword').optional().trim().isString(),
-  query('inventoryType').optional().trim().isString(),
+  query('inventoryType')
+    .optional()
+    .isIn(INVENTORY_TYPE_LIST)
+    .withMessage(`inventoryType must be one of: ${INVENTORY_TYPE_LIST.join(', ')}`),
   query('page').optional().isInt({ min: 1 }).withMessage('page must be a positive integer'),
   query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('limit must be between 1 and 100'),
 ]);

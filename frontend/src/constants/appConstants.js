@@ -12,6 +12,8 @@ export const INVENTORY_TYPE_LABELS = {
 
 export const ALL_DEVELOPERS_ID = 'ALL';
 
+export const ALL_TYPES_ID = 'ALL_TYPES';
+
 export const BOOKMARK_STORAGE_KEY = 'bookmarked_inventories';
 
 export const TOAST_TYPES = Object.freeze({

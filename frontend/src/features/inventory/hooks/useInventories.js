@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { inventoryService } from '../services/inventoryService';
 import { parseApiError } from '../../../services/errorHandler';
-import { ALL_DEVELOPERS_ID } from '../../../constants/appConstants';
+import { ALL_DEVELOPERS_ID, ALL_TYPES_ID } from '../../../constants/appConstants';
 
-export function useInventories({ developerId, searchTerm, page = 1, limit = 12 }) {
+export function useInventories({ developerId, type, searchTerm, page = 1, limit = 12 }) {
   const [inventories, setInventories] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -15,6 +15,7 @@ export function useInventories({ developerId, searchTerm, page = 1, limit = 12 }
     try {
       const params = { page, limit };
       if (developerId && developerId !== ALL_DEVELOPERS_ID) params.developerId = developerId;
+      if (type && type !== ALL_TYPES_ID) params.type = type;
       if (searchTerm) params.q = searchTerm;
 
       const data = await inventoryService.getAll(params);
@@ -26,7 +27,7 @@ export function useInventories({ developerId, searchTerm, page = 1, limit = 12 }
     } finally {
       setLoading(false);
     }
-  }, [developerId, searchTerm, page, limit]);
+  }, [developerId, type, searchTerm, page, limit]);
 
   useEffect(() => {
     fetchInventories();
