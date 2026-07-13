@@ -3,7 +3,7 @@ const { getPool, sql } = require('../database/connection');
 const TABLE = 'Sectors';
 
 const create = async ({ developerId, sectorName }) => {
-  const pool = getPool();
+  const pool = await getPool();
   const result = await pool
     .request()
     .input('DeveloperId', sql.Int, developerId)
@@ -17,7 +17,7 @@ const create = async ({ developerId, sectorName }) => {
 };
 
 const findAll = async ({ page, limit, developerId }) => {
-  const pool = getPool();
+  const pool = await getPool();
   const offset = (page - 1) * limit;
 
   const request = pool
@@ -33,10 +33,10 @@ const findAll = async ({ page, limit, developerId }) => {
 
   const result = await request.query(`
     SELECT * FROM (
-      SELECT s.*, d.DeveloperName,
+      SELECT s.*, g.GroupName,
              ROW_NUMBER() OVER (ORDER BY s.CreatedAt DESC) AS RowNum
       FROM ${TABLE} s
-      INNER JOIN Developers d ON d.DeveloperId = s.DeveloperId
+      INNER JOIN Groups g ON g.GroupId = s.DeveloperId
       ${whereClause}
     ) AS Sub
     WHERE RowNum > @Offset AND RowNum <= (@Offset + @Limit)
@@ -58,21 +58,21 @@ const findAll = async ({ page, limit, developerId }) => {
 };
 
 const findById = async (sectorId) => {
-  const pool = getPool();
+  const pool = await getPool();
   const result = await pool
     .request()
     .input('SectorId', sql.Int, sectorId)
     .query(`
-      SELECT s.*, d.DeveloperName
+      SELECT s.*, g.GroupName
       FROM ${TABLE} s
-      INNER JOIN Developers d ON d.DeveloperId = s.DeveloperId
+      INNER JOIN Groups g ON g.GroupId = s.DeveloperId
       WHERE s.SectorId = @SectorId AND s.IsDeleted = 0
     `);
   return result.recordset[0];
 };
 
 const findByNameAndDeveloper = async (sectorName, developerId) => {
-  const pool = getPool();
+  const pool = await getPool();
   const result = await pool
     .request()
     .input('SectorName', sql.NVarChar(200), sectorName)
@@ -94,7 +94,7 @@ const findOrCreateByName = async (sectorName, developerId) => {
 };
 
 const update = async (sectorId, { sectorName }) => {
-  const pool = getPool();
+  const pool = await getPool();
   const result = await pool
     .request()
     .input('SectorId', sql.Int, sectorId)
@@ -110,7 +110,7 @@ const update = async (sectorId, { sectorName }) => {
 };
 
 const softDelete = async (sectorId) => {
-  const pool = getPool();
+  const pool = await getPool();
   const result = await pool
     .request()
     .input('SectorId', sql.Int, sectorId)

@@ -1,0 +1,87 @@
+.group-multiselect {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: relative;
+}
+
+.group-multiselect__label {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.group-multiselect__box {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid #d0d5dd;
+  border-radius: 8px;
+  min-height: 42px;
+  cursor: text;
+}
+
+.group-multiselect__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #eef2ff;
+  color: #3730a3;
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-size: 13px;
+}
+
+.group-multiselect__chip-remove {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  color: #3730a3;
+}
+
+.group-multiselect__input {
+  border: none;
+  outline: none;
+  flex: 1;
+  min-width: 120px;
+  font-size: 14px;
+}
+
+.group-multiselect__suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  background: #fff;
+  border: 1px solid #d0d5dd;
+  border-radius: 8px;
+  margin-top: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+  list-style: none;
+  padding: 4px;
+}
+
+.group-multiselect__suggestions button {
+  width: 100%;
+  text-align: left;
+  padding: 6px 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.group-multiselect__suggestions button:hover {
+  background: #f3f4f6;
+}
+
+.group-multiselect__hint {
+  font-size: 12px;
+  color: #6b7280;
+  padding: 0 4px;
+}

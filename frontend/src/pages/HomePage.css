@@ -15,7 +15,30 @@
 .home-page__search-row {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: var(--space-2);
   padding-top: var(--space-3);
   min-width: 0;
+}
+
+/* Mobile — search bar takes remaining space, filter button stays compact beside it */
+.home-page__search-row .search-bar {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+
+.home-page__search-row .dev-chips {
+  flex: 0 0 auto;
+}
+
+/* Desktop/tablet (640px+) — filter chips drop to their OWN full-width row
+   below the search bar, exactly like before. The flex-basis:100% trick
+   forces a wrap onto a new line within the same flex row, without
+   touching the JSX/DOM order. */
+@media (min-width: 640px) {
+  .home-page__search-row .dev-chips {
+    flex-basis: 100%;
+    order: 3;
+    margin-top: var(--space-2);
+  }
 }

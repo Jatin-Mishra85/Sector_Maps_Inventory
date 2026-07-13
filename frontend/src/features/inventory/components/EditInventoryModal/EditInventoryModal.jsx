@@ -1,13 +1,3 @@
-/**
- * ============================================================
- * TEMPORARY COMPONENT — DEVELOPMENT PHASE ONLY
- * ------------------------------------------------------------
- * Purpose: lets the team attach/replace images and fix basic
- * fields on inventories that were created without a photo.
- * Delete this entire folder + its usage in InventoryCard/
- * InventoryGrid once the real Admin Panel ships.
- * ============================================================
- */
 import { useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import './EditInventoryModal.css';
@@ -16,18 +6,22 @@ import Input from '../../../../components/common/Input/Input';
 import TextArea from '../../../../components/common/TextArea/TextArea';
 import FileUpload from '../../../../components/common/FileUpload/FileUpload';
 import Button from '../../../../components/common/Button/Button';
+import GroupMultiSelect from '../../../../components/common/GroupMultiSelect/GroupMultiSelect';
 
 import { inventoryService } from '../../services/inventoryService';
 import { parseApiError } from '../../../../services/errorHandler';
 import { useToast } from '../../../../context/ToastContext';
 
-export default function EditInventoryModal({ inventory, isOpen, onClose, onUpdated }) {
+export default function EditInventoryModal({ inventory, isOpen, onClose, onUpdated, availableGroups = [] }) {
   const { showToast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { control, register, handleSubmit, reset } = useForm({
     defaultValues: {
       name: '',
+      block: '',
+      actualDeveloperName: '',
+      groups: [], // "Grouping" — NEW
       description: '',
       image: null,
     },
@@ -37,6 +31,9 @@ export default function EditInventoryModal({ inventory, isOpen, onClose, onUpdat
     if (inventory) {
       reset({
         name: inventory.name || '',
+        block: inventory.block || '',
+        actualDeveloperName: inventory.actualDeveloperName || '',
+        groups: Array.isArray(inventory.groups) ? inventory.groups.map((g) => g.groupName) : [],
         description: inventory.description || '',
         image: null,
       });
@@ -50,6 +47,9 @@ export default function EditInventoryModal({ inventory, isOpen, onClose, onUpdat
     try {
       const formData = new FormData();
       formData.append('name', data.name || '');
+      formData.append('block', data.block || '');
+      formData.append('actualDeveloperName', data.actualDeveloperName || '');
+      formData.append('groupNames', JSON.stringify(data.groups || [])); // Grouping
       formData.append('description', data.description || '');
       if (data.image) {
         formData.append('image', data.image);
@@ -60,6 +60,9 @@ export default function EditInventoryModal({ inventory, isOpen, onClose, onUpdat
       const updatedInventory = {
         ...inventory,
         name: response?.name ?? data.name ?? inventory.name,
+        block: response?.block ?? data.block ?? inventory.block,
+        actualDeveloperName: response?.actualDeveloperName ?? data.actualDeveloperName ?? inventory.actualDeveloperName,
+        groups: response?.groups ?? inventory.groups,
         description: response?.description ?? data.description ?? inventory.description,
         imageUrl: response?.imageUrl ?? (data.image ? URL.createObjectURL(data.image) : inventory.imageUrl),
       };
@@ -77,40 +80,35 @@ export default function EditInventoryModal({ inventory, isOpen, onClose, onUpdat
 
   return (
     <div className="edit-modal__overlay" role="presentation" onClick={onClose}>
-      <div
-        className="edit-modal"
-        role="dialog"
-        aria-modal="true"
-        aria-label={`Edit ${inventory.name}`}
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="edit-modal" role="dialog" aria-modal="true" aria-label={`Edit ${inventory.name}`} onClick={(e) => e.stopPropagation()}>
         <div className="edit-modal__header">
           <h2 className="edit-modal__title">Edit Inventory</h2>
-          <button
-            type="button"
-            className="edit-modal__close"
-            onClick={onClose}
-            aria-label="Close edit dialog"
-          >
+          <button type="button" className="edit-modal__close" onClick={onClose} aria-label="Close edit dialog">
             &times;
           </button>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
-          <Input label="Inventory Name" {...register('name')} />
+          <Input label="Project" {...register('name')} />
+
+          <Input label="Block" {...register('block')} />
+
+          <Input label="Developer" {...register('actualDeveloperName')} />
+
+          <Controller
+            name="groups"
+            control={control}
+            render={({ field }) => (
+              <GroupMultiSelect label="Grouping" value={field.value} onChange={field.onChange} availableGroups={availableGroups} />
+            )}
+          />
 
           <TextArea label="Description" {...register('description')} />
 
           <Controller
             name="image"
             control={control}
-            render={({ field }) => (
-              <FileUpload
-                label="Replace / Add Image"
-                value={field.value}
-                onChange={field.onChange}
-              />
-            )}
+            render={({ field }) => <FileUpload label="Replace / Add Image" value={field.value} onChange={field.onChange} />}
           />
 
           <div className="edit-modal__actions">

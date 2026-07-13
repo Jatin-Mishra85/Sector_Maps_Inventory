@@ -1,10 +1,10 @@
 .inv-card {
   display: flex;
-  gap: var(--space-4);
+  gap: var(--space-3);
   background: var(--color-surface);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-soft);
-  padding: var(--space-3);
+  padding: var(--space-2);
   min-width: 0;
   transition: box-shadow 0.25s ease, transform 0.25s ease;
 }
@@ -14,22 +14,28 @@
   transform: translateY(-1px);
 }
 
+/* ===== Image — wrapped in a visible "frame": a slightly darker padded
+   box behind the photo, so the boundary is unmistakable no matter what
+   colors the photo itself contains. ===== */
 .inv-card__thumb {
   flex: 0 0 auto;
   width: 96px;
   height: 96px;
   border-radius: var(--radius-md);
   overflow: hidden;
-  border: none;
+  border: 2px solid rgb(144, 144, 144);
+  box-shadow: 0 3px 10px rgba(86, 112, 144, 0.28);
   padding: 0;
   cursor: zoom-in;
-  background: var(--color-surface-hover);
+  background: var(--color-primary);
 }
 
 .inv-card__thumb img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
+  border-radius: 6px;
   transition: transform 0.3s ease;
 }
 
@@ -40,7 +46,21 @@
 .inv-card__thumb-fallback {
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, var(--color-surface-hover), var(--color-border));
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #cfc3a3 0%, #b8a97e 100%);
+  position: relative;
+}
+
+.inv-card__thumb-fallback::after {
+  content: '';
+  width: 28px;
+  height: 28px;
+  background: rgba(18, 38, 63, 0.35);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M4 6h16v12H4z' stroke='black' stroke-width='1.8'/%3E%3Cpath d='M4 16l5-5 4 4 3-3 4 4' stroke='black' stroke-width='1.8'/%3E%3Ccircle cx='9' cy='9' r='1.5' fill='black'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M4 6h16v12H4z' stroke='black' stroke-width='1.8'/%3E%3Cpath d='M4 16l5-5 4 4 3-3 4 4' stroke='black' stroke-width='1.8'/%3E%3Ccircle cx='9' cy='9' r='1.5' fill='black'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 
 .inv-card__content {
@@ -48,7 +68,7 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: 2px;
 }
 
 .inv-card__top {
@@ -56,65 +76,81 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--space-2);
+  min-width: 0;
 }
 
-.inv-card__title {
+.inv-card__sector {
   font-family: var(--font-heading);
   font-size: var(--font-size-base);
+  font-weight: 800;
   color: var(--color-text);
   margin: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  min-width: 0;
+  flex: 1;
 }
 
 .inv-card__top-actions {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  flex: 0 0 auto;
+  gap: var(--space-1);
+  flex-shrink: 0;
 }
 
-/* TEMPORARY — remove this rule block when Admin Panel replaces the Edit button */
-.inv-card__edit-btn {
-  border: none;
-  background: var(--color-primary-tint);
-  color: var(--color-primary);
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
+.inv-card__icon-btn-sm {
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.inv-card__edit-btn:hover {
-  background: var(--color-primary);
-  color: var(--color-on-primary);
-}
-
-.inv-card__bookmark {
-  flex: 0 0 auto;
-  border: none;
-  background: transparent;
+  width: 32px;
+  height: 32px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: var(--color-surface-hover);
   color: var(--color-text-muted);
   cursor: pointer;
-  padding: 2px;
-  transition: color 0.2s ease;
+  transition: background-color 0.18s ease, color 0.18s ease,
+    box-shadow 0.18s ease, transform 0.12s ease;
 }
 
-.inv-card__bookmark[aria-pressed="true"] {
+.inv-card__icon-btn-sm svg {
+  width: 15px;
+  height: 15px;
+  stroke-width: 2;
+}
+
+.inv-card__icon-btn-sm:hover {
+  background: var(--color-primary-tint);
   color: var(--color-primary);
+  box-shadow: 0 2px 8px rgba(16, 24, 40, 0.08);
+  transform: translateY(-1px);
 }
 
-.inv-card__badge-row {
-  display: flex;
+.inv-card__icon-btn-sm:active {
+  transform: translateY(0) scale(0.96);
+  box-shadow: none;
 }
 
-.inv-card__meta {
-  font-size: var(--font-size-sm);
+.inv-card__icon-btn-sm--danger:hover {
+  background: rgba(179, 57, 44, 0.1);
+  color: var(--color-danger);
+}
+
+.inv-card__icon-btn-sm--danger:active {
+  background: rgba(179, 57, 44, 0.16);
+}
+
+.inv-card__icon-btn-sm:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.inv-card__title {
+  font-size: var(--font-size-xs);
+  font-weight: 500;
   color: var(--color-text-muted);
   margin: 0;
   overflow: hidden;
@@ -125,9 +161,9 @@
 .inv-card__description {
   font-size: var(--font-size-xs);
   color: var(--color-text-muted);
-  margin: 0;
+  margin: 2px 0 0;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -136,38 +172,109 @@
   display: flex;
   gap: var(--space-2);
   margin-top: auto;
-  padding-top: var(--space-2);
+  padding-top: 12px;
+  overflow-x: auto;
 }
 
-.inv-card__icon-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
-  color: var(--color-text-muted);
+.inv-card__action-btn {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+  color: var(--color-text-muted);
   cursor: pointer;
-  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+  transition: transform 0.18s ease, box-shadow 0.18s ease,
+    color 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
 }
 
-.inv-card__icon-btn:hover {
-  border-color: var(--color-primary);
+.inv-card__action-btn svg {
+  width: 18px;
+  height: 18px;
+  stroke-width: 1.8;
+}
+
+.inv-card__action-btn:hover {
   color: var(--color-primary);
+  border-color: var(--color-primary-tint);
   background: var(--color-primary-tint);
+  box-shadow: 0 4px 12px rgba(16, 24, 40, 0.08);
+  transform: translateY(-1px);
 }
 
-.inv-card__icon-btn:disabled {
-  opacity: 0.4;
+.inv-card__action-btn:active {
+  transform: translateY(0) scale(0.96);
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.06);
+}
+
+.inv-card__action-btn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.inv-card__action-btn:disabled {
+  opacity: 0.45;
   cursor: not-allowed;
-}
-
-.inv-card__icon-btn:disabled:hover {
-  border-color: var(--color-border);
   color: var(--color-text-muted);
   background: var(--color-surface);
+  border-color: var(--color-border);
+  box-shadow: none;
+  transform: none;
+}
+
+.inv-card__action-btn:disabled:hover {
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+  border-color: var(--color-border);
+  box-shadow: none;
+  transform: none;
+}
+
+.inv-card__share-wrap {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.inv-card__share-menu {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  min-width: 160px;
+  list-style: none;
+  margin: 0;
+  padding: var(--space-1);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-hover);
+  z-index: 10;
+}
+
+.inv-card__share-menu button {
+  width: 100%;
+  text-align: left;
+  padding: var(--space-2) var(--space-3);
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.inv-card__share-menu button:hover {
+  background: var(--color-surface-hover);
+}
+
+.inv-card__share-menu button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 @media (min-width: 480px) {
@@ -175,4 +282,35 @@
     width: 112px;
     height: 112px;
   }
+
+  .inv-card__action-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+  }
+
+  .inv-card__action-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.inv-card--selectable {
+  position: relative;
+  cursor: pointer;
+}
+
+.inv-card--selected {
+  outline: 2px solid #4f46e5;
+  outline-offset: 2px;
+}
+
+.inv-card__select-checkbox {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 5;
+  background: #fff;
+  border-radius: 4px;
+  padding: 2px;
 }

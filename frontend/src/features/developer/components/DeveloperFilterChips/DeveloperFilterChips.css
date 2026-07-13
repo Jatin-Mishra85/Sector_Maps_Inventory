@@ -1,39 +1,40 @@
 .dev-chips {
-  margin-bottom: var(--space-5);
-  min-width: 0;
-  overflow: hidden;
+  position: relative;
+  width: 100%;
+  margin-bottom: var(--space-2);
 }
 
+/* ===== Mobile — same scrollable chips, just smaller/tighter ===== */
 .dev-chips__scroll {
   display: flex;
-  gap: var(--space-2);
+  gap: var(--space-1);
   overflow-x: auto;
   padding-bottom: var(--space-2);
   scrollbar-width: thin;
   -webkit-overflow-scrolling: touch;
-  min-width: 0;
 }
 
 .dev-chips__scroll::-webkit-scrollbar {
   height: 4px;
 }
+
 .dev-chips__scroll::-webkit-scrollbar-thumb {
   background: var(--color-border);
-  border-radius: var(--radius-sm);
+  border-radius: 4px;
 }
 
 .dev-chip {
-  flex: 0 0 auto;
-  padding: var(--space-2) var(--space-4);
-  border-radius: 999px;
+  flex-shrink: 0;
+  padding: 6px 12px;
   border: 1px solid var(--color-border);
+  border-radius: 999px;
   background: var(--color-surface);
   color: var(--color-text);
-  font-size: var(--font-size-sm);
+  font-size: 12.5px;
   font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
-  transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
 .dev-chip:hover {
@@ -44,5 +45,16 @@
   background: var(--color-primary);
   border-color: var(--color-primary);
   color: var(--color-on-primary);
-  box-shadow: var(--shadow-soft);
+}
+
+/* ===== Tablet/Desktop — slightly bigger chips, more breathing room ===== */
+@media (min-width: 640px) {
+  .dev-chips__scroll {
+    gap: var(--space-2);
+  }
+
+  .dev-chip {
+    padding: var(--space-2) var(--space-4);
+    font-size: var(--font-size-sm);
+  }
 }

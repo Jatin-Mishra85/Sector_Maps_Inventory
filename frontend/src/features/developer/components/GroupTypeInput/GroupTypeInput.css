@@ -1,0 +1,67 @@
+.group-type-input {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: relative;
+  /* flex: 1 1 260px; */
+  min-width: 0;
+}
+
+.group-type-input__label {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.group-type-input__field {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid #d0d5dd;
+  border-radius: 10px;
+  font-size: 16px;
+}
+
+.group-type-input__suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  background: #fff;
+  border: 1px solid #d0d5dd;
+  border-radius: 8px;
+  margin-top: 4px;
+  max-height: 220px;
+  overflow-y: auto;
+  list-style: none;
+  padding: 4px;
+}
+
+.group-type-input__suggestions button {
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.group-type-input__suggestions button:hover {
+  background: #f3f4f6;
+}
+
+.group-type-input__hint {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* On mobile, the parent switches to column layout — override the
+   flex-basis here so 260px doesn't get applied as HEIGHT (which is what
+   was causing the huge vertical gap). */
+@media (max-width: 640px) {
+  .group-type-input {
+    flex: none;
+    width: 100%;
+  }
+}

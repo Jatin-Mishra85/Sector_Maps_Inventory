@@ -1,13 +1,13 @@
 const sectorRepository = require('../repositories/sector.repository');
-const developerRepository = require('../repositories/developer.repository');
+const groupRepository = require('../repositories/group.repository'); // RENAMED from developer.repository
 const SectorModel = require('../models/sector.model');
 const ApiError = require('../utils/apiError.util');
 const HTTP_STATUS = require('../constants/httpStatusCodes.constant');
 
 const createSector = async (payload) => {
-  const developer = await developerRepository.findById(payload.developerId);
-  if (!developer) {
-    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Invalid DeveloperId. Developer does not exist');
+  const group = await groupRepository.findById(payload.developerId);
+  if (!group) {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Invalid DeveloperId. Group does not exist');
   }
 
   const row = await sectorRepository.create(payload);

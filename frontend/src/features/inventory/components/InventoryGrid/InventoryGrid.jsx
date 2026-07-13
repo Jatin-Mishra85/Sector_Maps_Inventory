@@ -13,6 +13,7 @@ import RetryState from '../../../../components/common/RetryState/RetryState';
 // import { useBookmarks } from '../../hooks/useBookmarks';
 import { inventoryService } from '../../services/inventoryService'; // TEMPORARY — for hard delete
 import { useToast } from '../../../../context/ToastContext'; // TEMPORARY — for delete toasts
+import { useGroups } from '../../../developer/hooks/useGroups'; // NEW — for Grouping multi-select dropdown
 
 export default function InventoryGrid({
   inventories,
@@ -25,6 +26,7 @@ export default function InventoryGrid({
 }) {
   // const { isBookmarked, toggleBookmark } = useBookmarks(); // TEMPORARILY DISABLED
   const { showToast } = useToast(); // TEMPORARY
+  const { groups } = useGroups(); // NEW — passed to EditInventoryModal's Grouping dropdown
   const [previewInventory, setPreviewInventory] = useState(null);
   const [editingInventory, setEditingInventory] = useState(null); // TEMPORARY
   const [localOverrides, setLocalOverrides] = useState({}); // TEMPORARY — id -> patched fields
@@ -145,6 +147,7 @@ export default function InventoryGrid({
         isOpen={!!editingInventory}
         onClose={() => setEditingInventory(null)}
         onUpdated={handleUpdated}
+        availableGroups={groups}
       />
     </>
   );

@@ -1,8 +1,9 @@
 export const ALL_TYPES_ID = 'ALL_TYPES';
 export const API_ENDPOINTS = {
-  DEVELOPER: {
-    BASE: '/developers',
-    BY_ID: (id) => `/developers/${id}`,
+  GROUP: {
+    BASE: '/groups',
+    ADD_INVENTORIES: '/groups/add-inventories',
+    REMOVE_INVENTORIES: '/groups/remove-inventories',
   },
   SECTOR: {
     BASE: '/sectors',

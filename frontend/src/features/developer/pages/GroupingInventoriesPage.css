@@ -1,0 +1,142 @@
+.grouping-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-bottom: 90px;
+}
+
+.grouping-page__title {
+  text-align: center;
+  margin: 0;
+}
+
+.grouping-page__search-row {
+  display: flex;
+  justify-content: center;
+}
+
+/* Desktop/laptop (default, min-width 641px+): Group input + Select-All
+   side by side in ONE row. */
+.grouping-page__controls-row {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 16px;
+}
+
+/* Mobile (640px and below): Group input takes its own full-width row,
+   Select-All + count sit on their own row underneath it. */
+@media (max-width: 640px) {
+  .grouping-page__controls-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+}
+
+.grouping-page__select-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+  white-space: nowrap;
+  padding-bottom: 2px;
+}
+
+@media (max-width: 640px) {
+  .grouping-page__select-row {
+    justify-content: flex-end;
+    padding-bottom: 0;
+  }
+}
+
+.grouping-page__select-all-btn {
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid #d0d5dd;
+  background: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.grouping-page__select-all-btn:hover {
+  background: #f3f4f6;
+}
+
+.grouping-page__selected-count {
+  font-size: 13px;
+  color: #6b7280;
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .grouping-page__select-all-btn {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+  .grouping-page__selected-count {
+    font-size: 12px;
+  }
+}
+
+.grouping-page__error {
+  text-align: center;
+  color: #dc2626;
+  font-size: 14px;
+}
+
+.grouping-page__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.grouping-page__load-more {
+  display: flex;
+  justify-content: center;
+}
+
+.grouping-page__footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  display: flex;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #fff;
+  border-top: 1px solid #e5e7eb;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.grouping-page__save-btn,
+.grouping-page__remove-btn {
+  flex: 1;
+  padding: 12px;
+  border-radius: 8px;
+  border: none;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  background: #e5e7eb;
+  color: #9ca3af;
+  transition: background 0.15s, color 0.15s;
+}
+
+.grouping-page__save-btn--active {
+  background: #16a34a;
+  color: #fff;
+}
+
+.grouping-page__remove-btn--active {
+  background: #dc2626;
+  color: #fff;
+}
+
+.grouping-page__save-btn:disabled,
+.grouping-page__remove-btn:disabled {
+  cursor: not-allowed;
+}

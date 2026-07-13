@@ -1,19 +1,22 @@
 :root {
-  /* ===== Colors — light ocean blue, eye-friendly, calm ===== */
- --color-bg: #f2f9fc;
---color-bg-gradient: linear-gradient(180deg, #f2f9fc 0%, #eaf5fa 45%, #e4f1f8 100%);
-  --color-surface: #ffffff;
-  --color-surface-hover: #f2f8fc;
-  --color-text: #1c2b3a;
-  --color-text-muted: #5c7185;
-  --color-border: #d9e7f0;
+  /* ===== Colors — premium warm ivory + deep navy + bronze accent ===== */
+  --color-bg: #f6f3ee;
+  --color-bg-gradient: linear-gradient(180deg, #f8f5f0 0%, #f1ece3 45%, #ece4d5 100%);
+  --color-surface: #fffdfa;
+  --color-surface-hover: #f5efe4;
+  --color-text: #1f2a37;
+  --color-text-muted: #6b7280;
+  --color-border: #e6ddcc;
 
-  --color-primary: #2f6690;        /* ocean blue — calm, trustworthy */
-  --color-primary-hover: #265575;
-  --color-primary-tint: rgba(47, 102, 144, 0.10);
-  --color-on-primary: #ffffff;
+  --color-primary: #12263f;         /* deep navy — premium, trustworthy */
+  --color-primary-hover: #0b1a2c;
+  --color-primary-tint: rgba(18, 38, 63, 0.08);
+  --color-on-primary: #f3ede0;
 
-  --color-accent: #5fb0c9;         /* soft aqua accent, used sparingly */
+  --color-accent: #b8925a;          /* warm bronze/gold — real estate luxury feel */
+  --color-accent-light: #e3c48c;
+  --color-accent-hover: #9c7845;
+
   --color-success: #2f7d4f;
   --color-warning: #b7791f;
   --color-danger: #b3392c;
@@ -38,7 +41,6 @@
   --space-6: clamp(20px, 4vw, 32px);
   --space-8: clamp(28px, 5vw, 48px);
 
-  /* Safe horizontal page padding — never lets content touch the edge, even on Fold cover screen */
   --page-padding-inline: clamp(12px, 4vw, 32px);
 
   /* ===== Radius & shadow ===== */
@@ -46,8 +48,8 @@
   --radius-md: 10px;
   --radius-lg: 16px;
 
-  --shadow-soft: 0 2px 10px rgba(47, 102, 144, 0.08);
-  --shadow-hover: 0 6px 20px rgba(47, 102, 144, 0.14);
+  --shadow-soft: 0 2px 10px rgba(18, 38, 63, 0.10);
+  --shadow-hover: 0 6px 20px rgba(18, 38, 63, 0.16);
 
   /* ===== Z-index scale ===== */
   --z-header: 100;

@@ -44,7 +44,21 @@ function SearchBar({ value, onChange, placeholder = 'Search by project, sector, 
 
   return (
     <div className="search-bar" ref={wrapRef}>
-      <div className="search-bar__field-wrap">
+      {/* Unified pill — search icon + input + mic all live inside ONE bordered shell */}
+      <div className={classNames('search-bar__pill', isFocused && 'search-bar__pill--focused')}>
+        <svg
+          className="search-bar__search-icon"
+          viewBox="0 0 24 24"
+          width="18"
+          height="18"
+          fill="none"
+          aria-hidden="true"
+          focusable="false"
+        >
+          <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.8" />
+          <path d="M20 20l-3.2-3.2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+        </svg>
+
         <Input
           name="search"
           value={value}
@@ -53,7 +67,7 @@ function SearchBar({ value, onChange, placeholder = 'Search by project, sector, 
           onBlur={() => setTimeout(() => setIsFocused(false), 150)}
           placeholder={isListening ? 'Listening...' : placeholder}
           aria-label="Search inventories"
-          className="search-bar__input"
+          className="search-bar__input-wrap"
           autoComplete="off"
         />
 
@@ -68,8 +82,8 @@ function SearchBar({ value, onChange, placeholder = 'Search by project, sector, 
           >
             <svg
               viewBox="0 0 24 24"
-              width="20"
-              height="20"
+              width="19"
+              height="19"
               fill="none"
               aria-hidden="true"
               focusable="false"

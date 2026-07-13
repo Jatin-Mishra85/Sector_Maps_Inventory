@@ -1,77 +1,110 @@
 import { useEffect, useRef, useState } from 'react';
-import { useForm, Controller, useFieldArray } from 'react-hook-form';
+import { useForm, Controller, useFieldArray, useWatch } from 'react-hook-form';
 import './AdminInventoryForm.css';
 
 import Input from '../../../../components/common/Input/Input';
 import TextArea from '../../../../components/common/TextArea/TextArea';
 import FileUpload from '../../../../components/common/FileUpload/FileUpload';
 import Button from '../../../../components/common/Button/Button';
+import GroupMultiSelect from '../../../../components/common/GroupMultiSelect/GroupMultiSelect';
 
 import { adminService } from '../../services/adminService';
 import { parseApiError } from '../../../../services/errorHandler';
 import { useToast } from '../../../../context/ToastContext';
 
 const defaultValues = {
-  developerName: '',
+  groups: [], // "Grouping" — array of names (many-to-many)
+  actualDeveloperName: '', // "Developer" — plain text, unrelated to Grouping
   sectorName: '',
-  type: '',
-  // BULK ADD — one Developer/Sector/Type, multiple Inventory Names.
-  // Starts with a single empty name row, same as the old single-name form.
+  // BULK ADD — Project(s). Optional — Blocks can be saved without any Project.
   names: [{ value: '' }],
+  // BULK ADD — Block(s). Each block row has its OWN "which Project does
+  // this belong to" selector (projectName) — can be left blank.
+  blocks: [{ value: '', projectName: '' }],
   description: '',
   polygon: '',
   image: null,
 };
 
-export default function AdminInventoryForm({ onSuccess }) {
+export default function AdminInventoryForm({ onSuccess, availableGroups = [] }) {
   const { showToast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const namesContainerRef = useRef(null); // KEYBOARD SHORTCUT — used to focus the new row
+  const namesContainerRef = useRef(null);
+  const blocksContainerRef = useRef(null);
 
   const { control, register, handleSubmit, reset } = useForm({ defaultValues, mode: 'onBlur' });
-  // No validation rules — every field remains optional, as requested earlier.
 
-  // BULK ADD — "+ Add Another" appends a new Inventory Name row.
-  // Developer/Sector/Type/Description/Image stay shared across all of them.
+  // --- Projects field array ---
   const { fields: nameFields, append: appendName, remove: removeName } = useFieldArray({
     control,
     name: 'names',
   });
 
-  // KEYBOARD SHORTCUT — after a new row is added (via button OR Enter key),
-  // auto-focus it so typing can continue without touching the mouse.
-  // Only runs when the row COUNT changes, so it never fires on normal typing.
-  const prevCountRef = useRef(nameFields.length);
+  // Live list of currently-typed Project names, used to populate every
+  // Block row's "which Project" dropdown. Updates instantly as the user
+  // types/adds/removes Project rows.
+  const namesWatch = useWatch({ control, name: 'names' });
+  const projectOptions = (namesWatch || [])
+    .map((n) => (n?.value || '').trim())
+    .filter(Boolean);
+
+  // --- Blocks field array ---
+  const { fields: blockFields, append: appendBlock, remove: removeBlock } = useFieldArray({
+    control,
+    name: 'blocks',
+  });
+
+  const prevNameCountRef = useRef(nameFields.length);
   useEffect(() => {
-    if (nameFields.length > prevCountRef.current) {
+    if (nameFields.length > prevNameCountRef.current) {
       const inputs = namesContainerRef.current?.querySelectorAll('input');
       const lastInput = inputs?.[inputs.length - 1];
       lastInput?.focus();
     }
-    prevCountRef.current = nameFields.length;
+    prevNameCountRef.current = nameFields.length;
   }, [nameFields.length]);
 
-  // KEYBOARD SHORTCUT — pressing plain Enter while typing in the LAST
-  // Inventory Name box adds a new row, instead of submitting the form.
-  // Scoped to just this one input's keydown event — it never listens at
-  // the page/window/OS level, so it cannot clash with any laptop or
-  // browser shortcut. Shift/Ctrl/Alt/Meta+Enter are ignored on purpose,
-  // so nothing unexpected happens if those combos are pressed here.
+  const prevBlockCountRef = useRef(blockFields.length);
+  useEffect(() => {
+    if (blockFields.length > prevBlockCountRef.current) {
+      const inputs = blocksContainerRef.current?.querySelectorAll('input');
+      const lastInput = inputs?.[inputs.length - 1];
+      lastInput?.focus();
+    }
+    prevBlockCountRef.current = blockFields.length;
+  }, [blockFields.length]);
+
   const handleNameKeyDown = (e, index) => {
     if (e.key !== 'Enter') return;
     if (index !== nameFields.length - 1) return;
     if (e.shiftKey || e.ctrlKey || e.altKey || e.metaKey) return;
-
-    e.preventDefault(); // stop Enter from submitting the whole form
+    e.preventDefault();
     appendName({ value: '' });
   };
 
-  const createOne = async (data, nameValue) => {
+  // Adding a new Block row: if exactly ONE Project has been typed so far,
+  // auto-select it (no ambiguity). If 0 or 2+ Projects exist, leave blank
+  // — blank is fine now, that Block will just save with no Project.
+  const handleAddBlock = () => {
+    const autoProject = projectOptions.length === 1 ? projectOptions[0] : '';
+    appendBlock({ value: '', projectName: autoProject });
+  };
+
+  const handleBlockKeyDown = (e, index) => {
+    if (e.key !== 'Enter') return;
+    if (index !== blockFields.length - 1) return;
+    if (e.shiftKey || e.ctrlKey || e.altKey || e.metaKey) return;
+    e.preventDefault();
+    handleAddBlock();
+  };
+
+  const createOne = async (data, entry) => {
     const formData = new FormData();
-    formData.append('developerName', data.developerName || '');
+    formData.append('groupNames', JSON.stringify(data.groups || [])); // Grouping
+    formData.append('actualDeveloperName', data.actualDeveloperName || '');
     formData.append('sectorName', data.sectorName || '');
-    formData.append('type', data.type || '');
-    formData.append('name', nameValue || '');
+    formData.append('block', entry.block || '');
+    formData.append('name', entry.projectName || ''); // Project — CAN be blank now
     formData.append('description', data.description || '');
     formData.append('polygon', data.polygon || '');
     if (data.image) {
@@ -82,9 +115,10 @@ export default function AdminInventoryForm({ onSuccess }) {
 
     return {
       id: response?.id ?? response?.data?.id ?? crypto.randomUUID(),
-      name: response?.name ?? nameValue ?? 'Untitled Inventory',
-      type: response?.type ?? data.type ?? '',
-      developerName: response?.developerName ?? data.developerName ?? '-',
+      name: response?.name ?? entry.projectName ?? '',
+      block: response?.block ?? entry.block ?? '',
+      groups: response?.groups ?? data.groups ?? [],
+      actualDeveloperName: response?.actualDeveloperName ?? data.actualDeveloperName ?? '',
       sectorName: response?.sectorName ?? data.sectorName ?? '-',
       imageUrl: response?.imageUrl ?? (data.image ? URL.createObjectURL(data.image) : null),
       latitude: response?.latitude ?? null,
@@ -92,40 +126,79 @@ export default function AdminInventoryForm({ onSuccess }) {
     };
   };
 
+  /**
+   * Builds the final list of entries to submit, from the Projects list +
+   * Blocks list:
+   *
+   *   1. EVERY Block row that has a block name typed -> its OWN entry.
+   *      - If a Project was selected for it -> { projectName, block }
+   *      - If NOT -> { projectName: '', block }  (Project stays blank,
+   *        but the Block still gets saved as its own entry — this is
+   *        the fix: Blocks are no longer skipped just because no
+   *        Project was picked for them.)
+   *   2. Every Project name NOT claimed by any Block row -> its own
+   *      entry { projectName, block: '' } (old Projects-only behaviour,
+   *      for people who don't use Blocks at all).
+   *   3. If absolutely nothing was typed anywhere -> one blank fallback
+   *      entry (so the form never crashes on empty submit).
+   */
+  const buildEntries = (data) => {
+    const enteredProjectNames = (data.names || [])
+      .map((n) => (n?.value || '').trim())
+      .filter(Boolean);
+
+    const enteredBlocks = (data.blocks || [])
+      .map((b) => ({
+        block: (b?.value || '').trim(),
+        projectName: (b?.projectName || '').trim(),
+      }))
+      .filter((b) => b.block); // block row must at least have a block name typed
+
+    const entries = [];
+    const claimedProjectNames = new Set();
+
+    enteredBlocks.forEach((b) => {
+      entries.push({ projectName: b.projectName, block: b.block });
+      if (b.projectName) claimedProjectNames.add(b.projectName);
+    });
+
+    enteredProjectNames.forEach((name) => {
+      if (!claimedProjectNames.has(name)) {
+        entries.push({ projectName: name, block: '' });
+      }
+    });
+
+    if (entries.length === 0) {
+      entries.push({ projectName: '', block: '' });
+    }
+
+    return entries;
+  };
+
   const onSubmit = async (data) => {
     setIsSubmitting(true);
 
-    // BULK ADD — collect every non-empty Inventory Name typed in.
-    // If none were typed, fall back to one submission with an empty name
-    // (same behaviour as the old single-name form).
-    const enteredNames = (data.names || [])
-      .map((n) => (n?.value || '').trim())
-      .filter((n) => n.length > 0);
-    const namesToSubmit = enteredNames.length > 0 ? enteredNames : [''];
+    const entries = buildEntries(data);
 
-    // IMPORTANT: submitted ONE AT A TIME, not in parallel. The very first
-    // request auto-creates the Developer/Sector if they don't exist yet
-    // (findOrCreateByName on the backend). Firing all requests together
-    // could create duplicate Developer/Sector rows before the first one
-    // finishes saving — sequential avoids that.
     let successCount = 0;
     let failCount = 0;
 
-    for (const nameValue of namesToSubmit) {
+    for (const entry of entries) {
       try {
-        const createdInventory = await createOne(data, nameValue);
+        const createdInventory = await createOne(data, entry);
         successCount += 1;
         onSuccess?.(createdInventory);
       } catch (err) {
         failCount += 1;
         const { message } = parseApiError(err);
-        showToast(`"${nameValue || 'Untitled'}" save nahi hui: ${message}`, 'error');
+        const label = [entry.projectName, entry.block].filter(Boolean).join(' / ') || 'Untitled';
+        showToast(`"${label}" save nahi hui: ${message}`, 'error');
       }
     }
 
     if (successCount > 0) {
       showToast(
-        namesToSubmit.length > 1
+        entries.length > 1
           ? `${successCount} inventories create ho gayi${failCount ? `, ${failCount} fail hui` : ''}.`
           : 'Inventory created successfully.',
         'success'
@@ -143,64 +216,83 @@ export default function AdminInventoryForm({ onSuccess }) {
   return (
     <form className="admin-form" onSubmit={handleSubmit(onSubmit)} noValidate>
       <div className="admin-form__grid">
-        <Input
-          label="Developer"
-          placeholder="e.g. BPTP"
-          {...register('developerName')}
+        <Controller
+          name="groups"
+          control={control}
+          render={({ field }) => (
+            <GroupMultiSelect
+              label="Grouping"
+              value={field.value}
+              onChange={field.onChange}
+              availableGroups={availableGroups}
+            />
+          )}
         />
 
-        <Input
-          label="Sector"
-          placeholder="e.g. Sector 37D"
-          {...register('sectorName')}
-        />
+        <Input label="Developer" placeholder="e.g. Actual developer name" {...register('actualDeveloperName')} />
 
-        <Input
-          label="Inventory Type"
-          placeholder="e.g. Plot, Villa, Apartment — kuch bhi likh sakte ho"
-          {...register('type')}
-        />
+        <Input label="Sector" placeholder="e.g. Sector 37D" {...register('sectorName')} />
       </div>
 
-      {/* BULK ADD — one row per Inventory Name. "+ Add Another" (or pressing
-          Enter in the last box) adds a new row, so multiple blocks/units
-          under the same Sector + Type can be added in one go. */}
+      {/* BULK ADD — Project(s), optional */}
       <div className="admin-form__names" ref={namesContainerRef}>
-        <label className="admin-form__names-label">Inventory Name(s)</label>
+        <label className="admin-form__names-label">Project(s) (optional)</label>
         {nameFields.map((field, index) => (
           <div className="admin-form__name-row" key={field.id}>
             <Input
-              placeholder="e.g. Block A — Enter dabao naya row ke liye"
+              placeholder="e.g. Project Name — Enter dabao naya row ke liye"
               {...register(`names.${index}.value`)}
               onKeyDown={(e) => handleNameKeyDown(e, index)}
             />
             {nameFields.length > 1 && (
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => removeName(index)}
-                disabled={isSubmitting}
-              >
+              <Button type="button" variant="secondary" onClick={() => removeName(index)} disabled={isSubmitting}>
                 Remove
               </Button>
             )}
           </div>
         ))}
-        <Button
-          type="button"
-          variant="secondary"
-          onClick={() => appendName({ value: '' })}
-          disabled={isSubmitting}
-        >
+        <Button type="button" variant="secondary" onClick={() => appendName({ value: '' })} disabled={isSubmitting}>
           + Add Another
         </Button>
       </div>
 
-      <TextArea
-        label="Description (optional)"
-        placeholder="Brief details about this inventory..."
-        {...register('description')}
-      />
+      {/* BULK ADD — Block(s), each optionally tagged with a Project */}
+      <div className="admin-form__names" ref={blocksContainerRef}>
+        <label className="admin-form__names-label">Block(s)</label>
+        {blockFields.map((field, index) => (
+          <div className="admin-form__name-row" key={field.id}>
+            <Input
+              placeholder="e.g. Block Name — Enter dabao naya row ke liye"
+              {...register(`blocks.${index}.value`)}
+              onKeyDown={(e) => handleBlockKeyDown(e, index)}
+            />
+
+            <select
+              className="admin-form__block-project-select"
+              {...register(`blocks.${index}.projectName`)}
+              disabled={projectOptions.length === 0}
+            >
+              <option value="">— Project (optional) —</option>
+              {projectOptions.map((name) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
+              ))}
+            </select>
+
+            {blockFields.length > 1 && (
+              <Button type="button" variant="secondary" onClick={() => removeBlock(index)} disabled={isSubmitting}>
+                Remove
+              </Button>
+            )}
+          </div>
+        ))}
+        <Button type="button" variant="secondary" onClick={handleAddBlock} disabled={isSubmitting}>
+          + Add Another
+        </Button>
+      </div>
+
+      <TextArea label="Description (optional)" placeholder="Brief details about this inventory..." {...register('description')} />
 
       <Input
         label="Google Polygon Coordinates"
@@ -212,13 +304,7 @@ export default function AdminInventoryForm({ onSuccess }) {
       <Controller
         name="image"
         control={control}
-        render={({ field }) => (
-          <FileUpload
-            label="Inventory Image"
-            value={field.value}
-            onChange={field.onChange}
-          />
-        )}
+        render={({ field }) => <FileUpload label="Inventory Image" value={field.value} onChange={field.onChange} />}
       />
 
       <div className="admin-form__actions">

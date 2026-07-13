@@ -1,39 +1,31 @@
-// import AdminInventoryForm from '../components/AdminInventoryForm/AdminInventoryForm';
-
-// // Temporary standalone page — will be removed once the real Admin Panel exists.
-// export default function AdminInventoryFormPage() {
-//   return (
-//     <div>
-//       <h1 style={{ textAlign: 'center', marginBottom: 'var(--space-6)', fontFamily: 'var(--font-heading)' }}>
-//         Add Inventory
-//       </h1>
-//       <AdminInventoryForm />
-//     </div>
-//   );
-// }
-
-
-
-
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './AdminInventoryFormPage.css';
 import AdminInventoryForm from '../components/AdminInventoryForm/AdminInventoryForm';
+import SectorBasedInventoryForm from '../components/SectorBasedInventoryForm/SectorBasedInventoryForm';
 import InventoryCard from '../../inventory/components/InventoryCard/InventoryCard';
 import Button from '../../../components/common/Button/Button';
 import { useBookmarks } from '../../inventory/hooks/useBookmarks';
 import { useSiteGate } from '../../../hooks/useSiteGate';
+import { useGroups } from '../../developer/hooks/useGroups';
 
 // Temporary standalone page — will be removed once the real Admin Panel exists.
+
+// Add more entries here as new form "types" get built later.
+const FORM_TYPES = [
+  { id: 'normal', label: 'Normal (Project + Block linked)' },
+  { id: 'sector-based', label: 'Sector-based' },
+];
+
 export default function AdminInventoryFormPage() {
   const [createdInventory, setCreatedInventory] = useState(null);
+  const [formType, setFormType] = useState('normal');
   const { isBookmarked, toggleBookmark } = useBookmarks();
   const { isUnlocked, unlock } = useSiteGate();
+  const { groups } = useGroups();
   const navigate = useNavigate();
 
   const handleAddAnother = () => setCreatedInventory(null);
-
   const handleFinish = () => {
     unlock();
     navigate('/');
@@ -57,7 +49,6 @@ export default function AdminInventoryFormPage() {
           <p className="admin-page__result-hint">
             Here's how it will appear to visitors:
           </p>
-
           <div className="admin-page__card-wrap">
             <InventoryCard
               inventory={createdInventory}
@@ -66,7 +57,6 @@ export default function AdminInventoryFormPage() {
               onPreview={() => {}}
             />
           </div>
-
           <div className="admin-page__result-actions">
             <Button variant="primary" onClick={handleAddAnother}>
               Add Another Inventory
@@ -78,7 +68,32 @@ export default function AdminInventoryFormPage() {
         </div>
       ) : (
         <>
-          <AdminInventoryForm onSuccess={setCreatedInventory} />
+          {/* Type selector — dropdown at the top, form below switches with it */}
+          <div className="admin-page__type-select">
+            <label htmlFor="admin-page-form-type" className="admin-page__type-select-label">
+              Type
+            </label>
+            <select
+              id="admin-page-form-type"
+              className="admin-page__type-select-input"
+              value={formType}
+              onChange={(e) => setFormType(e.target.value)}
+            >
+              {FORM_TYPES.map((type) => (
+                <option key={type.id} value={type.id}>
+                  {type.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {formType === 'normal' && (
+            <AdminInventoryForm onSuccess={setCreatedInventory} availableGroups={groups} />
+          )}
+          {formType === 'sector-based' && (
+            <SectorBasedInventoryForm onSuccess={setCreatedInventory} availableGroups={groups} />
+          )}
+
           {!isUnlocked && (
             <div className="admin-page__finish-early">
               <Button variant="ghost" onClick={handleFinish}>
