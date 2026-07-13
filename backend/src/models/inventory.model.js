@@ -9,12 +9,11 @@ class InventoryModel {
     this.imageUrl = row.ImageUrl;
     this.googleMapUrl = row.GoogleMapUrl;
     this.googleMapPolygon = row.GoogleMapPolygon;
+    this.cardId = row.CardId; // number or null — internal sequencing/roll-no, not shown on the card
     this.createdAt = row.CreatedAt;
     this.updatedAt = row.UpdatedAt;
     this.isDeleted = row.IsDeleted;
 
-    // "Grouping" in the UI — many-to-many via InventoryGroups.
-    // Array of { groupId, groupName }.
     this.groups = Array.isArray(row.Groups) ? row.Groups : [];
 
     if (row.SectorName !== undefined) {

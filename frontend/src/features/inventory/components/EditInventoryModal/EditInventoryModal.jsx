@@ -16,12 +16,13 @@ export default function EditInventoryModal({ inventory, isOpen, onClose, onUpdat
   const { showToast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { control, register, handleSubmit, reset } = useForm({
+  const { control, register, handleSubmit, reset, formState: { errors } } = useForm({
     defaultValues: {
       name: '',
       block: '',
       actualDeveloperName: '',
-      groups: [], // "Grouping" — NEW
+      groups: [],
+      cardId: '', // Card ID / Roll No — internal only, not shown on the card. Decimal allowed (e.g. 5.6).
       description: '',
       image: null,
     },
@@ -34,6 +35,7 @@ export default function EditInventoryModal({ inventory, isOpen, onClose, onUpdat
         block: inventory.block || '',
         actualDeveloperName: inventory.actualDeveloperName || '',
         groups: Array.isArray(inventory.groups) ? inventory.groups.map((g) => g.groupName) : [],
+        cardId: inventory.cardId != null ? String(inventory.cardId) : '',
         description: inventory.description || '',
         image: null,
       });
@@ -50,6 +52,7 @@ export default function EditInventoryModal({ inventory, isOpen, onClose, onUpdat
       formData.append('block', data.block || '');
       formData.append('actualDeveloperName', data.actualDeveloperName || '');
       formData.append('groupNames', JSON.stringify(data.groups || [])); // Grouping
+      formData.append('cardId', data.cardId || ''); // Card ID — compulsory, decimal allowed
       formData.append('description', data.description || '');
       if (data.image) {
         formData.append('image', data.image);
@@ -63,6 +66,7 @@ export default function EditInventoryModal({ inventory, isOpen, onClose, onUpdat
         block: response?.block ?? data.block ?? inventory.block,
         actualDeveloperName: response?.actualDeveloperName ?? data.actualDeveloperName ?? inventory.actualDeveloperName,
         groups: response?.groups ?? inventory.groups,
+        cardId: response?.cardId ?? inventory.cardId,
         description: response?.description ?? data.description ?? inventory.description,
         imageUrl: response?.imageUrl ?? (data.image ? URL.createObjectURL(data.image) : inventory.imageUrl),
       };
@@ -101,6 +105,19 @@ export default function EditInventoryModal({ inventory, isOpen, onClose, onUpdat
             render={({ field }) => (
               <GroupMultiSelect label="Grouping" value={field.value} onChange={field.onChange} availableGroups={availableGroups} />
             )}
+          />
+
+          <Input
+            label="Card ID *"
+            type="number"
+            min="0.0001"
+            step="0.01"
+            placeholder="e.g. 5.6"
+            helperText={errors.cardId ? errors.cardId.message : 'Har entry ka Card ID unique hona chahiye. Decimal bhi allowed hai (jaise 5.6).'}
+            {...register('cardId', {
+              required: 'Card ID zaroori hai, isse khaali nahi chhod sakte.',
+              min: { value: 0.0001, message: 'Card ID 0 se zyada hona chahiye.' },
+            })}
           />
 
           <TextArea label="Description" {...register('description')} />

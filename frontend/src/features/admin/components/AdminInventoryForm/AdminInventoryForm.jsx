@@ -16,11 +16,11 @@ const defaultValues = {
   groups: [], // "Grouping" — array of names (many-to-many)
   actualDeveloperName: '', // "Developer" — plain text, unrelated to Grouping
   sectorName: '',
-  // BULK ADD — Project(s). Optional — Blocks can be saved without any Project.
-  names: [{ value: '' }],
-  // BULK ADD — Block(s). Each block row has its OWN "which Project does
-  // this belong to" selector (projectName) — can be left blank.
-  blocks: [{ value: '', projectName: '' }],
+  // BULK ADD — Project(s). Each row has its OWN Card ID (decimal allowed, e.g. 5.6).
+  names: [{ value: '', cardId: '' }],
+  // BULK ADD — Block(s). Each row has its OWN "which Project" selector +
+  // its OWN Card ID (decimal allowed).
+  blocks: [{ value: '', projectName: '', cardId: '' }],
   description: '',
   polygon: '',
   image: null,
@@ -34,21 +34,16 @@ export default function AdminInventoryForm({ onSuccess, availableGroups = [] }) 
 
   const { control, register, handleSubmit, reset } = useForm({ defaultValues, mode: 'onBlur' });
 
-  // --- Projects field array ---
   const { fields: nameFields, append: appendName, remove: removeName } = useFieldArray({
     control,
     name: 'names',
   });
 
-  // Live list of currently-typed Project names, used to populate every
-  // Block row's "which Project" dropdown. Updates instantly as the user
-  // types/adds/removes Project rows.
   const namesWatch = useWatch({ control, name: 'names' });
   const projectOptions = (namesWatch || [])
     .map((n) => (n?.value || '').trim())
     .filter(Boolean);
 
-  // --- Blocks field array ---
   const { fields: blockFields, append: appendBlock, remove: removeBlock } = useFieldArray({
     control,
     name: 'blocks',
@@ -57,7 +52,7 @@ export default function AdminInventoryForm({ onSuccess, availableGroups = [] }) 
   const prevNameCountRef = useRef(nameFields.length);
   useEffect(() => {
     if (nameFields.length > prevNameCountRef.current) {
-      const inputs = namesContainerRef.current?.querySelectorAll('input');
+      const inputs = namesContainerRef.current?.querySelectorAll('input[type="text"], input:not([type])');
       const lastInput = inputs?.[inputs.length - 1];
       lastInput?.focus();
     }
@@ -67,7 +62,7 @@ export default function AdminInventoryForm({ onSuccess, availableGroups = [] }) 
   const prevBlockCountRef = useRef(blockFields.length);
   useEffect(() => {
     if (blockFields.length > prevBlockCountRef.current) {
-      const inputs = blocksContainerRef.current?.querySelectorAll('input');
+      const inputs = blocksContainerRef.current?.querySelectorAll('input[type="text"], input:not([type])');
       const lastInput = inputs?.[inputs.length - 1];
       lastInput?.focus();
     }
@@ -79,15 +74,12 @@ export default function AdminInventoryForm({ onSuccess, availableGroups = [] }) 
     if (index !== nameFields.length - 1) return;
     if (e.shiftKey || e.ctrlKey || e.altKey || e.metaKey) return;
     e.preventDefault();
-    appendName({ value: '' });
+    appendName({ value: '', cardId: '' });
   };
 
-  // Adding a new Block row: if exactly ONE Project has been typed so far,
-  // auto-select it (no ambiguity). If 0 or 2+ Projects exist, leave blank
-  // — blank is fine now, that Block will just save with no Project.
   const handleAddBlock = () => {
     const autoProject = projectOptions.length === 1 ? projectOptions[0] : '';
-    appendBlock({ value: '', projectName: autoProject });
+    appendBlock({ value: '', projectName: autoProject, cardId: '' });
   };
 
   const handleBlockKeyDown = (e, index) => {
@@ -105,6 +97,7 @@ export default function AdminInventoryForm({ onSuccess, availableGroups = [] }) 
     formData.append('sectorName', data.sectorName || '');
     formData.append('block', entry.block || '');
     formData.append('name', entry.projectName || ''); // Project — CAN be blank now
+    formData.append('cardId', entry.cardId || ''); // Card ID — per-entry, decimal allowed
     formData.append('description', data.description || '');
     formData.append('polygon', data.polygon || '');
     if (data.image) {
@@ -114,10 +107,11 @@ export default function AdminInventoryForm({ onSuccess, availableGroups = [] }) 
     const response = await adminService.createInventory(formData);
 
     return {
-      id: response?.id ?? response?.data?.id ?? crypto.randomUUID(),
+      id: response?.id ?? response?.data?.id ?? `temp-${Date.now()}-${Math.random().toString(36).slice(2)}`,
       name: response?.name ?? entry.projectName ?? '',
       block: response?.block ?? entry.block ?? '',
       groups: response?.groups ?? data.groups ?? [],
+      cardId: response?.cardId ?? (entry.cardId ? Number(entry.cardId) : null),
       actualDeveloperName: response?.actualDeveloperName ?? data.actualDeveloperName ?? '',
       sectorName: response?.sectorName ?? data.sectorName ?? '-',
       imageUrl: response?.imageUrl ?? (data.image ? URL.createObjectURL(data.image) : null),
@@ -126,50 +120,35 @@ export default function AdminInventoryForm({ onSuccess, availableGroups = [] }) 
     };
   };
 
-  /**
-   * Builds the final list of entries to submit, from the Projects list +
-   * Blocks list:
-   *
-   *   1. EVERY Block row that has a block name typed -> its OWN entry.
-   *      - If a Project was selected for it -> { projectName, block }
-   *      - If NOT -> { projectName: '', block }  (Project stays blank,
-   *        but the Block still gets saved as its own entry — this is
-   *        the fix: Blocks are no longer skipped just because no
-   *        Project was picked for them.)
-   *   2. Every Project name NOT claimed by any Block row -> its own
-   *      entry { projectName, block: '' } (old Projects-only behaviour,
-   *      for people who don't use Blocks at all).
-   *   3. If absolutely nothing was typed anywhere -> one blank fallback
-   *      entry (so the form never crashes on empty submit).
-   */
   const buildEntries = (data) => {
     const enteredProjectNames = (data.names || [])
-      .map((n) => (n?.value || '').trim())
-      .filter(Boolean);
+      .map((n) => ({ value: (n?.value || '').trim(), cardId: (n?.cardId || '').trim() }))
+      .filter((n) => n.value);
 
     const enteredBlocks = (data.blocks || [])
       .map((b) => ({
         block: (b?.value || '').trim(),
         projectName: (b?.projectName || '').trim(),
+        cardId: (b?.cardId || '').trim(),
       }))
-      .filter((b) => b.block); // block row must at least have a block name typed
+      .filter((b) => b.block);
 
     const entries = [];
     const claimedProjectNames = new Set();
 
     enteredBlocks.forEach((b) => {
-      entries.push({ projectName: b.projectName, block: b.block });
+      entries.push({ projectName: b.projectName, block: b.block, cardId: b.cardId });
       if (b.projectName) claimedProjectNames.add(b.projectName);
     });
 
-    enteredProjectNames.forEach((name) => {
-      if (!claimedProjectNames.has(name)) {
-        entries.push({ projectName: name, block: '' });
+    enteredProjectNames.forEach((n) => {
+      if (!claimedProjectNames.has(n.value)) {
+        entries.push({ projectName: n.value, block: '', cardId: n.cardId });
       }
     });
 
     if (entries.length === 0) {
-      entries.push({ projectName: '', block: '' });
+      entries.push({ projectName: '', block: '', cardId: '' });
     }
 
     return entries;
@@ -179,6 +158,14 @@ export default function AdminInventoryForm({ onSuccess, availableGroups = [] }) 
     setIsSubmitting(true);
 
     const entries = buildEntries(data);
+
+    const missingCardIdEntry = entries.find((e) => !e.cardId);
+    if (missingCardIdEntry) {
+      const label = [missingCardIdEntry.projectName, missingCardIdEntry.block].filter(Boolean).join(' / ') || 'Untitled';
+      showToast(`"${label}" ke liye Card ID dena zaroori hai.`, 'error');
+      setIsSubmitting(false);
+      return;
+    }
 
     let successCount = 0;
     let failCount = 0;
@@ -234,7 +221,7 @@ export default function AdminInventoryForm({ onSuccess, availableGroups = [] }) 
         <Input label="Sector" placeholder="e.g. Sector 37D" {...register('sectorName')} />
       </div>
 
-      {/* BULK ADD — Project(s), optional */}
+      {/* BULK ADD — Project(s), each with its own Card ID */}
       <div className="admin-form__names" ref={namesContainerRef}>
         <label className="admin-form__names-label">Project(s) (optional)</label>
         {nameFields.map((field, index) => (
@@ -244,6 +231,14 @@ export default function AdminInventoryForm({ onSuccess, availableGroups = [] }) 
               {...register(`names.${index}.value`)}
               onKeyDown={(e) => handleNameKeyDown(e, index)}
             />
+            <Input
+              type="number"
+              min="0.0001"
+              step="0.01"
+              placeholder="Card ID (e.g. 5.6)"
+              className="admin-form__card-id-input"
+              {...register(`names.${index}.cardId`)}
+            />
             {nameFields.length > 1 && (
               <Button type="button" variant="secondary" onClick={() => removeName(index)} disabled={isSubmitting}>
                 Remove
@@ -251,12 +246,12 @@ export default function AdminInventoryForm({ onSuccess, availableGroups = [] }) 
             )}
           </div>
         ))}
-        <Button type="button" variant="secondary" onClick={() => appendName({ value: '' })} disabled={isSubmitting}>
+        <Button type="button" variant="secondary" onClick={() => appendName({ value: '', cardId: '' })} disabled={isSubmitting}>
           + Add Another
         </Button>
       </div>
 
-      {/* BULK ADD — Block(s), each optionally tagged with a Project */}
+      {/* BULK ADD — Block(s), each optionally tagged with a Project + its own Card ID */}
       <div className="admin-form__names" ref={blocksContainerRef}>
         <label className="admin-form__names-label">Block(s)</label>
         {blockFields.map((field, index) => (
@@ -279,6 +274,15 @@ export default function AdminInventoryForm({ onSuccess, availableGroups = [] }) 
                 </option>
               ))}
             </select>
+
+            <Input
+              type="number"
+              min="0.0001"
+              step="0.01"
+              placeholder="Card ID (e.g. 5.6)"
+              className="admin-form__card-id-input"
+              {...register(`blocks.${index}.cardId`)}
+            />
 
             {blockFields.length > 1 && (
               <Button type="button" variant="secondary" onClick={() => removeBlock(index)} disabled={isSubmitting}>

@@ -3,9 +3,6 @@ const ApiResponse = require('../utils/apiResponse.util');
 const HTTP_STATUS = require('../constants/httpStatusCodes.constant');
 const ApiError = require('../utils/apiError.util');
 
-// groupNames FormData mein JSON stringified array ke roop mein aata hai,
-// jaise '["BPTP","DLF"]'. Yahan safely parse karte hain — agar galat/missing
-// ho to undefined return karte hain (matlab "touch mat karo groups ko").
 const parseGroupNames = (raw) => {
   if (raw === undefined) return undefined;
   try {
@@ -18,6 +15,19 @@ const parseGroupNames = (raw) => {
     if (err instanceof ApiError) throw err;
     throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'groupNames must be a valid JSON array string');
   }
+};
+
+// CardId COMPULSORY hai, aur ab DECIMAL bhi allow karta hai (jaise 5.6),
+// taaki beech mein insert karna aasan ho bina sab renumber kiye.
+const parseCardId = (raw) => {
+  if (raw === undefined || raw === null || raw === '') {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Card ID zaroori hai, isse khaali nahi chhod sakte.');
+  }
+  const parsed = Number(raw);
+  if (Number.isNaN(parsed) || parsed <= 0) {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Card ID ek positive number hona chahiye');
+  }
+  return parsed;
 };
 
 const createInventory = async (req, res, next) => {
@@ -33,6 +43,7 @@ const createInventory = async (req, res, next) => {
       description: req.body.description,
       googleMapUrl: req.body.googleMapUrl,
       googleMapPolygon: req.body.polygon,
+      cardId: parseCardId(req.body.cardId), // compulsory, decimal allowed
       imageUrl,
     };
 
@@ -46,9 +57,6 @@ const createInventory = async (req, res, next) => {
 const getAllInventories = async (req, res, next) => {
   try {
     const { page, limit, developerId, sectorId } = req.query;
-    // NOTE: `developerId` naam frontend chip filter ke saath backward
-    // compatibility ke liye rakha gaya hai — actually ye ab GroupId hai,
-    // service layer isko groupId mein map karti hai.
     const result = await inventoryService.getAllInventories({
       page: page ? parseInt(page, 10) : 1,
       limit: limit ? parseInt(limit, 10) : 20,
@@ -72,9 +80,6 @@ const getInventoryById = async (req, res, next) => {
 
 const updateInventory = async (req, res, next) => {
   try {
-    // IMPORTANT: sirf wahi fields include karte hain jo form ne actually
-    // bheji hain. Missing fields ko null/undefined default nahi karte —
-    // service layer decide karti hai key present hai ya nahi ke basis pe.
     const payload = {};
 
     if (req.body.groupNames !== undefined) payload.groupNames = parseGroupNames(req.body.groupNames); // Grouping
@@ -86,8 +91,9 @@ const updateInventory = async (req, res, next) => {
     if (req.body.googleMapUrl !== undefined) payload.googleMapUrl = req.body.googleMapUrl;
     if (req.body.polygon !== undefined) payload.googleMapPolygon = req.body.polygon;
 
-    // Sirf tab imageUrl touch karte hain jab naya file actually upload hui ho.
-    // Naya file nahi hai to imageUrl bhejte hi nahi — isse purani image safe rehti hai.
+    // CardId Edit mein bhi COMPULSORY — hamesha valid decimal value dena hoga
+    payload.cardId = parseCardId(req.body.cardId);
+
     if (req.file) {
       payload.imageUrl = `/uploads/${req.file.filename}`;
     }

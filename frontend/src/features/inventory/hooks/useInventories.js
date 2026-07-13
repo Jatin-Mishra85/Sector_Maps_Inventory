@@ -6,26 +6,12 @@ import { ENV } from '../../../constants/env';
 
 function resolveImageUrl(imageUrl) {
   if (!imageUrl) return null;
-
-  // Extract just the "/uploads/filename.ext" part, no matter what host
-  // (old machine's IP, localhost, etc.) happens to be baked into the
-  // stored value. This makes old backup data (saved with a different
-  // machine's IP/hostname) work correctly on any new machine.
   const match = imageUrl.match(/\/uploads\/[^/?#]+/i);
   const path = match ? match[0] : imageUrl;
-
-  if (/^https?:\/\//i.test(path)) return path; // fallback, shouldn't happen
+  if (/^https?:\/\//i.test(path)) return path;
   return `${ENV.STATIC_BASE_URL}${path}`;
 }
 
-// FIELD MAPPING NOTE:
-// - "name"               -> item.inventoryName        -> shown as "Project" in the UI
-// - "block"               -> item.block                -> shown as "Block" in the UI
-// - "actualDeveloperName" -> item.inventoryDeveloperName -> shown as "Developer" in the UI
-// - "developerName"       -> item.developerName (via ...item spread) -> shown as "Grouping" in the UI
-//   (this is the OLD Developer concept — DeveloperId FK joined from the Developers table,
-//   NOT the same as actualDeveloperName above. Kept as "developerName" internally on purpose,
-//   only its UI label changed to "Grouping".)
 function mapInventory(item) {
   return {
     ...item,
@@ -33,16 +19,13 @@ function mapInventory(item) {
     name: item.inventoryName,
     block: item.block,
     actualDeveloperName: item.inventoryDeveloperName,
-    groups: Array.isArray(item.groups) ? item.groups : [], // "Grouping" — array of {groupId, groupName} now
+    groups: Array.isArray(item.groups) ? item.groups : [],
+    cardId: item.cardId, // number or null — Card ID / Roll No, internal only (not displayed on the card)
     googleMapsUrl: item.googleMapUrl,
     imageUrl: resolveImageUrl(item.imageUrl),
   };
 }
-// INFINITE SCROLL — accumulates pages instead of replacing them.
-// When a searchTerm is present, hits the dedicated /search/inventories
-// endpoint (matches Grouping, Sector, Project, Block, Developer —
-// all free-text fields). Otherwise uses the normal list endpoint with the
-// developer chip filter.
+
 export function useInventories({ developerId, type, searchTerm, limit = 12 }) {
   const [inventories, setInventories] = useState([]);
   const [total, setTotal] = useState(0);
@@ -65,11 +48,9 @@ export function useInventories({ developerId, type, searchTerm, limit = 12 }) {
         let response;
 
         if (trimmedSearch) {
-          // Search mode — searches Grouping, Sector, Project, Block, Developer together.
           const params = { keyword: trimmedSearch, page: pageToFetch, limit };
           response = await inventoryService.search(params);
         } else {
-          // Normal browse mode — developer chip filter applies here.
           const params = { page: pageToFetch, limit };
           if (developerId && developerId !== ALL_DEVELOPERS_ID) params.developerId = developerId;
           response = await inventoryService.getAll(params);

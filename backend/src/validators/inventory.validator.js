@@ -1,9 +1,6 @@
 const { body, param, query } = require('express-validator');
 const { runValidation } = require('./baseValidator.util');
 
-// groupNames ek JSON stringified array hoti hai FormData mein (e.g. '["BPTP","DLF"]').
-// Yahan sirf ye check karte hain ki valid JSON array of strings hai — actual
-// resolve/create logic controller+service layer mein hota hai.
 const isValidGroupNamesJson = (value) => {
   if (value === undefined || value === '') return true;
   let parsed;
@@ -21,6 +18,14 @@ const isValidGroupNamesJson = (value) => {
   return true;
 };
 
+// CardId ab decimal bhi allow karta hai (jaise "5.6"), sirf whole number nahi.
+const cardIdMustBePositiveNumber = (value) => {
+  if (!/^\d+(\.\d+)?$/.test(String(value)) || Number(value) <= 0) {
+    throw new Error('Card ID ek positive number hona chahiye (decimal bhi allowed hai, jaise 5.6)');
+  }
+  return true;
+};
+
 const createInventoryValidator = runValidation([
   body('groupNames').optional().custom(isValidGroupNamesJson), // Grouping
   body('sectorName').optional().trim().isLength({ max: 200 }).withMessage('sectorName must not exceed 200 characters'),
@@ -30,6 +35,11 @@ const createInventoryValidator = runValidation([
   body('description').optional().trim().isString(),
   body('googleMapUrl').optional().trim().isString(),
   body('polygon').optional().isString(),
+  // CardId ab COMPULSORY hai — na khaali, na missing
+  body('cardId')
+    .notEmpty().withMessage('Card ID zaroori hai, isse khaali nahi chhod sakte.')
+    .bail()
+    .custom(cardIdMustBePositiveNumber),
 ]);
 
 const updateInventoryValidator = runValidation([
@@ -43,6 +53,11 @@ const updateInventoryValidator = runValidation([
   body('googleMapUrl').optional().trim().isString(),
   body('polygon').optional().isString(),
   body('existingImageUrl').optional().trim().isString(),
+  // Edit mein bhi CardId compulsory
+  body('cardId')
+    .notEmpty().withMessage('Card ID zaroori hai, isse khaali nahi chhod sakte.')
+    .bail()
+    .custom(cardIdMustBePositiveNumber),
 ]);
 
 const inventoryIdParamValidator = runValidation([

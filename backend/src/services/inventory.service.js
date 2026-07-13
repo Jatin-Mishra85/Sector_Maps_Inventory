@@ -5,9 +5,6 @@ const InventoryModel = require('../models/inventory.model');
 const ApiError = require('../utils/apiError.util');
 const HTTP_STATUS = require('../constants/httpStatusCodes.constant');
 
-// Sectors table ka DeveloperId column abhi bhi NOT NULL hai (naam purana hai,
-// par ab ye actually Groups.GroupId ko refer karta hai — dekho sector.repository.js
-// ka comment). Isliye naya Sector create karte waqt ek Group ZARURI hai.
 const UNASSIGNED_GROUP_NAME = 'UNASSIGNED';
 
 const normalizeSectorName = (value) => {
@@ -28,10 +25,6 @@ const normalizeBlockName = (value) => {
 
 const normalizeUpper = (value) => (value || '').trim().toUpperCase();
 
-/**
- * Resolves an ARRAY of Group names into an array of GroupIds — creates
- * any Group that doesn't exist yet (findOrCreate, one at a time).
- */
 const resolveGroupIds = async (groupNames) => {
   const names = Array.isArray(groupNames) ? groupNames : [];
   const cleanNames = [...new Set(names.map((n) => normalizeUpper(n)).filter(Boolean))];
@@ -44,16 +37,6 @@ const resolveGroupIds = async (groupNames) => {
   return groupIds;
 };
 
-/**
- * Resolves Sector by name, creates it if it doesn't exist.
- *
- * Sectors.DeveloperId (NOT NULL) needs a single GroupId — but Grouping is
- * now many-to-many on the Inventory, so there's no single "the" group for
- * a Sector anymore. We use the FIRST group from the Inventory's selected
- * groupIds as the Sector's group. If no group was selected at all, we
- * fall back to a shared "UNASSIGNED" group (auto-created if missing) so
- * the NOT NULL constraint never breaks.
- */
 const resolveSector = async (sectorName, groupIds) => {
   const finalSectorName = normalizeSectorName(sectorName) || 'UNKNOWN SECTOR';
 
@@ -82,14 +65,12 @@ const createInventory = async (payload) => {
     imageUrl: payload.imageUrl,
     googleMapUrl: payload.googleMapUrl,
     googleMapPolygon: payload.googleMapPolygon,
+    cardId: payload.cardId, // number or null/undefined
   });
   return InventoryModel.fromRow(row);
 };
 
 const getAllInventories = async ({ page = 1, limit = 20, developerId, sectorId }) => {
-  // `developerId` kept as the EXTERNAL filter param name for backward
-  // compatibility with the frontend chip filter — internally matched
-  // against GroupId via the InventoryGroups junction table.
   const { rows, total } = await inventoryRepository.findAll({
     page,
     limit,
@@ -120,6 +101,10 @@ const getInventoryById = async (inventoryId) => {
  * groupNames: undefined -> groups untouched
  * groupNames: []        -> ALL groups removed
  * groupNames: [...]     -> groups fully REPLACED with this new set
+ *
+ * cardId: undefined -> touched mat karo
+ * cardId: null       -> Card ID hata do
+ * cardId: number     -> naya Card ID set karo
  */
 const updateInventory = async (inventoryId, payload) => {
   const existing = await inventoryRepository.findById(inventoryId);
@@ -134,9 +119,6 @@ const updateInventory = async (inventoryId, payload) => {
 
   let sectorId = existing.SectorId;
   if (payload.sectorName !== undefined) {
-    // Sector badalte waqt bhi wahi groupIds use karte hain (ya agar is
-    // update mein groups nahi bheje gaye, to existing inventory ke groups
-    // se pehla group le lete hain, taaki purana behavior consistent rahe).
     const groupIdsForSector = groupIds !== undefined
       ? groupIds
       : (existing.Groups || []).map((g) => g.groupId);
@@ -158,6 +140,7 @@ const updateInventory = async (inventoryId, payload) => {
     googleMapUrl: payload.googleMapUrl !== undefined ? payload.googleMapUrl : existing.GoogleMapUrl,
     googleMapPolygon:
       payload.googleMapPolygon !== undefined ? payload.googleMapPolygon : existing.GoogleMapPolygon,
+    cardId: payload.cardId !== undefined ? payload.cardId : existing.CardId,
   };
 
   const row = await inventoryRepository.update(inventoryId, mergedPayload);
@@ -179,4 +162,4 @@ module.exports = {
   getInventoryById,
   updateInventory,
   deleteInventory,
-}; 
+};

@@ -1,0 +1,61 @@
+.sector-block-image-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sector-block-image-form__entry-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--border-color, #d8dbe0);
+  border-radius: 10px;
+  background: var(--card-bg, #fff);
+}
+
+.sector-block-image-form__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.sector-block-image-form__row > * {
+  flex: 1 1 160px;
+  min-width: 140px;
+}
+
+.sector-block-image-form__card-id-input {
+  flex: 0 1 120px;
+  min-width: 100px;
+}
+
+.sector-block-image-form__image-row {
+  width: 100%;
+}
+
+.sector-block-image-form__remove-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: none;
+  background: var(--danger-bg, #fde8e8);
+  color: var(--danger-color, #c0392b);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.sector-block-image-form__actions {
+  display: flex;
+}
+
+.sector-block-image-form__submit-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}

@@ -1,6 +1,14 @@
 const { getPool, sql } = require('../database/connection');
+const ApiError = require('../utils/apiError.util');
+const HTTP_STATUS = require('../constants/httpStatusCodes.constant');
 
 const TABLE = 'Inventories';
+
+const SQL_UNIQUE_VIOLATION_CODES = [2627, 2601];
+
+const isDuplicateCardIdError = (err) =>
+  SQL_UNIQUE_VIOLATION_CODES.includes(err?.number) &&
+  /CardId/i.test(err?.message || '');
 
 const INVENTORY_COLUMNS = `
   i.InventoryId,
@@ -12,9 +20,16 @@ const INVENTORY_COLUMNS = `
   i.ImageUrl,
   i.GoogleMapUrl,
   i.GoogleMapPolygon,
+  i.CardId,
   i.CreatedAt,
   i.UpdatedAt,
   i.IsDeleted
+`;
+
+const ORDER_BY_CARD_ID = `
+  CASE WHEN i.CardId IS NULL THEN 1 ELSE 0 END,
+  i.CardId ASC,
+  i.CreatedAt DESC
 `;
 
 const attachGroups = async (rows) => {
@@ -75,25 +90,36 @@ const create = async ({
   imageUrl,
   googleMapUrl,
   googleMapPolygon,
+  cardId, // decimal number — compulsory, comes in already validated
 }) => {
   const pool = await getPool();
-  const result = await pool
-    .request()
-    .input('SectorId', sql.Int, sectorId)
-    .input('InventoryName', sql.NVarChar(200), inventoryName)
-    .input('Block', sql.NVarChar(200), block || null)
-    .input('InventoryDeveloperName', sql.NVarChar(200), inventoryDeveloperName || null)
-    .input('Description', sql.NVarChar(sql.MAX), description || null)
-    .input('ImageUrl', sql.NVarChar(500), imageUrl || null)
-    .input('GoogleMapUrl', sql.NVarChar(500), googleMapUrl || null)
-    .input('GoogleMapPolygon', sql.NVarChar(sql.MAX), googleMapPolygon || null)
-    .query(`
-      INSERT INTO ${TABLE}
-        (SectorId, InventoryName, Block, InventoryDeveloperName, Description, ImageUrl, GoogleMapUrl, GoogleMapPolygon, CreatedAt, UpdatedAt, IsDeleted)
-      OUTPUT INSERTED.*
-      VALUES
-        (@SectorId, @InventoryName, @Block, @InventoryDeveloperName, @Description, @ImageUrl, @GoogleMapUrl, @GoogleMapPolygon, GETDATE(), GETDATE(), 0)
-    `);
+
+  let result;
+  try {
+    result = await pool
+      .request()
+      .input('SectorId', sql.Int, sectorId)
+      .input('InventoryName', sql.NVarChar(200), inventoryName)
+      .input('Block', sql.NVarChar(200), block || null)
+      .input('InventoryDeveloperName', sql.NVarChar(200), inventoryDeveloperName || null)
+      .input('Description', sql.NVarChar(sql.MAX), description || null)
+      .input('ImageUrl', sql.NVarChar(500), imageUrl || null)
+      .input('GoogleMapUrl', sql.NVarChar(500), googleMapUrl || null)
+      .input('GoogleMapPolygon', sql.NVarChar(sql.MAX), googleMapPolygon || null)
+      .input('CardId', sql.Decimal(18, 4), cardId)
+      .query(`
+        INSERT INTO ${TABLE}
+          (SectorId, InventoryName, Block, InventoryDeveloperName, Description, ImageUrl, GoogleMapUrl, GoogleMapPolygon, CardId, CreatedAt, UpdatedAt, IsDeleted)
+        OUTPUT INSERTED.*
+        VALUES
+          (@SectorId, @InventoryName, @Block, @InventoryDeveloperName, @Description, @ImageUrl, @GoogleMapUrl, @GoogleMapPolygon, @CardId, GETDATE(), GETDATE(), 0)
+      `);
+  } catch (err) {
+    if (isDuplicateCardIdError(err)) {
+      throw new ApiError(HTTP_STATUS.BAD_REQUEST, `Card ID ${cardId} already use ho chuki hai, doosra number try karo.`);
+    }
+    throw err;
+  }
 
   const inserted = result.recordset[0];
   await insertInventoryGroups(pool, inserted.InventoryId, groupIds);
@@ -130,7 +156,7 @@ const findAll = async ({ page, limit, groupId, sectorId }) => {
   const result = await request.query(`
     SELECT * FROM (
       SELECT ${INVENTORY_COLUMNS}, s.SectorName,
-             ROW_NUMBER() OVER (ORDER BY i.CreatedAt DESC) AS RowNum
+             ROW_NUMBER() OVER (ORDER BY ${ORDER_BY_CARD_ID}) AS RowNum
       FROM ${TABLE} i
       INNER JOIN Sectors s ON s.SectorId = i.SectorId
       ${whereClause}
@@ -175,34 +201,45 @@ const findById = async (inventoryId) => {
 
 const update = async (
   inventoryId,
-  { sectorId, groupIds, inventoryName, block, inventoryDeveloperName, description, imageUrl, googleMapUrl, googleMapPolygon }
+  { sectorId, groupIds, inventoryName, block, inventoryDeveloperName, description, imageUrl, googleMapUrl, googleMapPolygon, cardId }
 ) => {
   const pool = await getPool();
-  const result = await pool
-    .request()
-    .input('InventoryId', sql.Int, inventoryId)
-    .input('SectorId', sql.Int, sectorId)
-    .input('InventoryName', sql.NVarChar(200), inventoryName)
-    .input('Block', sql.NVarChar(200), block || null)
-    .input('InventoryDeveloperName', sql.NVarChar(200), inventoryDeveloperName || null)
-    .input('Description', sql.NVarChar(sql.MAX), description || null)
-    .input('ImageUrl', sql.NVarChar(500), imageUrl || null)
-    .input('GoogleMapUrl', sql.NVarChar(500), googleMapUrl || null)
-    .input('GoogleMapPolygon', sql.NVarChar(sql.MAX), googleMapPolygon || null)
-    .query(`
-      UPDATE ${TABLE}
-      SET SectorId = @SectorId,
-          InventoryName = @InventoryName,
-          Block = @Block,
-          InventoryDeveloperName = @InventoryDeveloperName,
-          Description = @Description,
-          ImageUrl = @ImageUrl,
-          GoogleMapUrl = @GoogleMapUrl,
-          GoogleMapPolygon = @GoogleMapPolygon,
-          UpdatedAt = GETDATE()
-      OUTPUT INSERTED.*
-      WHERE InventoryId = @InventoryId AND IsDeleted = 0
-    `);
+
+  let result;
+  try {
+    result = await pool
+      .request()
+      .input('InventoryId', sql.Int, inventoryId)
+      .input('SectorId', sql.Int, sectorId)
+      .input('InventoryName', sql.NVarChar(200), inventoryName)
+      .input('Block', sql.NVarChar(200), block || null)
+      .input('InventoryDeveloperName', sql.NVarChar(200), inventoryDeveloperName || null)
+      .input('Description', sql.NVarChar(sql.MAX), description || null)
+      .input('ImageUrl', sql.NVarChar(500), imageUrl || null)
+      .input('GoogleMapUrl', sql.NVarChar(500), googleMapUrl || null)
+      .input('GoogleMapPolygon', sql.NVarChar(sql.MAX), googleMapPolygon || null)
+      .input('CardId', sql.Decimal(18, 4), cardId)
+      .query(`
+        UPDATE ${TABLE}
+        SET SectorId = @SectorId,
+            InventoryName = @InventoryName,
+            Block = @Block,
+            InventoryDeveloperName = @InventoryDeveloperName,
+            Description = @Description,
+            ImageUrl = @ImageUrl,
+            GoogleMapUrl = @GoogleMapUrl,
+            GoogleMapPolygon = @GoogleMapPolygon,
+            CardId = @CardId,
+            UpdatedAt = GETDATE()
+        OUTPUT INSERTED.*
+        WHERE InventoryId = @InventoryId AND IsDeleted = 0
+      `);
+  } catch (err) {
+    if (isDuplicateCardIdError(err)) {
+      throw new ApiError(HTTP_STATUS.BAD_REQUEST, `Card ID ${cardId} already use ho chuki hai, doosra number try karo.`);
+    }
+    throw err;
+  }
 
   const updated = result.recordset[0];
   if (!updated) return undefined;
@@ -283,7 +320,7 @@ const search = async ({ keyword, page, limit }) => {
   const result = await request.query(`
     SELECT * FROM (
       SELECT ${INVENTORY_COLUMNS}, s.SectorName,
-             ROW_NUMBER() OVER (ORDER BY i.CreatedAt DESC) AS RowNum
+             ROW_NUMBER() OVER (ORDER BY ${ORDER_BY_CARD_ID}) AS RowNum
       FROM ${TABLE} i
       INNER JOIN Sectors s ON s.SectorId = i.SectorId
       ${whereClause}

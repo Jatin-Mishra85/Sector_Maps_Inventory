@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import './AdminInventoryFormPage.css';
 import AdminInventoryForm from '../components/AdminInventoryForm/AdminInventoryForm';
 import SectorBasedInventoryForm from '../components/SectorBasedInventoryForm/SectorBasedInventoryForm';
+import SectorBlockImageForm from '../components/SectorBlockImageForm/SectorBlockImageForm';
 import InventoryCard from '../../inventory/components/InventoryCard/InventoryCard';
 import Button from '../../../components/common/Button/Button';
 import { useBookmarks } from '../../inventory/hooks/useBookmarks';
@@ -15,6 +16,7 @@ import { useGroups } from '../../developer/hooks/useGroups';
 const FORM_TYPES = [
   { id: 'normal', label: 'Normal (Project + Block linked)' },
   { id: 'sector-based', label: 'Sector-based' },
+  { id: 'sector-block-image', label: 'Sector + Block + Image' },
 ];
 
 export default function AdminInventoryFormPage() {
@@ -92,6 +94,9 @@ export default function AdminInventoryFormPage() {
           )}
           {formType === 'sector-based' && (
             <SectorBasedInventoryForm onSuccess={setCreatedInventory} availableGroups={groups} />
+          )}
+          {formType === 'sector-block-image' && (
+            <SectorBlockImageForm onSuccess={setCreatedInventory} />
           )}
 
           {!isUnlocked && (
