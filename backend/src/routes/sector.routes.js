@@ -1,18 +1,13 @@
+// backend/routes/sector.routes.js
+// Mount in app.js: app.use('/api/sectors', require('./routes/sector.routes'));
 const express = require('express');
 const router = express.Router();
-
 const sectorController = require('../controllers/sector.controller');
-const {
-  createSectorValidator,
-  updateSectorValidator,
-  sectorIdParamValidator,
-  getAllSectorsValidator,
-} = require('../validators/sector.validator');
 
-router.post('/', createSectorValidator, sectorController.createSector);
-router.get('/', getAllSectorsValidator, sectorController.getAllSectors);
-router.get('/:id', sectorIdParamValidator, sectorController.getSectorById);
-router.put('/:id', updateSectorValidator, sectorController.updateSector);
-router.delete('/:id', sectorIdParamValidator, sectorController.deleteSector);
+router.get('/', sectorController.getAllSectors);
+router.get('/:id', sectorController.getSectorById);
+router.post('/', sectorController.createSector);
+router.put('/:id', sectorController.updateSector);
+router.delete('/:id', sectorController.deleteSector);
 
 module.exports = router;

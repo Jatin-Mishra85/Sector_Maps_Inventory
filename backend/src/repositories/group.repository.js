@@ -1,185 +1,89 @@
+// backend/repositories/group.repository.js
+// Note: table is "Groups" (plural) to avoid GROUP being a reserved SQL keyword.
+// ⚠️ Adjust this import path to match your real db connection file.
 const { getPool, sql } = require('../database/connection');
 
-const TABLE = 'Groups';
+async function getAll() {
+    const pool = await getPool();
+    const result = await pool.request().query('SELECT * FROM Groups ORDER BY GroupId');
+    return result.recordset;
+}
 
-const create = async ({ groupName }) => {
-  const pool = await getPool();
-  const result = await pool
-    .request()
-    .input('GroupName', sql.NVarChar(200), groupName)
-    .query(`
-      INSERT INTO ${TABLE} (GroupName, CreatedAt, UpdatedAt, IsDeleted)
-      OUTPUT INSERTED.*
-      VALUES (@GroupName, GETDATE(), GETDATE(), 0)
-    `);
-  return result.recordset[0];
-};
-
-
-
-const findAll = async ({ page, limit } = {}) => {
-  const pool = await getPool();
-
-  if (!page || !limit) {
-    const result = await pool.request().query(`
-      SELECT g.*, COUNT(ig.InventoryId) AS InventoryCount
-      FROM ${TABLE} g
-      LEFT JOIN InventoryGroups ig ON ig.GroupId = g.GroupId
-      LEFT JOIN Inventories i ON i.InventoryId = ig.InventoryId AND i.IsDeleted = 0
-      WHERE g.IsDeleted = 0
-      GROUP BY g.GroupId, g.GroupName, g.CreatedAt, g.UpdatedAt, g.IsDeleted
-      ORDER BY g.GroupName ASC
-    `);
-    return { rows: result.recordset, total: result.recordset.length };
-  }
-
-  const offset = (page - 1) * limit;
-  const result = await pool
-    .request()
-    .input('Offset', sql.Int, offset)
-    .input('Limit', sql.Int, limit)
-    .query(`
-      SELECT * FROM (
-        SELECT g.*, COUNT(ig.InventoryId) AS InventoryCount,
-               ROW_NUMBER() OVER (ORDER BY g.CreatedAt DESC) AS RowNum
-        FROM ${TABLE} g
-        LEFT JOIN InventoryGroups ig ON ig.GroupId = g.GroupId
-        LEFT JOIN Inventories i ON i.InventoryId = ig.InventoryId AND i.IsDeleted = 0
-        WHERE g.IsDeleted = 0
-        GROUP BY g.GroupId, g.GroupName, g.CreatedAt, g.UpdatedAt, g.IsDeleted
-      ) AS Sub
-      WHERE RowNum > @Offset AND RowNum <= (@Offset + @Limit)
-      ORDER BY RowNum
-    `);
-
-  const countResult = await pool
-    .request()
-    .query(`SELECT COUNT(*) AS total FROM ${TABLE} WHERE IsDeleted = 0`);
-
-  return {
-    rows: result.recordset,
-    total: countResult.recordset[0].total,
-  };
-};
-
-const findById = async (groupId) => {
-  const pool = await getPool();
-  const result = await pool
-    .request()
-    .input('GroupId', sql.Int, groupId)
-    .query(`
-      SELECT * FROM ${TABLE}
-      WHERE GroupId = @GroupId AND IsDeleted = 0
-    `);
-  return result.recordset[0];
-};
-
-const findByName = async (groupName) => {
-  const pool = await getPool();
-  const result = await pool
-    .request()
-    .input('GroupName', sql.NVarChar(200), groupName)
-    .query(`
-      SELECT * FROM ${TABLE}
-      WHERE GroupName = @GroupName AND IsDeleted = 0
-    `);
-  return result.recordset[0];
-};
-
-const findOrCreateByName = async (groupName) => {
-  const trimmedName = (groupName || '').trim();
-  const existing = await findByName(trimmedName);
-  if (existing) {
-    return existing;
-  }
-  return create({ groupName: trimmedName });
-};
-
-const update = async (groupId, { groupName }) => {
-  const pool = await getPool();
-  const result = await pool
-    .request()
-    .input('GroupId', sql.Int, groupId)
-    .input('GroupName', sql.NVarChar(200), groupName)
-    .query(`
-      UPDATE ${TABLE}
-      SET GroupName = @GroupName,
-          UpdatedAt = GETDATE()
-      OUTPUT INSERTED.*
-      WHERE GroupId = @GroupId AND IsDeleted = 0
-    `);
-  return result.recordset[0];
-};
-
-const softDelete = async (groupId) => {
-  const pool = await getPool();
-  const result = await pool
-    .request()
-    .input('GroupId', sql.Int, groupId)
-    .query(`
-      UPDATE ${TABLE}
-      SET IsDeleted = 1, UpdatedAt = GETDATE()
-      OUTPUT INSERTED.*
-      WHERE GroupId = @GroupId AND IsDeleted = 0
-    `);
-  return result.recordset[0];
-};
-
-// Bulk-adds a set of InventoryIds to a Group. Skips any that are already
-// linked (no duplicate rows). Returns how many were actually added.
-const addInventoriesToGroup = async (groupId, inventoryIds) => {
-  const pool = await getPool();
-  const uniqueIds = [...new Set((inventoryIds || []).filter(Boolean))];
-  let addedCount = 0;
-
-  for (const inventoryId of uniqueIds) {
-    const exists = await pool
-      .request()
-      .input('InventoryId', sql.Int, inventoryId)
-      .input('GroupId', sql.Int, groupId)
-      .query(`SELECT 1 FROM InventoryGroups WHERE InventoryId = @InventoryId AND GroupId = @GroupId`);
-
-    if (exists.recordset.length === 0) {
-      await pool
-        .request()
-        .input('InventoryId', sql.Int, inventoryId)
+async function getById(groupId) {
+    const pool = await getPool();
+    const result = await pool.request()
         .input('GroupId', sql.Int, groupId)
-        .query(`INSERT INTO InventoryGroups (InventoryId, GroupId) VALUES (@InventoryId, @GroupId)`);
-      addedCount += 1;
+        .query('SELECT * FROM Groups WHERE GroupId = @GroupId');
+    return result.recordset[0] || null;
+}
+
+async function create(groupName) {
+    const pool = await getPool();
+    const result = await pool.request()
+        .input('GroupName', sql.NVarChar(255), groupName)
+        .query(`
+            INSERT INTO Groups (GroupName)
+            OUTPUT INSERTED.*
+            VALUES (@GroupName)
+        `);
+    return result.recordset[0];
+}
+
+async function update(groupId, groupName) {
+    const pool = await getPool();
+    const result = await pool.request()
+        .input('GroupId', sql.Int, groupId)
+        .input('GroupName', sql.NVarChar(255), groupName)
+        .query(`
+            UPDATE Groups
+            SET GroupName = @GroupName
+            OUTPUT INSERTED.*
+            WHERE GroupId = @GroupId
+        `);
+    return result.recordset[0] || null;
+}
+
+async function remove(groupId) {
+    const pool = await getPool();
+    const result = await pool.request()
+        .input('GroupId', sql.Int, groupId)
+        .query('DELETE FROM Groups WHERE GroupId = @GroupId');
+    return result.rowsAffected[0] > 0;
+}
+
+async function addInventoriesToGroup(groupId, inventoryIds) {
+    const pool = await getPool();
+    const results = [];
+    for (const inventoryId of inventoryIds) {
+        const result = await pool.request()
+            .input('GroupId', sql.Int, groupId)
+            .input('InventoryId', sql.Int, inventoryId)
+            .query(`
+                IF NOT EXISTS (
+                    SELECT 1 FROM InventoryGroups
+                    WHERE GroupId = @GroupId AND InventoryId = @InventoryId
+                )
+                INSERT INTO InventoryGroups (GroupId, InventoryId)
+                OUTPUT INSERTED.*
+                VALUES (@GroupId, @InventoryId)
+            `);
+        if (result.recordset[0]) results.push(result.recordset[0]);
     }
-  }
+    return results;
+}
 
-  return addedCount;
-};
+async function removeInventoriesFromGroup(groupId, inventoryIds) {
+    const pool = await getPool();
+    const request = pool.request().input('GroupId', sql.Int, groupId);
+    const params = inventoryIds.map((id, i) => {
+        request.input(`InvId${i}`, sql.Int, id);
+        return `@InvId${i}`;
+    });
+    const result = await request.query(`
+        DELETE FROM InventoryGroups
+        WHERE GroupId = @GroupId AND InventoryId IN (${params.join(',')})
+    `);
+    return result.rowsAffected[0];
+}
 
-// Bulk-removes a set of InventoryIds from a Group. Returns how many rows were removed.
-const removeInventoriesFromGroup = async (groupId, inventoryIds) => {
-  const pool = await getPool();
-  const uniqueIds = [...new Set((inventoryIds || []).filter(Boolean))];
-  if (uniqueIds.length === 0) return 0;
-
-  const request = pool.request().input('GroupId', sql.Int, groupId);
-  const idParams = uniqueIds.map((id, idx) => {
-    const paramName = `InvId${idx}`;
-    request.input(paramName, sql.Int, id);
-    return `@${paramName}`;
-  });
-
-  const result = await request.query(`
-    DELETE FROM InventoryGroups
-    WHERE GroupId = @GroupId AND InventoryId IN (${idParams.join(', ')})
-  `);
-  return result.rowsAffected[0];
-};
-
-module.exports = {
-  create,
-  findAll,
-  findById,
-  findByName,
-  findOrCreateByName,
-  update,
-  softDelete,
-  addInventoriesToGroup,      // NEW
-  removeInventoriesFromGroup, // NEW
-};
+module.exports = { getAll, getById, create, update, remove, addInventoriesToGroup, removeInventoriesFromGroup };

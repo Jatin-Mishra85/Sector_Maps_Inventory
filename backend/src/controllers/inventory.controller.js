@@ -1,123 +1,65 @@
+// backend/controllers/inventory.controller.js
 const inventoryService = require('../services/inventory.service');
-const ApiResponse = require('../utils/apiResponse.util');
-const HTTP_STATUS = require('../constants/httpStatusCodes.constant');
-const ApiError = require('../utils/apiError.util');
 
-const parseGroupNames = (raw) => {
-  if (raw === undefined) return undefined;
-  try {
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) {
-      throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'groupNames must be a JSON array');
-    }
-    return parsed;
-  } catch (err) {
-    if (err instanceof ApiError) throw err;
-    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'groupNames must be a valid JSON array string');
-  }
-};
-
-// CardId COMPULSORY hai, aur ab DECIMAL bhi allow karta hai (jaise 5.6),
-// taaki beech mein insert karna aasan ho bina sab renumber kiye.
-const parseCardId = (raw) => {
-  if (raw === undefined || raw === null || raw === '') {
-    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Card ID zaroori hai, isse khaali nahi chhod sakte.');
-  }
-  const parsed = Number(raw);
-  if (Number.isNaN(parsed) || parsed <= 0) {
-    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Card ID ek positive number hona chahiye');
-  }
-  return parsed;
-};
-
-const createInventory = async (req, res, next) => {
-  try {
-    const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
-
-    const payload = {
-      groupNames: parseGroupNames(req.body.groupNames), // "Grouping" in the UI — array of names
-      sectorName: req.body.sectorName,
-      inventoryName: req.body.name, // "Project" in the UI
-      block: req.body.block,
-      inventoryDeveloperName: req.body.actualDeveloperName, // "Developer" in the UI
-      description: req.body.description,
-      googleMapUrl: req.body.googleMapUrl,
-      googleMapPolygon: req.body.polygon,
-      cardId: parseCardId(req.body.cardId), // compulsory, decimal allowed
-      imageUrl,
+function mapBody(req) {
+    return {
+        developerId: req.body.developerId,
+        sectorId: req.body.sectorId,
+        projectId: req.body.projectId,
+        imageId: req.body.imageId,
+        displaySequence: req.body.displaySequence,
+        price: req.body.price,
+        areaSqFt: req.body.areaSqFt,
+        unitType: req.body.unitType,
+        status: req.body.status,
+        description: req.body.description,
     };
+}
 
-    const inventory = await inventoryService.createInventory(payload);
-    return ApiResponse.success(res, HTTP_STATUS.CREATED, 'Inventory created successfully', inventory);
-  } catch (err) {
-    next(err);
-  }
-};
-
-const getAllInventories = async (req, res, next) => {
-  try {
-    const { page, limit, developerId, sectorId } = req.query;
-    const result = await inventoryService.getAllInventories({
-      page: page ? parseInt(page, 10) : 1,
-      limit: limit ? parseInt(limit, 10) : 20,
-      developerId: developerId ? parseInt(developerId, 10) : undefined,
-      sectorId: sectorId ? parseInt(sectorId, 10) : undefined,
-    });
-    return ApiResponse.success(res, HTTP_STATUS.OK, 'Inventories fetched successfully', result);
-  } catch (err) {
-    next(err);
-  }
-};
-
-const getInventoryById = async (req, res, next) => {
-  try {
-    const inventory = await inventoryService.getInventoryById(parseInt(req.params.id, 10));
-    return ApiResponse.success(res, HTTP_STATUS.OK, 'Inventory fetched successfully', inventory);
-  } catch (err) {
-    next(err);
-  }
-};
-
-const updateInventory = async (req, res, next) => {
-  try {
-    const payload = {};
-
-    if (req.body.groupNames !== undefined) payload.groupNames = parseGroupNames(req.body.groupNames); // Grouping
-    if (req.body.sectorName !== undefined) payload.sectorName = req.body.sectorName;
-    if (req.body.name !== undefined) payload.inventoryName = req.body.name; // Project
-    if (req.body.block !== undefined) payload.block = req.body.block;
-    if (req.body.actualDeveloperName !== undefined) payload.inventoryDeveloperName = req.body.actualDeveloperName; // Developer
-    if (req.body.description !== undefined) payload.description = req.body.description;
-    if (req.body.googleMapUrl !== undefined) payload.googleMapUrl = req.body.googleMapUrl;
-    if (req.body.polygon !== undefined) payload.googleMapPolygon = req.body.polygon;
-
-    // CardId Edit mein bhi COMPULSORY — hamesha valid decimal value dena hoga
-    payload.cardId = parseCardId(req.body.cardId);
-
-    if (req.file) {
-      payload.imageUrl = `/uploads/${req.file.filename}`;
+async function getAll(req, res) {
+    try {
+        const inventory = await inventoryService.getAllInventory();
+        res.status(200).json(inventory);
+    } catch (err) {
+        res.status(err.statusCode || 500).json({ message: err.message });
     }
+}
 
-    const inventory = await inventoryService.updateInventory(parseInt(req.params.id, 10), payload);
-    return ApiResponse.success(res, HTTP_STATUS.OK, 'Inventory updated successfully', inventory);
-  } catch (err) {
-    next(err);
-  }
-};
+async function getById(req, res) {
+    try {
+        const item = await inventoryService.getInventoryById(req.params.id);
+        if (!item) return res.status(404).json({ message: 'Inventory not found.' });
+        res.status(200).json(item);
+    } catch (err) {
+        res.status(err.statusCode || 500).json({ message: err.message });
+    }
+}
 
-const deleteInventory = async (req, res, next) => {
-  try {
-    const inventory = await inventoryService.deleteInventory(parseInt(req.params.id, 10));
-    return ApiResponse.success(res, HTTP_STATUS.OK, 'Inventory deleted successfully', inventory);
-  } catch (err) {
-    next(err);
-  }
-};
+async function create(req, res) {
+    try {
+        const item = await inventoryService.createInventory(mapBody(req));
+        res.status(201).json(item);
+    } catch (err) {
+        res.status(err.statusCode || 500).json({ message: err.message });
+    }
+}
 
-module.exports = {
-  createInventory,
-  getAllInventories,
-  getInventoryById,
-  updateInventory,
-  deleteInventory,
-};
+async function update(req, res) {
+    try {
+        const item = await inventoryService.updateInventory(req.params.id, mapBody(req));
+        res.status(200).json(item);
+    } catch (err) {
+        res.status(err.statusCode || 500).json({ message: err.message });
+    }
+}
+
+async function remove(req, res) {
+    try {
+        await inventoryService.deleteInventory(req.params.id);
+        res.status(204).send();
+    } catch (err) {
+        res.status(err.statusCode || 500).json({ message: err.message });
+    }
+}
+
+module.exports = { getAll, getById, create, update, remove };

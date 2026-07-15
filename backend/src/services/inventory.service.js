@@ -1,165 +1,65 @@
+// backend/services/inventory.service.js
 const inventoryRepository = require('../repositories/inventory.repository');
-const groupRepository = require('../repositories/group.repository');
-const sectorRepository = require('../repositories/sector.repository');
-const InventoryModel = require('../models/inventory.model');
-const ApiError = require('../utils/apiError.util');
-const HTTP_STATUS = require('../constants/httpStatusCodes.constant');
 
-const UNASSIGNED_GROUP_NAME = 'UNASSIGNED';
+function validate(data) {
+    if (data.displaySequence === undefined || data.displaySequence === null || data.displaySequence === '') {
+        const error = new Error('DisplaySequence is required.');
+        error.statusCode = 400;
+        throw error;
+    }
+}
 
-const normalizeSectorName = (value) => {
-  const trimmed = (value || '').trim();
-  if (!trimmed) return '';
-  const withoutPrefix = trimmed.replace(/^sector[\s-]*/i, '').trim();
-  const finalValue = withoutPrefix ? `SECTOR ${withoutPrefix}` : trimmed;
-  return finalValue.toUpperCase();
-};
+async function getAllInventory() {
+    return inventoryRepository.getAll();
+}
 
-const normalizeBlockName = (value) => {
-  const trimmed = (value || '').trim();
-  if (!trimmed) return '';
-  const withoutPrefix = trimmed.replace(/^block[\s-]*/i, '').trim();
-  const finalValue = withoutPrefix ? `BLOCK ${withoutPrefix}` : trimmed;
-  return finalValue.toUpperCase();
-};
+async function getInventoryById(inventoryId) {
+    return inventoryRepository.getById(inventoryId);
+}
 
-const normalizeUpper = (value) => (value || '').trim().toUpperCase();
+async function createInventory(data) {
+    validate(data);
+    try {
+        return await inventoryRepository.create(data);
+    } catch (err) {
+        // Unique constraint on DisplaySequence — give a clear message instead of raw SQL error.
+        if (err.message && err.message.includes('UQ_Inventory_DisplaySequence')) {
+            const error = new Error('That DisplaySequence value is already in use. Choose a different value.');
+            error.statusCode = 409;
+            throw error;
+        }
+        throw err;
+    }
+}
 
-const resolveGroupIds = async (groupNames) => {
-  const names = Array.isArray(groupNames) ? groupNames : [];
-  const cleanNames = [...new Set(names.map((n) => normalizeUpper(n)).filter(Boolean))];
+async function updateInventory(inventoryId, data) {
+    validate(data);
+    try {
+        const updated = await inventoryRepository.update(inventoryId, data);
+        if (!updated) {
+            const error = new Error('Inventory not found.');
+            error.statusCode = 404;
+            throw error;
+        }
+        return updated;
+    } catch (err) {
+        if (err.message && err.message.includes('UQ_Inventory_DisplaySequence')) {
+            const error = new Error('That DisplaySequence value is already in use. Choose a different value.');
+            error.statusCode = 409;
+            throw error;
+        }
+        throw err;
+    }
+}
 
-  const groupIds = [];
-  for (const name of cleanNames) {
-    const group = await groupRepository.findOrCreateByName(name);
-    groupIds.push(group.GroupId);
-  }
-  return groupIds;
-};
+async function deleteInventory(inventoryId) {
+    const deleted = await inventoryRepository.remove(inventoryId);
+    if (!deleted) {
+        const error = new Error('Inventory not found.');
+        error.statusCode = 404;
+        throw error;
+    }
+    return true;
+}
 
-const resolveSector = async (sectorName, groupIds) => {
-  const finalSectorName = normalizeSectorName(sectorName) || 'UNKNOWN SECTOR';
-
-  let sectorGroupId = Array.isArray(groupIds) && groupIds.length > 0 ? groupIds[0] : null;
-
-  if (!sectorGroupId) {
-    const fallbackGroup = await groupRepository.findOrCreateByName(UNASSIGNED_GROUP_NAME);
-    sectorGroupId = fallbackGroup.GroupId;
-  }
-
-  const sector = await sectorRepository.findOrCreateByName(finalSectorName, sectorGroupId);
-  return sector.SectorId;
-};
-
-const createInventory = async (payload) => {
-  const groupIds = await resolveGroupIds(payload.groupNames);
-  const sectorId = await resolveSector(payload.sectorName, groupIds);
-
-  const row = await inventoryRepository.create({
-    sectorId,
-    groupIds,
-    inventoryName: normalizeUpper(payload.inventoryName),
-    block: normalizeBlockName(payload.block),
-    inventoryDeveloperName: normalizeUpper(payload.inventoryDeveloperName),
-    description: payload.description,
-    imageUrl: payload.imageUrl,
-    googleMapUrl: payload.googleMapUrl,
-    googleMapPolygon: payload.googleMapPolygon,
-    cardId: payload.cardId, // number or null/undefined
-  });
-  return InventoryModel.fromRow(row);
-};
-
-const getAllInventories = async ({ page = 1, limit = 20, developerId, sectorId }) => {
-  const { rows, total } = await inventoryRepository.findAll({
-    page,
-    limit,
-    groupId: developerId,
-    sectorId,
-  });
-
-  return {
-    items: InventoryModel.fromRows(rows),
-    pagination: {
-      page,
-      limit,
-      total,
-      totalPages: Math.ceil(total / limit),
-    },
-  };
-};
-
-const getInventoryById = async (inventoryId) => {
-  const row = await inventoryRepository.findById(inventoryId);
-  if (!row) {
-    throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Inventory not found');
-  }
-  return InventoryModel.fromRow(row);
-};
-
-/**
- * groupNames: undefined -> groups untouched
- * groupNames: []        -> ALL groups removed
- * groupNames: [...]     -> groups fully REPLACED with this new set
- *
- * cardId: undefined -> touched mat karo
- * cardId: null       -> Card ID hata do
- * cardId: number     -> naya Card ID set karo
- */
-const updateInventory = async (inventoryId, payload) => {
-  const existing = await inventoryRepository.findById(inventoryId);
-  if (!existing) {
-    throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Inventory not found');
-  }
-
-  let groupIds;
-  if (payload.groupNames !== undefined) {
-    groupIds = await resolveGroupIds(payload.groupNames);
-  }
-
-  let sectorId = existing.SectorId;
-  if (payload.sectorName !== undefined) {
-    const groupIdsForSector = groupIds !== undefined
-      ? groupIds
-      : (existing.Groups || []).map((g) => g.groupId);
-    sectorId = await resolveSector(payload.sectorName, groupIdsForSector);
-  }
-
-  const mergedPayload = {
-    sectorId,
-    groupIds,
-    inventoryName:
-      payload.inventoryName !== undefined ? normalizeUpper(payload.inventoryName) : existing.InventoryName,
-    block: payload.block !== undefined ? normalizeBlockName(payload.block) : existing.Block,
-    inventoryDeveloperName:
-      payload.inventoryDeveloperName !== undefined
-        ? normalizeUpper(payload.inventoryDeveloperName)
-        : existing.InventoryDeveloperName,
-    description: payload.description !== undefined ? payload.description : existing.Description,
-    imageUrl: payload.imageUrl !== undefined ? payload.imageUrl : existing.ImageUrl,
-    googleMapUrl: payload.googleMapUrl !== undefined ? payload.googleMapUrl : existing.GoogleMapUrl,
-    googleMapPolygon:
-      payload.googleMapPolygon !== undefined ? payload.googleMapPolygon : existing.GoogleMapPolygon,
-    cardId: payload.cardId !== undefined ? payload.cardId : existing.CardId,
-  };
-
-  const row = await inventoryRepository.update(inventoryId, mergedPayload);
-  return InventoryModel.fromRow(row);
-};
-
-const deleteInventory = async (inventoryId) => {
-  const existing = await inventoryRepository.findById(inventoryId);
-  if (!existing) {
-    throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Inventory not found');
-  }
-  const row = await inventoryRepository.hardDelete(inventoryId);
-  return InventoryModel.fromRow(row);
-};
-
-module.exports = {
-  createInventory,
-  getAllInventories,
-  getInventoryById,
-  updateInventory,
-  deleteInventory,
-};
+module.exports = { getAllInventory, getInventoryById, createInventory, updateInventory, deleteInventory };

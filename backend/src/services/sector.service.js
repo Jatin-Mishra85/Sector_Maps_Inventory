@@ -1,62 +1,46 @@
+// backend/services/sector.service.js
 const sectorRepository = require('../repositories/sector.repository');
-const groupRepository = require('../repositories/group.repository'); // RENAMED from developer.repository
-const SectorModel = require('../models/sector.model');
-const ApiError = require('../utils/apiError.util');
-const HTTP_STATUS = require('../constants/httpStatusCodes.constant');
 
-const createSector = async (payload) => {
-  const group = await groupRepository.findById(payload.developerId);
-  if (!group) {
-    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Invalid DeveloperId. Group does not exist');
-  }
+async function getAllSectors() {
+    return sectorRepository.getAll();
+}
 
-  const row = await sectorRepository.create(payload);
-  return SectorModel.fromRow(row);
-};
+async function getSectorById(sectorId) {
+    return sectorRepository.getById(sectorId);
+}
 
-const getAllSectors = async ({ page = 1, limit = 20, developerId }) => {
-  const { rows, total } = await sectorRepository.findAll({ page, limit, developerId });
-  return {
-    items: SectorModel.fromRows(rows),
-    pagination: {
-      page,
-      limit,
-      total,
-      totalPages: Math.ceil(total / limit),
-    },
-  };
-};
+async function createSector(sectorName) {
+    if (!sectorName || sectorName.trim() === '') {
+        const error = new Error('SectorName is required.');
+        error.statusCode = 400;
+        throw error;
+    }
+    return sectorRepository.create(sectorName.trim());
+}
 
-const getSectorById = async (sectorId) => {
-  const row = await sectorRepository.findById(sectorId);
-  if (!row) {
-    throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Sector not found');
-  }
-  return SectorModel.fromRow(row);
-};
+async function updateSector(sectorId, sectorName) {
+    if (!sectorName || sectorName.trim() === '') {
+        const error = new Error('SectorName is required.');
+        error.statusCode = 400;
+        throw error;
+    }
+    const updated = await sectorRepository.update(sectorId, sectorName.trim());
+    if (!updated) {
+        const error = new Error('Sector not found.');
+        error.statusCode = 404;
+        throw error;
+    }
+    return updated;
+}
 
-const updateSector = async (sectorId, payload) => {
-  const existing = await sectorRepository.findById(sectorId);
-  if (!existing) {
-    throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Sector not found');
-  }
-  const row = await sectorRepository.update(sectorId, payload);
-  return SectorModel.fromRow(row);
-};
+async function deleteSector(sectorId) {
+    const deleted = await sectorRepository.remove(sectorId);
+    if (!deleted) {
+        const error = new Error('Sector not found.');
+        error.statusCode = 404;
+        throw error;
+    }
+    return true;
+}
 
-const deleteSector = async (sectorId) => {
-  const existing = await sectorRepository.findById(sectorId);
-  if (!existing) {
-    throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Sector not found');
-  }
-  const row = await sectorRepository.softDelete(sectorId);
-  return SectorModel.fromRow(row);
-};
-
-module.exports = {
-  createSector,
-  getAllSectors,
-  getSectorById,
-  updateSector,
-  deleteSector,
-};
+module.exports = { getAllSectors, getSectorById, createSector, updateSector, deleteSector };

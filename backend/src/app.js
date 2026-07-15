@@ -11,7 +11,8 @@ const ApiResponse = require('./utils/apiResponse.util');
 const HTTP_STATUS = require('./constants/httpStatusCodes.constant');
 
 const app = express();
-
+const developerRoutes = require('./routes/developer.routes');
+app.use('/api/developers', developerRoutes);
 // ==============================
 // GLOBAL MIDDLEWARE
 // ==============================
