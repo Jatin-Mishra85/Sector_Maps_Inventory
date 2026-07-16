@@ -1,0 +1,102 @@
+.batch-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.batch-form__card {
+  position: relative;
+  border: 1px solid #e2e2e2;
+  border-radius: 10px;
+  padding: 20px;
+  background: #fafafa;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.batch-form__remove-batch-btn {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  background: none;
+  border: none;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  color: #999;
+}
+
+.batch-form__remove-batch-btn:hover {
+  color: #d33;
+}
+
+/* Developer Name — top, centered, wider box */
+.batch-form__developer-row {
+  display: flex;
+  justify-content: center;
+}
+
+.batch-form__developer-input {
+  width: 100%;
+  max-width: 420px;
+}
+
+/* Sector — its own row below Developer */
+.batch-form__sector-row {
+  display: flex;
+  justify-content: center;
+}
+
+.batch-form__sector-row > * {
+  width: 100%;
+  max-width: 420px;
+}
+
+.batch-form__projects {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.batch-form__projects-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #444;
+}
+
+.batch-form__project-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.batch-form__project-row > *:first-child {
+  flex: 2;
+}
+
+.batch-form__card-id-input {
+  flex: 1;
+  max-width: 160px;
+}
+
+.batch-form__add-more {
+  display: flex;
+  justify-content: center;
+}
+
+.batch-form__actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+@media (max-width: 640px) {
+  .batch-form__project-row {
+    flex-wrap: wrap;
+  }
+
+  .batch-form__card-id-input {
+    max-width: 100%;
+  }
+}

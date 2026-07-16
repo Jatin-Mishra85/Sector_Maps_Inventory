@@ -1,25 +1,25 @@
 :root {
-  /* ===== Colors — premium warm ivory + deep navy + bronze accent ===== */
-  --color-bg: #f6f3ee;
-  --color-bg-gradient: linear-gradient(180deg, #f8f5f0 0%, #f1ece3 45%, #ece4d5 100%);
-  --color-surface: #fffdfa;
-  --color-surface-hover: #f5efe4;
-  --color-text: #1f2a37;
-  --color-text-muted: #6b7280;
-  --color-border: #e6ddcc;
+  /* ===== Colors — calm, professional soft ocean blue palette ===== */
+  --color-bg: #f5fbff;               /* Ice Blue */
+  --color-bg-gradient: linear-gradient(180deg, #f5fbff 0%, #eef7fc 50%, #dff4ff 100%); /* Ice to Sky Blue */
+  --color-surface: rgba(255, 255, 255, 0.75); /* Glassmorphism base */
+  --color-surface-hover: rgba(223, 244, 255, 0.4);
+  --color-text: #1e3a5f;             /* Deep muted navy for accessible contrast */
+  --color-text-muted: #627d98;       /* Calm muted steel blue */
+  --color-border: rgba(111, 188, 207, 0.25); /* Subtle muted teal border */
 
-  --color-primary: #12263f;         /* deep navy — premium, trustworthy */
-  --color-primary-hover: #0b1a2c;
-  --color-primary-tint: rgba(18, 38, 63, 0.08);
-  --color-on-primary: #f3ede0;
+  --color-primary: #4fa3d1;          /* Soft Ocean Blue */
+  --color-primary-hover: #3b8cb8;
+  --color-primary-tint: rgba(79, 163, 209, 0.08);
+  --color-on-primary: #ffffff;
 
-  --color-accent: #b8925a;          /* warm bronze/gold — real estate luxury feel */
-  --color-accent-light: #e3c48c;
-  --color-accent-hover: #9c7845;
+  --color-accent: #6fbccf;           /* Muted Teal */
+  --color-accent-light: #beefff;     /* Soft Cyan */
+  --color-accent-hover: #54a0b3;
 
-  --color-success: #2f7d4f;
-  --color-warning: #b7791f;
-  --color-danger: #b3392c;
+  --color-success: #439671;
+  --color-warning: #d99136;
+  --color-danger: #cd5347;
 
   /* ===== Typography ===== */
   --font-heading: 'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif;
@@ -32,7 +32,7 @@
   --font-size-xl: clamp(1.4rem, 1.2rem + 1vw, 1.75rem);
   --font-size-2xl: clamp(1.7rem, 1.4rem + 1.5vw, 2.25rem);
 
-  /* ===== Spacing scale (fluid — safe from 280px up) ===== */
+  /* ===== Spacing scale (fluid) ===== */
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -44,14 +44,12 @@
   --page-padding-inline: clamp(12px, 4vw, 32px);
 
   /* ===== Radius & shadow ===== */
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
 
-  --shadow-soft: 0 2px 10px rgba(18, 38, 63, 0.10);
-  --shadow-hover: 0 6px 20px rgba(18, 38, 63, 0.16);
-
-  /* ===== Z-index scale ===== */
-  --z-header: 100;
-  --z-toast: 1000;
+  /* Premium soft depth effects */
+  --shadow-soft: 0 8px 32px 0 rgba(30, 58, 95, 0.04);
+  --shadow-hover: 0 12px 40px 0 rgba(30, 58, 95, 0.08);
+  --glass-blur: blur(12px);
 }

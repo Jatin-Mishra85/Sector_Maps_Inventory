@@ -15,14 +15,15 @@ function resolveImageUrl(imageUrl) {
 function mapInventory(item) {
   return {
     ...item,
-    id: item.inventoryId,
-    name: item.inventoryName,
-    block: item.block,
-    actualDeveloperName: item.inventoryDeveloperName,
+    id: item.InventoryId,
+    name: item.ProjectName,
+    block: item.Block ?? null,
+    actualDeveloperName: item.DeveloperName,
+    sectorName: item.SectorName,              // 👈 YE LINE MISSING THI
     groups: Array.isArray(item.groups) ? item.groups : [],
-    cardId: item.cardId, // number or null — Card ID / Roll No, internal only (not displayed on the card)
-    googleMapsUrl: item.googleMapUrl,
-    imageUrl: resolveImageUrl(item.imageUrl),
+    cardId: item.DisplaySequence,
+    googleMapsUrl: item.GoogleMapUrl ?? null,
+    imageUrl: resolveImageUrl(item.imageUrl ?? null),
   };
 }
 
@@ -56,14 +57,18 @@ export function useInventories({ developerId, type, searchTerm, limit = 12 }) {
           response = await inventoryService.getAll(params);
         }
 
-        const payload = response?.data ?? {};
-        const rawItems = Array.isArray(payload) ? payload : payload?.items || [];
+        const payload = response ?? {};
+        // Handles both response shapes:
+        //   - getAll's raw array: [ {...}, {...} ]
+        //   - search's wrapped ApiResponse: { success, message, data: { items, total, page, limit, totalPages } }
+        const dataBlock = payload?.data ?? payload;
+        const rawItems = Array.isArray(dataBlock) ? dataBlock : dataBlock?.items || [];
         const items = rawItems.map(mapInventory);
 
         if (requestId !== requestIdRef.current) return;
 
         setInventories((prev) => (append ? [...prev, ...items] : items));
-        setTotal(payload?.pagination?.total ?? items.length);
+        setTotal(dataBlock?.total ?? items.length);
       } catch (err) {
         if (requestId !== requestIdRef.current) return;
         setError(parseApiError(err));

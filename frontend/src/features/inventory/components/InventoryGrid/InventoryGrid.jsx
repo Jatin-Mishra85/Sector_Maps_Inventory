@@ -14,6 +14,8 @@ import RetryState from '../../../../components/common/RetryState/RetryState';
 import { inventoryService } from '../../services/inventoryService'; // TEMPORARY — for hard delete
 import { useToast } from '../../../../context/ToastContext'; // TEMPORARY — for delete toasts
 import { useGroups } from '../../../developer/hooks/useGroups'; // NEW — for Grouping multi-select dropdown
+import { useAdminAuth } from '../../../../context/AdminAuthContext'; // NEW — gates Edit/Delete
+import AdminAccessModal from '../../../admin/components/AdminAccessModal/AdminAccessModal'; // NEW
 
 export default function InventoryGrid({
   inventories,
@@ -27,10 +29,13 @@ export default function InventoryGrid({
   // const { isBookmarked, toggleBookmark } = useBookmarks(); // TEMPORARILY DISABLED
   const { showToast } = useToast(); // TEMPORARY
   const { groups } = useGroups(); // NEW — passed to EditInventoryModal's Grouping dropdown
+  const { isAdminAuthenticated } = useAdminAuth(); // NEW
   const [previewInventory, setPreviewInventory] = useState(null);
   const [editingInventory, setEditingInventory] = useState(null); // TEMPORARY
   const [localOverrides, setLocalOverrides] = useState({}); // TEMPORARY — id -> patched fields
   const [deletedIds, setDeletedIds] = useState(new Set()); // TEMPORARY — ids removed from view immediately
+  // NEW — { type: 'edit' | 'delete', inventory } while waiting on admin code verification
+  const [pendingAdminAction, setPendingAdminAction] = useState(null);
 
   // INFINITE SCROLL — watches an invisible div at the bottom of the grid.
   // As soon as it scrolls into view, load the next page (like Instagram
@@ -109,6 +114,36 @@ export default function InventoryGrid({
     }
   };
 
+  // NEW — Edit and Delete both go through this gate. If already
+  // authenticated for this session, the action runs immediately; otherwise
+  // it's parked in `pendingAdminAction` until the admin code is verified.
+  const handleEditRequest = (inventory) => {
+    if (isAdminAuthenticated) {
+      setEditingInventory(inventory);
+    } else {
+      setPendingAdminAction({ type: 'edit', inventory });
+    }
+  };
+
+  const handleDeleteRequest = (inventory) => {
+    if (isAdminAuthenticated) {
+      handleDelete(inventory);
+    } else {
+      setPendingAdminAction({ type: 'delete', inventory });
+    }
+  };
+
+  const handleAdminAccessSuccess = () => {
+    if (!pendingAdminAction) return;
+    const { type, inventory } = pendingAdminAction;
+    if (type === 'edit') {
+      setEditingInventory(inventory);
+    } else if (type === 'delete') {
+      handleDelete(inventory);
+    }
+    setPendingAdminAction(null);
+  };
+
   return (
     <>
       <div className="inv-grid">
@@ -119,8 +154,8 @@ export default function InventoryGrid({
             // isBookmarked={isBookmarked(inv.id)} // TEMPORARILY DISABLED
             // onToggleBookmark={toggleBookmark} // TEMPORARILY DISABLED
             onPreview={setPreviewInventory}
-            onEdit={setEditingInventory} // TEMPORARY
-            onDelete={handleDelete} // TEMPORARY
+            onEdit={handleEditRequest} // CHANGED — gated behind admin auth
+            onDelete={handleDeleteRequest} // CHANGED — gated behind admin auth
           />
         ))}
       </div>
@@ -149,6 +184,14 @@ export default function InventoryGrid({
         onUpdated={handleUpdated}
         availableGroups={groups}
       />
+
+      {/* NEW — shown before Edit or Delete runs, unless already authenticated this session */}
+      {pendingAdminAction && (
+        <AdminAccessModal
+          onSuccess={handleAdminAccessSuccess}
+          onCancel={() => setPendingAdminAction(null)}
+        />
+      )}
     </>
   );
 }

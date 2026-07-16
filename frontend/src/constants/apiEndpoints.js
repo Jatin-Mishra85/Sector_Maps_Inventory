@@ -5,6 +5,9 @@ export const API_ENDPOINTS = {
     ADD_INVENTORIES: '/groups/add-inventories',
     REMOVE_INVENTORIES: '/groups/remove-inventories',
   },
+  ADMIN: {
+    VERIFY_CODE: '/admin/verify-code',
+  },
   SECTOR: {
     BASE: '/sectors',
     BY_ID: (id) => `/sectors/${id}`,

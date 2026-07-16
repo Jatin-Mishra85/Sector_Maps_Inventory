@@ -2,11 +2,14 @@
   display: flex;
   gap: var(--space-3);
   background: var(--color-surface);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-soft);
-  padding: var(--space-2);
+  padding: var(--space-1);
   min-width: 0;
-  transition: box-shadow 0.25s ease, transform 0.25s ease;
+  transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
 }
 
 .inv-card:hover {
@@ -14,20 +17,18 @@
   transform: translateY(-1px);
 }
 
-/* ===== Image — wrapped in a visible "frame": a slightly darker padded
-   box behind the photo, so the boundary is unmistakable no matter what
-   colors the photo itself contains. ===== */
+/* ===== Image Frame — Soft Ocean Blue theme styling ===== */
 .inv-card__thumb {
   flex: 0 0 auto;
-  width: 96px;
-  height: 96px;
+  width: 110px;
+  height: 100%;
   border-radius: var(--radius-md);
   overflow: hidden;
-  border: 2px solid rgb(144, 144, 144);
-  box-shadow: 0 3px 10px rgba(86, 112, 144, 0.28);
-  padding: 0;
+  border: 1px solid var(--color-border);
+  box-shadow: 0 4px 12px rgba(30, 58, 95, 0.06);
+  padding: var(--space-1);
   cursor: zoom-in;
-  background: var(--color-primary);
+  background: var(--color-accent-light); /* Soft Cyan frame base */
 }
 
 .inv-card__thumb img {
@@ -35,7 +36,7 @@
   height: 100%;
   object-fit: cover;
   display: block;
-  border-radius: 6px;
+  border-radius: calc(var(--radius-md) - 2px);
   transition: transform 0.3s ease;
 }
 
@@ -46,11 +47,11 @@
 .inv-card__thumb-fallback {
   width: 100%;
   height: 100%;
-  border-radius: 6px;
+  border-radius: calc(var(--radius-md) - 2px);
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #cfc3a3 0%, #b8a97e 100%);
+  background: linear-gradient(135deg, var(--color-accent-light) 0%, #ccefff 100%);
   position: relative;
 }
 
@@ -58,7 +59,7 @@
   content: '';
   width: 28px;
   height: 28px;
-  background: rgba(18, 38, 63, 0.35);
+  background: var(--color-primary);
   -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M4 6h16v12H4z' stroke='black' stroke-width='1.8'/%3E%3Cpath d='M4 16l5-5 4 4 3-3 4 4' stroke='black' stroke-width='1.8'/%3E%3Ccircle cx='9' cy='9' r='1.5' fill='black'/%3E%3C/svg%3E") center / contain no-repeat;
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M4 6h16v12H4z' stroke='black' stroke-width='1.8'/%3E%3Cpath d='M4 16l5-5 4 4 3-3 4 4' stroke='black' stroke-width='1.8'/%3E%3Ccircle cx='9' cy='9' r='1.5' fill='black'/%3E%3C/svg%3E") center / contain no-repeat;
 }
@@ -106,12 +107,13 @@
   width: 32px;
   height: 32px;
   border: 1px solid transparent;
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   background: var(--color-surface-hover);
   color: var(--color-text-muted);
   cursor: pointer;
   transition: background-color 0.18s ease, color 0.18s ease,
     box-shadow 0.18s ease, transform 0.12s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .inv-card__icon-btn-sm svg {
@@ -123,7 +125,7 @@
 .inv-card__icon-btn-sm:hover {
   background: var(--color-primary-tint);
   color: var(--color-primary);
-  box-shadow: 0 2px 8px rgba(16, 24, 40, 0.08);
+  box-shadow: 0 2px 8px rgba(30, 58, 95, 0.06);
   transform: translateY(-1px);
 }
 
@@ -133,12 +135,12 @@
 }
 
 .inv-card__icon-btn-sm--danger:hover {
-  background: rgba(179, 57, 44, 0.1);
+  background: rgba(205, 83, 71, 0.1);
   color: var(--color-danger);
 }
 
 .inv-card__icon-btn-sm--danger:active {
-  background: rgba(179, 57, 44, 0.16);
+  background: rgba(205, 83, 71, 0.16);
 }
 
 .inv-card__icon-btn-sm:disabled {
@@ -168,48 +170,71 @@
   overflow: hidden;
 }
 
+/* Adjusted container padding to prevent 3D elements and shadows from getting clipped */
 .inv-card__actions {
   display: flex;
+  justify-content: space-between;
   gap: var(--space-2);
   margin-top: auto;
-  padding-top: 12px;
+  padding: 12px 4px 8px 4px; /* Added bottom and side padding to ensure free space for 3D bounce/press states */
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
+/* 3D Action Button Core Configuration */
 .inv-card__action-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
+  
+  /* Typography changes: Bigger, bolder text setup */
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  
+  /* Color theme & structural 3D parameters */
+  color: var(--color-text);
+  background: linear-gradient(180deg, #ffffff 0%, var(--color-bg) 100%);
+  border-radius: var(--radius-md);
+  
+  /* Distinct 3D extrusion structure */
   border: 1px solid var(--color-border);
-  border-radius: 12px;
-  background: var(--color-surface);
-  color: var(--color-text-muted);
+  border-bottom: 3.5px solid rgba(111, 188, 207, 0.6); 
+  box-shadow: 0 4px 6px -1px rgba(30, 58, 95, 0.08), 
+              0 2px 4px -1px rgba(30, 58, 95, 0.04);
+  
   cursor: pointer;
-  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
-  transition: transform 0.18s ease, box-shadow 0.18s ease,
-    color 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
+  position: relative;
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .inv-card__action-btn svg {
-  width: 18px;
-  height: 18px;
-  stroke-width: 1.8;
+  width: 20px;
+  height: 20px;
+  stroke-width: 2.2; /* Bolder vector icon scale */
 }
 
-.inv-card__action-btn:hover {
-  color: var(--color-primary);
-  border-color: var(--color-primary-tint);
-  background: var(--color-primary-tint);
-  box-shadow: 0 4px 12px rgba(16, 24, 40, 0.08);
+/* 3D Hover elevation state */
+.inv-card__action-btn:hover:not(:disabled) {
+  background: linear-gradient(180deg, #ffffff 0%, var(--color-surface-hover) 100%);
+  border-color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
   transform: translateY(-1px);
+  box-shadow: 0 6px 8px -1px rgba(30, 58, 95, 0.12), 
+              0 3px 6px -1px rgba(30, 58, 95, 0.06);
 }
 
-.inv-card__action-btn:active {
-  transform: translateY(0) scale(0.96);
-  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.06);
+/* Perfect 3D Inset Click state (Simulating mechanical press-in) */
+.inv-card__action-btn:active:not(:disabled) {
+  transform: translateY(2.5px); /* Pushes down the exact height of the bottom 3D rim */
+  border-bottom-width: 1px; /* flattens base border structure */
+  background: var(--color-bg);
+  box-shadow: inset 0 3px 6px rgba(30, 58, 95, 0.14), 
+              0 1px 2px rgba(30, 58, 95, 0.02);
 }
 
 .inv-card__action-btn:focus-visible {
@@ -217,20 +242,12 @@
   outline-offset: 2px;
 }
 
+/* Flatten disabled state out of 3D display rules */
 .inv-card__action-btn:disabled {
   opacity: 0.45;
   cursor: not-allowed;
-  color: var(--color-text-muted);
-  background: var(--color-surface);
-  border-color: var(--color-border);
-  box-shadow: none;
-  transform: none;
-}
-
-.inv-card__action-btn:disabled:hover {
-  color: var(--color-text-muted);
-  background: var(--color-surface);
-  border-color: var(--color-border);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
   box-shadow: none;
   transform: none;
 }
@@ -249,6 +266,8 @@
   margin: 0;
   padding: var(--space-1);
   background: var(--color-surface);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-hover);
@@ -270,29 +289,12 @@
 
 .inv-card__share-menu button:hover {
   background: var(--color-surface-hover);
+  color: var(--color-primary);
 }
 
 .inv-card__share-menu button:disabled {
   opacity: 0.4;
   cursor: not-allowed;
-}
-
-@media (min-width: 480px) {
-  .inv-card__thumb {
-    width: 112px;
-    height: 112px;
-  }
-
-  .inv-card__action-btn {
-    width: 38px;
-    height: 38px;
-    border-radius: 11px;
-  }
-
-  .inv-card__action-btn svg {
-    width: 16px;
-    height: 16px;
-  }
 }
 
 .inv-card--selectable {
@@ -301,7 +303,8 @@
 }
 
 .inv-card--selected {
-  outline: 2px solid #4f46e5;
+  outline: 2px solid var(--color-primary);
+  border-color: var(--color-primary);
   outline-offset: 2px;
 }
 
@@ -310,7 +313,35 @@
   top: 8px;
   left: 8px;
   z-index: 5;
-  background: #fff;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 4px;
   padding: 2px;
+}
+
+/* Fluid display optimization rules for wide layout variants */
+@media (min-width: 480px) {
+  .inv-card__thumb {
+
+    width: 112px;
+    height: 112px;
+    padding: var(--space-2);
+  }
+
+  .inv-card__action-btn {
+    width: auto;
+    height: 40px;
+    padding: 0 var(--space-4);
+    gap: var(--space-2);
+    border-bottom-width: 3px;
+  }
+
+  .inv-card__action-btn:active:not(:disabled) {
+    transform: translateY(2px);
+  }
+
+  .inv-card__action-btn svg {
+    width: 18px;
+    height: 18px;
+  }
 }

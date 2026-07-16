@@ -1,50 +1,41 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import './AdminInventoryFormPage.css';
-import AdminInventoryForm from '../components/AdminInventoryForm/AdminInventoryForm';
-import SectorBasedInventoryForm from '../components/SectorBasedInventoryForm/SectorBasedInventoryForm';
-import SectorBlockImageForm from '../components/SectorBlockImageForm/SectorBlockImageForm';
 import InventoryCard from '../../inventory/components/InventoryCard/InventoryCard';
 import Button from '../../../components/common/Button/Button';
 import { useBookmarks } from '../../inventory/hooks/useBookmarks';
-import { useSiteGate } from '../../../hooks/useSiteGate';
+import { useAdminAuth } from '../../../context/AdminAuthContext';
 import { useGroups } from '../../developer/hooks/useGroups';
+import DeveloperBatchInventoryForm from '../components/DeveloperBatchInventoryForm/DeveloperBatchInventoryForm';
+import AdminAccessModal from '../components/AdminAccessModal/AdminAccessModal';
 
 // Temporary standalone page — will be removed once the real Admin Panel exists.
 
-// Add more entries here as new form "types" get built later.
 const FORM_TYPES = [
-  { id: 'normal', label: 'Normal (Project + Block linked)' },
-  { id: 'sector-based', label: 'Sector-based' },
-  { id: 'sector-block-image', label: 'Sector + Block + Image' },
+  { id: 'developer-batch', label: 'Developer Batch (Bulk Projects)' },
 ];
 
 export default function AdminInventoryFormPage() {
   const [createdInventory, setCreatedInventory] = useState(null);
-  const [formType, setFormType] = useState('normal');
+  const [formType, setFormType] = useState('developer-batch');
   const { isBookmarked, toggleBookmark } = useBookmarks();
-  const { isUnlocked, unlock } = useSiteGate();
+  const { isAdminAuthenticated } = useAdminAuth();
   const { groups } = useGroups();
-  const navigate = useNavigate();
 
   const handleAddAnother = () => setCreatedInventory(null);
-  const handleFinish = () => {
-    unlock();
-    navigate('/');
-  };
+
+  if (!isAdminAuthenticated) {
+    return (
+      <div className="admin-page">
+        <AdminAccessModal variant="page" />
+      </div>
+    );
+  }
 
   return (
     <div className="admin-page">
       <h1 className="admin-page__title">
         {createdInventory ? 'Inventory Added' : 'Add Inventory'}
       </h1>
-
-      {!isUnlocked && (
-        <p className="admin-page__gate-hint">
-          The website is hidden from visitors while you add inventories. Click
-          "Finish &amp; View Website" below once you're done adding data.
-        </p>
-      )}
 
       {createdInventory ? (
         <div className="admin-page__result">
@@ -63,14 +54,10 @@ export default function AdminInventoryFormPage() {
             <Button variant="primary" onClick={handleAddAnother}>
               Add Another Inventory
             </Button>
-            <Button variant="secondary" onClick={handleFinish}>
-              Finish &amp; View Website
-            </Button>
           </div>
         </div>
       ) : (
         <>
-          {/* Type selector — dropdown at the top, form below switches with it */}
           <div className="admin-page__type-select">
             <label htmlFor="admin-page-form-type" className="admin-page__type-select-label">
               Type
@@ -89,22 +76,8 @@ export default function AdminInventoryFormPage() {
             </select>
           </div>
 
-          {formType === 'normal' && (
-            <AdminInventoryForm onSuccess={setCreatedInventory} availableGroups={groups} />
-          )}
-          {formType === 'sector-based' && (
-            <SectorBasedInventoryForm onSuccess={setCreatedInventory} availableGroups={groups} />
-          )}
-          {formType === 'sector-block-image' && (
-            <SectorBlockImageForm onSuccess={setCreatedInventory} />
-          )}
-
-          {!isUnlocked && (
-            <div className="admin-page__finish-early">
-              <Button variant="ghost" onClick={handleFinish}>
-                Skip for now &amp; view website
-              </Button>
-            </div>
+          {formType === 'developer-batch' && (
+            <DeveloperBatchInventoryForm onSuccess={setCreatedInventory} />
           )}
         </>
       )}

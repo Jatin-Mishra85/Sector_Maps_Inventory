@@ -2,9 +2,14 @@
   position: fixed;
   inset: 0;
   z-index: var(--z-toast);
-  background: rgba(15, 16, 20, 0.94);
+  background: rgba(15, 16, 20, 0.96); /* Slightly darker for better image isolation */
   display: flex;
   flex-direction: column;
+  /* Safe area inset support for modern edge-to-edge mobile screens and foldables */
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
 }
 
 .img-preview__toolbar {
@@ -12,22 +17,28 @@
   justify-content: flex-end;
   gap: var(--space-3);
   padding: var(--space-4);
+  z-index: 2; /* Ensures buttons sit above the stage if image overlaps */
 }
 
 .img-preview__btn {
-  width: 40px;
-  height: 40px;
+  /* Increased sizing to 44px minimum to satisfy touch target guidelines for mobile/Fold devices */
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   border: none;
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.15);
   color: #fff;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   transition: background-color 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .img-preview__btn:hover {
-  background: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.25);
 }
 
 .img-preview__stage {
@@ -37,13 +48,39 @@
   justify-content: center;
   overflow: hidden;
   touch-action: none;
+  position: relative;
+  /* Adds a small buffer safety zone so images never tightly hit the screen edges */
+  padding: var(--space-2); 
 }
 
 .img-preview__image {
-  max-width: 100%;
-  max-height: 100%;
+  /* Utilizing viewport dimensions combined with clamp protects layout flow across 
+     strange foldable aspect ratios (like the Z Fold 4's cover vs internal display) */
+  max-width: 96vw;
+  max-height: 82vh; 
+  width: auto;
+  height: auto;
   object-fit: contain;
   transition: transform 0.15s ease-out;
   cursor: zoom-in;
   user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* Adjustments specifically targeted at small outer displays or landscape foldables */
+@media (max-width: 480px), (max-height: 480px) {
+  .img-preview__toolbar {
+    padding: var(--space-2) var(--space-3);
+    gap: var(--space-2);
+  }
+  
+  .img-preview__btn {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+  
+  .img-preview__image {
+    max-height: 85vh;
+  }
 }

@@ -3,11 +3,11 @@ const inventoryService = require('../services/inventory.service');
 
 function mapBody(req) {
     return {
-        developerId: req.body.developerId,
-        sectorId: req.body.sectorId,
-        projectId: req.body.projectId,
+        developerName: req.body.actualDeveloperName,
+        sectorName: req.body.sectorName,
+        projectName: req.body.name,
+        displaySequence: req.body.cardId,
         imageId: req.body.imageId,
-        displaySequence: req.body.displaySequence,
         price: req.body.price,
         areaSqFt: req.body.areaSqFt,
         unitType: req.body.unitType,
@@ -20,6 +20,17 @@ async function getAll(req, res) {
     try {
         const inventory = await inventoryService.getAllInventory();
         res.status(200).json(inventory);
+    } catch (err) {
+        console.error('❌ getAll Inventory error:', err);
+        res.status(err.statusCode || 500).json({ message: err.message });
+    }
+}
+
+// GET /api/inventory/next-card-number — form isse agla free Card No fetch karta hai.
+async function getNextCardNumber(req, res) {
+    try {
+        const nextCardNumber = await inventoryService.getNextCardNumber();
+        res.status(200).json({ nextCardNumber });
     } catch (err) {
         res.status(err.statusCode || 500).json({ message: err.message });
     }
@@ -62,4 +73,4 @@ async function remove(req, res) {
     }
 }
 
-module.exports = { getAll, getById, create, update, remove };
+module.exports = { getAll, getNextCardNumber, getById, create, update, remove };

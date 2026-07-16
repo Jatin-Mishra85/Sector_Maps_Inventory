@@ -11,7 +11,8 @@
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 var(--space-1);
+  /* Fluid padding strategy prevents layouts from smashing into edges on small viewports */
+  padding-inline: clamp(12px, 4vw, var(--space-6));
   box-sizing: border-box;
 }
 
@@ -23,14 +24,16 @@
   width: 100%;
   background: linear-gradient(135deg, var(--color-primary) 0%, #0e1e33 100%);
   box-shadow: 0 4px 18px rgba(18, 38, 63, 0.25);
+  /* Safe area insets for notches/punch-holes */
+  padding-top: env(safe-area-inset-top, 0px);
 }
 
 .main-layout__header .main-layout__container {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-2);
-  height: 64px;
+  gap: var(--space-3);
+  height: 60px; /* Reduced base mobile height to secure header space */
   min-width: 0;
 }
 
@@ -48,22 +51,20 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
+  width: 40px; /* Scaled slightly down on tiny viewports */
   height: 40px;
   flex-shrink: 0;
   border-radius: var(--radius-md);
-  background: linear-gradient(145deg, var(--color-accent-light) 0%, var(--color-accent) 100%);
   color: var(--color-primary);
-  box-shadow: 0 2px 8px rgba(184, 146, 90, 0.35);
 }
 
-.main-layout__logo svg {
-  width: 24px;
-  height: 24px;
+.main-layout__logo img {
+  width: 35px;
+  height: 35px;
+  object-fit: contain;
 }
 
-/* MOBILE FIRST — brand text (name + subtitle) hidden below 400px, only the
-   logo icon shows so the header stays compact and never overflows */
+/* Mobile-first hidden pattern updated to protect hyper-narrow screens (Fold 4 cover screen ~280px-320px) */
 .main-layout__brand-text {
   display: none;
   flex-direction: column;
@@ -74,7 +75,7 @@
 
 .main-layout__brand-name {
   font-family: var(--font-heading);
-  font-size: 16px;
+  font-size: 16px; /* Fluidized for safety */
   font-weight: 800;
   letter-spacing: 0.1px;
   white-space: nowrap;
@@ -83,9 +84,10 @@
   background: linear-gradient(100deg, var(--color-accent-light) 0%, var(--color-accent) 45%, var(--color-accent-light) 100%);
   background-size: 200% auto;
   -webkit-background-clip: text;
+  --webkit-text-stroke: 1px rgba(0, 0, 0, 0.681);
   background-clip: text;
   color: transparent;
-  -webkit-text-stroke: 0.3px rgba(255, 255, 255, 0.15);
+  -webkit-text-stroke: 1px rgba(0, 0, 0, 0.235);
   animation: brand-shimmer 6s ease-in-out infinite;
 }
 
@@ -96,9 +98,9 @@
 }
 
 .main-layout__brand-subtitle {
-  font-size: 9.5px;
+  font-size: 8.5px;
   font-weight: 600;
-  letter-spacing: 1.8px;
+  letter-spacing: 1.5px;
   text-transform: uppercase;
   color: var(--color-on-primary);
   opacity: 0.72;
@@ -110,7 +112,7 @@
 .main-layout__nav--desktop {
   display: none;
   align-items: center;
-  gap: var(--space-5);
+  gap: var(--space-4); /* Tight gap for medium layout sizes */
 }
 
 .main-layout__nav-link {
@@ -144,21 +146,22 @@
   width: 100%;
 }
 
-/* ===== Hamburger button — mobile only ===== */
+/* ===== Hamburger button — mobile only (Enlarged touch targets for accessibility) ===== */
 .main-layout__hamburger {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   gap: 5px;
-  width: 38px;
-  height: 38px;
+  width: 44px; /* Satisfies modern 44px mobile touch target regulations */
+  height: 44px;
   flex-shrink: 0;
   background: transparent;
   border: none;
   cursor: pointer;
   padding: 0;
   z-index: calc(var(--z-header) + 2);
+  -webkit-tap-highlight-color: transparent;
 }
 
 .main-layout__hamburger span {
@@ -182,25 +185,25 @@
   transform: translateY(-7px) rotate(-45deg);
 }
 
-/* ===== Mobile dropdown nav — hidden by default, slides down when open ===== */
+/* ===== Mobile dropdown nav — switches gracefully to a scrollable panel if height runs out ===== */
 .main-layout__nav--mobile {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
   max-height: 0;
-  overflow: hidden;
+  overflow-y: auto;
   padding: 0 var(--space-4);
   background: linear-gradient(135deg, var(--color-primary) 0%, #0e1e33 100%);
-  transition: max-height 0.3s ease, padding 0.3s ease;
+  transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s ease;
 }
 
 .main-layout__nav--mobile-open {
-  max-height: 200px;
-  padding: var(--space-2) var(--space-4) var(--space-4);
+  max-height: 60vh; /* Protects users against overflowing small screen lengths */
+  padding: var(--space-2) var(--space-4) calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
 }
 
 .main-layout__nav--mobile .main-layout__nav-link {
-  padding: var(--space-2) 0;
+  padding: var(--space-3) 0; /* Expanded touch zone size */
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
@@ -212,8 +215,10 @@
 .main-layout__overlay {
   position: fixed;
   inset: 0;
-  top: 64px;
-  background: rgba(0, 0, 0, 0.25);
+  top: 60px;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   z-index: calc(var(--z-header) - 1);
 }
 
@@ -221,12 +226,12 @@
 .main-layout__content {
   flex: 1;
   width: 100%;
-  padding: var(--space-6) 0;
-  animation: page-fade-in 0.3s ease;
+  padding: var(--space-1) 0;
+  animation: page-fade-in 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @keyframes page-fade-in {
-  from { opacity: 0; transform: translateY(6px); }
+  from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
@@ -235,19 +240,44 @@
   border-top: 1px solid var(--color-border);
   font-size: var(--font-size-sm);
   color: var(--color-text-muted);
+  text-align: center;
 }
 
-/* ===== Small phones and up (400px+) — brand text starts appearing ===== */
-@media (min-width: 400px) {
+/* ===== Small Viewport Breakpoints (E.g., Fold Cover Screens / iPhone SE) ===== */
+@media (min-width: 340px) {
   .main-layout__brand-text {
     display: flex;
   }
+  .main-layout__brand-name {
+    font-size: 15px;
+  }
+  .main-layout__brand-subtitle {
+    font-size: 9px;
+  }
 }
 
-/* ===== Tablet and up — switch from hamburger to inline nav ===== */
-@media (min-width: 640px) {
+@media (min-width: 480px) {
+  .main-layout__logo {
+    width: 40px;
+    height: 40px;
+  }
+  .main-layout__brand-name {
+    font-size: 20px;
+  }
+  .main-layout__brand-subtitle {
+    font-size: 11px;
+  }
+}
+
+/* ===== Tablet / Desktop Transition Breakpoint ===== */
+@media (min-width: 768px) {
+  .main-layout__header .main-layout__container {
+    height: 72px;
+  }
+
   .main-layout__nav--desktop {
     display: flex;
+    gap: var(--space-5);
   }
 
   .main-layout__hamburger,
@@ -256,15 +286,15 @@
     display: none;
   }
 
-  .main-layout__header .main-layout__container {
-    height: 72px;
+  .main-layout__overlay {
+    top: 72px;
   }
-}
 
-@media (min-width: 768px) {
-  .main-layout__container { padding: 0 var(--space-6); }
-}
+  .main-layout__content {
+    padding: var(--space-6) 0;
+  }
 
-@media (min-width: 1024px) {
-  .main-layout__container { padding: 0 var(--space-8); }
+  .main-layout__footer {
+    text-align: left;
+  }
 }

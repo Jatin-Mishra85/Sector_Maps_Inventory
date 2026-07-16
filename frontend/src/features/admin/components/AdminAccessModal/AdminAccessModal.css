@@ -1,0 +1,108 @@
+/* Base Layout Configurations */
+.admin-access {
+  width: 100%;
+  background: #ffffff;
+  box-sizing: border-box;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Variant 1: Modal View (Overlay Backdrop Setup) */
+.admin-access__overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+.admin-access--overlay {
+  max-width: 440px;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  padding: 2.5rem 2rem;
+  animation: modalFadeIn 0.2s ease-out;
+}
+
+/* Variant 2: Full-Page/Inline Form View */
+.admin-access--page {
+  max-width: 600px;
+  margin: 4rem auto;
+  padding: 3rem 2.5rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #eef2f5;
+}
+
+/* Modal Inner Body Elements */
+.admin-access__body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.admin-access__title {
+  margin: 0;
+  color: #1a1a1a;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+.admin-access__hint {
+  margin: 0 0 0.5rem 0;
+  color: #666666;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.admin-access__error {
+  margin: 0.5rem 0 0 0;
+  color: #df2020;
+  background-color: #fce8e6;
+  border: 1px solid #fad2cf;
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+/* Dynamic Flex Actions Block */
+.admin-access__actions {
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: flex-start;
+  gap: 1rem;
+  margin-top: 1.75rem;
+}
+
+/* Responsiveness Constraints */
+@media (max-width: 480px) {
+  .admin-access--overlay,
+  .admin-access--page {
+    padding: 2rem 1.5rem;
+    margin: 1.5rem auto;
+  }
+  
+  .admin-access__actions {
+    flex-direction: column;
+  }
+}
+
+/* Modal Entry Keyframes Animation */
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -9,27 +9,15 @@ export default function MainLayout() {
 
   const closeMenu = () => setMenuOpen(false);
 
+  const logoSrc = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAMAAABF0y+mAAAAbFBMVEURc74Jcb0AbrwDdsB+sdptq9iexeT3+v2bwuIHcL1joNLY5/P////r9PtcnNEpfsOItNzm8flnptXe7PaNu+A5iMc/jcno8/rB2e1IkczL3u8tgcTY4/G31Oqoy+YpgsVKls4AbLsAabre5vPVOeCxAAAAyklEQVR4AcXNRQLCMBQE0MZb/qTuLve/IzUc1kw8L+L8O4xz9tOEVA77cU1oY1zv22XmXAjWgvwvFoQRTKwMEhmw9+9SAEmWFwDCt49ZRqa0UV5ZW5q6eUUvj0jRhqSSJPvAViUH0icmXW82NH1Jb8iGtAZWLIA6Dd5QEshuaAmkvGfzKhh3rFe09agNXt7lKToxtDsOooScnnDSSOfsxLlHyl/RnYcDm2/IM9oxmz5xy4bb+Io8XNo1ZZaV27ioDR8672HsGDf7U64VVBK7Duk2pAAAAABJRU5ErkJggg==";
+
   return (
     <div className="main-layout">
       <header className="main-layout__header">
         <div className="main-layout__container">
           <Link to={isUnlocked ? '/' : '/admin'} className="main-layout__brand" onClick={closeMenu}>
-            <span className="main-layout__logo" aria-hidden="true">
-              <svg viewBox="0 0 48 48" width="48" height="48" fill="none">
-                <rect x="6" y="16" width="14" height="26" rx="1.5" fill="currentColor" opacity="0.9" />
-                <rect x="22" y="8" width="14" height="34" rx="1.5" fill="currentColor" />
-                <rect x="38" y="20" width="6" height="22" rx="1" fill="currentColor" opacity="0.7" />
-                <rect x="9" y="20" width="3" height="3" fill="var(--color-primary)" />
-                <rect x="14" y="20" width="3" height="3" fill="var(--color-primary)" />
-                <rect x="9" y="26" width="3" height="3" fill="var(--color-primary)" />
-                <rect x="14" y="26" width="3" height="3" fill="var(--color-primary)" />
-                <rect x="26" y="13" width="3" height="3" fill="var(--color-primary)" />
-                <rect x="31" y="13" width="3" height="3" fill="var(--color-primary)" />
-                <rect x="26" y="19" width="3" height="3" fill="var(--color-primary)" />
-                <rect x="31" y="19" width="3" height="3" fill="var(--color-primary)" />
-                <rect x="26" y="25" width="3" height="3" fill="var(--color-primary)" />
-                <rect x="31" y="25" width="3" height="3" fill="var(--color-primary)" />
-              </svg>
+            <span className="main-layout__logo">
+              <img src={logoSrc} alt="The Builder Bazar Logo" width="28" height="28" />
             </span>
             <span className="main-layout__brand-text">
               <span className="main-layout__brand-name">The Builder Bazar</span>
