@@ -2,12 +2,22 @@
 const inventoryService = require('../services/inventory.service');
 
 function mapBody(req) {
+    let groupNames = [];
+    if (req.body.groupNames) {
+        try {
+            groupNames = JSON.parse(req.body.groupNames);
+        } catch (e) {
+            groupNames = [];
+        }
+    }
+
     return {
         developerName: req.body.actualDeveloperName,
         sectorName: req.body.sectorName,
         projectName: req.body.name,
         displaySequence: req.body.cardId,
-        imageId: req.body.imageId,
+        imagePath: req.file ? req.file.filename : undefined, // ✅ multer se file
+        groupNames,                                           // ✅ groups bhi
         price: req.body.price,
         areaSqFt: req.body.areaSqFt,
         unitType: req.body.unitType,

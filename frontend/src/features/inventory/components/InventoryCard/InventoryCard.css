@@ -20,7 +20,7 @@
 /* ===== Image Frame — Soft Ocean Blue theme styling ===== */
 .inv-card__thumb {
   flex: 0 0 auto;
-  width: 110px;
+  width: 130px;
   height: 100%;
   border-radius: var(--radius-md);
   overflow: hidden;
@@ -95,6 +95,7 @@
 
 .inv-card__top-actions {
   display: flex;
+  /* justify-content: end; */
   align-items: center;
   gap: var(--space-1);
   flex-shrink: 0;
@@ -173,7 +174,7 @@
 /* Adjusted container padding to prevent 3D elements and shadows from getting clipped */
 .inv-card__actions {
   display: flex;
-  justify-content: space-between;
+  justify-content: space-around;
   gap: var(--space-2);
   margin-top: auto;
   padding: 12px 4px 8px 4px; /* Added bottom and side padding to ensure free space for 3D bounce/press states */
@@ -322,13 +323,14 @@
 /* Fluid display optimization rules for wide layout variants */
 @media (min-width: 480px) {
   .inv-card__thumb {
-
+/* border: 20PX solid BLACK; */
     width: 112px;
     height: 112px;
     padding: var(--space-2);
   }
 
   .inv-card__action-btn {
+    /* background: red; */
     width: auto;
     height: 40px;
     padding: 0 var(--space-4);

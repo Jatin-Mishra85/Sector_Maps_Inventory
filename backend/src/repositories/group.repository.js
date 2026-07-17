@@ -1,6 +1,5 @@
-// backend/repositories/group.repository.js
+// backend/src/repositories/group.repository.js
 // Note: table is "Groups" (plural) to avoid GROUP being a reserved SQL keyword.
-// ⚠️ Adjust this import path to match your real db connection file.
 const { getPool, sql } = require('../database/connection');
 
 async function getAll() {

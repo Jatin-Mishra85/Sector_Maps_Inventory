@@ -20,7 +20,7 @@
 .main-layout__header {
   position: sticky;
   top: 0;
-  z-index: var(--z-header);
+  z-index: 99;
   width: 100%;
   background: linear-gradient(135deg, var(--color-primary) 0%, #0e1e33 100%);
   box-shadow: 0 4px 18px rgba(18, 38, 63, 0.25);
@@ -121,7 +121,8 @@
   font-weight: 600;
   color: var(--color-on-primary);
   text-decoration: none;
-  opacity: 0.85;
+  opacity: 1;
+  z-index: 99; 
   padding-bottom: 3px;
   white-space: nowrap;
   transition: opacity 0.2s ease;

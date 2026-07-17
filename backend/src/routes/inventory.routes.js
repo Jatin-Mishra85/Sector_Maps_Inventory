@@ -1,5 +1,4 @@
 // backend/src/routes/inventory.routes.js
-// Mount in app.js: app.use('/api/inventory', require('./routes/inventory.routes'));
 const express = require('express');
 const router = express.Router();
 const inventoryController = require('../controllers/inventory.controller');
@@ -13,11 +12,13 @@ router.get('/next-card-number', inventoryController.getNextCardNumber);
 
 router.get('/:id', inventoryController.getById);
 
-// upload.none() — Developer Batch form koi file nahi bhejta, sirf text fields
-// (actualDeveloperName, sectorName, name, cardId) multipart/form-data mein bhejta hai.
-// Iske bina Express req.body khaali reh jata hai, isliye sab "required" errors aate the.
+// Developer Batch (Add Inventory) — sirf text fields, koi file nahi.
 router.post('/', upload.none(), inventoryController.create);
-router.put('/:id', upload.none(), inventoryController.update);
+
+// Edit Inventory (purana modal) — optional 'image' file field bhejta hai.
+// upload.single('image') text fields ko bhi parse karta hai (req.body) aur
+// agar 'image' field mile to req.file mein daal deta hai; agar na mile, fine hai.
+router.put('/:id', upload.single('image'), inventoryController.update);
 
 router.delete('/:id', inventoryController.remove);
 

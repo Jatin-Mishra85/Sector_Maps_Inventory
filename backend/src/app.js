@@ -11,8 +11,7 @@ const ApiResponse = require('./utils/apiResponse.util');
 const HTTP_STATUS = require('./constants/httpStatusCodes.constant');
 
 const app = express();
-const developerRoutes = require('./routes/developer.routes');
-app.use('/api/developers', developerRoutes);
+
 // ==============================
 // GLOBAL MIDDLEWARE
 // ==============================
@@ -46,9 +45,6 @@ app.get('/health', (req, res) => {
 
 const routes = require('./routes/index.routes');
 app.use('/api/v1', routes);
-// Feature routes (auth, developer, sector, inventory, admin, upload,
-// excelImport, search) will be mounted here in the next implementation phase.
-// app.use('/api/v1', routes);
 
 // ==============================
 // ERROR HANDLING (must remain last)

@@ -49,15 +49,25 @@ async function searchInventories({ keyword, inventoryType, offset, limit }) {
         .input('Limit', sql.Int, limit);
     if (inventoryType) dataRequest.input('InventoryType', sql.NVarChar(255), inventoryType);
 
+    // NOTE: SQL Server 2008 R2 (compatibility level 100) OFFSET/FETCH support
+    // nahi karta — woh feature SQL Server 2012+ mein aaya. Isliye yahan
+    // ROW_NUMBER() window function se manual pagination ki gayi hai, jo
+    // 2008 R2 mein bhi chalta hai. DISTINCT aur ROW_NUMBER() saath mein
+    // allowed nahi hai SQL Server mein, isliye DISTINCT hata diya —
+    // duplicate rows Groups ke EXISTS() clause ki wajah se already avoid ho jaate hain
+    // (LEFT JOIN se duplicates aate, EXISTS se nahi).
     const dataResult = await dataRequest.query(`
-        SELECT DISTINCT i.*, d.DeveloperName, s.SectorName, p.ProjectName
-        FROM Inventory i
-        LEFT JOIN Developers d ON d.DeveloperId = i.DeveloperId
-        LEFT JOIN Sectors s ON s.SectorId = i.SectorId
-        LEFT JOIN Projects p ON p.ProjectId = i.ProjectId
-        ${whereClause}
-        ORDER BY i.DisplaySequence
-        OFFSET @Offset ROWS FETCH NEXT @Limit ROWS ONLY
+        SELECT * FROM (
+            SELECT i.*, d.DeveloperName, s.SectorName, p.ProjectName,
+                   ROW_NUMBER() OVER (ORDER BY i.DisplaySequence) AS RowNum
+            FROM Inventory i
+            LEFT JOIN Developers d ON d.DeveloperId = i.DeveloperId
+            LEFT JOIN Sectors s ON s.SectorId = i.SectorId
+            LEFT JOIN Projects p ON p.ProjectId = i.ProjectId
+            ${whereClause}
+        ) AS Results
+        WHERE RowNum > @Offset AND RowNum <= (@Offset + @Limit)
+        ORDER BY RowNum
     `);
 
     return { items: dataResult.recordset, total };

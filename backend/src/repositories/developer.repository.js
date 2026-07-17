@@ -2,7 +2,7 @@
 //
 // This file only talks to the database. No business logic lives here.
 // ⚠️ This import path is a PLACEHOLDER — change it to wherever your real
-// connectDB/getPool/closeDB file actually lives (e.g. '../config/db.config').
+// connectDB/getPool/closeDB file actually lives (e.g. '../database/connection').
 const { getPool, sql } = require('../database/connection');
 
 async function getAll() {
