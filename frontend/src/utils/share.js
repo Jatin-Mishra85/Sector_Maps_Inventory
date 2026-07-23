@@ -8,7 +8,9 @@ export async function shareContent({ title, text, url }) {
     }
   }
   if (navigator.clipboard) {
-    await navigator.clipboard.writeText(url);
+    const toCopy = url || text;
+    if (!toCopy) return 'unsupported';
+    await navigator.clipboard.writeText(toCopy);
     return 'copied';
   }
   return 'unsupported';

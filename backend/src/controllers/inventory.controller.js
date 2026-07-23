@@ -26,10 +26,32 @@ function mapBody(req) {
     };
 }
 
+// Raw DB row (PascalCase, joined columns) -> frontend-expected shape (camelCase).
+// Repository ka getAll/getById/create/update sab isi raw shape mein row deta hai,
+// isliye ye function har response ke saath call hona chahiye.
+function mapInventoryRow(row) {
+    if (!row) return null;
+
+    return {
+        id: row.InventoryId,
+        name: row.ProjectName || '',
+        actualDeveloperName: row.DeveloperName || '',
+        sectorName: row.SectorName || '',
+        cardId: row.DisplaySequence,
+        price: row.Price,
+        areaSqFt: row.AreaSqFt,
+        unitType: row.UnitType,
+        status: row.Status,
+        description: row.Description || '',
+        imageUrl: row.ImagePath ? `/uploads/${row.ImagePath}` : null,
+        groups: Array.isArray(row.Groups) ? row.Groups : [],
+    };
+}
+
 async function getAll(req, res) {
     try {
         const inventory = await inventoryService.getAllInventory();
-        res.status(200).json(inventory);
+        res.status(200).json(inventory.map(mapInventoryRow));
     } catch (err) {
         console.error('❌ getAll Inventory error:', err);
         res.status(err.statusCode || 500).json({ message: err.message });
@@ -50,7 +72,7 @@ async function getById(req, res) {
     try {
         const item = await inventoryService.getInventoryById(req.params.id);
         if (!item) return res.status(404).json({ message: 'Inventory not found.' });
-        res.status(200).json(item);
+        res.status(200).json(mapInventoryRow(item));
     } catch (err) {
         res.status(err.statusCode || 500).json({ message: err.message });
     }
@@ -59,7 +81,7 @@ async function getById(req, res) {
 async function create(req, res) {
     try {
         const item = await inventoryService.createInventory(mapBody(req));
-        res.status(201).json(item);
+        res.status(201).json(mapInventoryRow(item));
     } catch (err) {
         res.status(err.statusCode || 500).json({ message: err.message });
     }
@@ -68,7 +90,7 @@ async function create(req, res) {
 async function update(req, res) {
     try {
         const item = await inventoryService.updateInventory(req.params.id, mapBody(req));
-        res.status(200).json(item);
+        res.status(200).json(mapInventoryRow(item));
     } catch (err) {
         res.status(err.statusCode || 500).json({ message: err.message });
     }

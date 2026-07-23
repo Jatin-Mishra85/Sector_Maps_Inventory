@@ -4,7 +4,7 @@ import { parseApiError } from '../../../services/errorHandler';
 import { ALL_DEVELOPERS_ID, ALL_TYPES_ID } from '../../../constants/appConstants';
 import { ENV } from '../../../constants/env';
 
-function resolveImageUrl(imageUrl) {
+export function resolveImageUrl(imageUrl) {
   if (!imageUrl) return null;
   const match = imageUrl.match(/\/uploads\/[^/?#]+/i);
   const path = match ? match[0] : imageUrl;
@@ -12,17 +12,19 @@ function resolveImageUrl(imageUrl) {
   return `${ENV.STATIC_BASE_URL}${path}`;
 }
 
+// FIX: Backend (inventory.controller.js -> mapInventoryRow) already sends
+// camelCase fields (id, name, actualDeveloperName, sectorName, cardId,
+// googleMapsUrl, groups). Pehle ye function unhe dobara PascalCase DB-column
+// names (item.ProjectName, item.DeveloperName, item.SectorName, etc.) se
+// remap karne ki koshish kar raha tha — jo ab exist hi nahi karte, isliye
+// ye undefined values `...item` spread ke baad likhi jaake sahi values ko
+// overwrite kar deti thi. Isi wajah se card par Sector/Project/Developer
+// text blank aa raha tha, sirf image sahi dikh rahi thi.
 function mapInventory(item) {
   return {
     ...item,
-    id: item.InventoryId,
-    name: item.ProjectName,
-    block: item.Block ?? null,
-    actualDeveloperName: item.DeveloperName,
-    sectorName: item.SectorName,              // 👈 YE LINE MISSING THI
-    groups: Array.isArray(item.groups) ? item.groups : [],
-    cardId: item.DisplaySequence,
-    googleMapsUrl: item.GoogleMapUrl ?? null,
+    // Sirf imageUrl ko extra resolve karna hai (relative path -> full URL).
+    // Baaki sab fields backend se already sahi camelCase shape mein aati hain.
     imageUrl: resolveImageUrl(item.imageUrl ?? null),
   };
 }

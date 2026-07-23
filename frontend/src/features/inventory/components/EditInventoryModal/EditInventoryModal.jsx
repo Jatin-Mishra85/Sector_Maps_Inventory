@@ -9,6 +9,7 @@ import Button from '../../../../components/common/Button/Button';
 import GroupMultiSelect from '../../../../components/common/GroupMultiSelect/GroupMultiSelect';
 
 import { inventoryService } from '../../services/inventoryService';
+import { resolveImageUrl } from '../../hooks/useInventories';
 import { parseApiError } from '../../../../services/errorHandler';
 import { useToast } from '../../../../context/ToastContext';
 
@@ -19,7 +20,7 @@ export default function EditInventoryModal({ inventory, isOpen, onClose, onUpdat
   const { control, register, handleSubmit, reset, formState: { errors } } = useForm({
     defaultValues: {
       name: '',
-      block: '',
+      sector: '',
       actualDeveloperName: '',
       groups: [],
       cardId: '', // Card ID / Roll No — internal only, not shown on the card. Decimal allowed (e.g. 5.6).
@@ -32,7 +33,7 @@ export default function EditInventoryModal({ inventory, isOpen, onClose, onUpdat
     if (inventory) {
       reset({
         name: inventory.name || '',
-        block: inventory.block || '',
+        sector: inventory.sectorName || '',
         actualDeveloperName: inventory.actualDeveloperName || '',
         groups: Array.isArray(inventory.groups) ? inventory.groups.map((g) => g.groupName) : [],
         cardId: inventory.cardId != null ? String(inventory.cardId) : '',
@@ -49,7 +50,7 @@ export default function EditInventoryModal({ inventory, isOpen, onClose, onUpdat
     try {
       const formData = new FormData();
       formData.append('name', data.name || '');
-      formData.append('block', data.block || '');
+      formData.append('sectorName', data.sector || '');
       formData.append('actualDeveloperName', data.actualDeveloperName || '');
       formData.append('groupNames', JSON.stringify(data.groups || [])); // Grouping
       formData.append('cardId', data.cardId || ''); // Card ID — compulsory, decimal allowed
@@ -63,12 +64,14 @@ export default function EditInventoryModal({ inventory, isOpen, onClose, onUpdat
       const updatedInventory = {
         ...inventory,
         name: response?.name ?? data.name ?? inventory.name,
-        block: response?.block ?? data.block ?? inventory.block,
+        sectorName: response?.sectorName ?? data.sector ?? inventory.sectorName,
         actualDeveloperName: response?.actualDeveloperName ?? data.actualDeveloperName ?? inventory.actualDeveloperName,
         groups: response?.groups ?? inventory.groups,
         cardId: response?.cardId ?? inventory.cardId,
         description: response?.description ?? data.description ?? inventory.description,
-        imageUrl: response?.imageUrl ?? (data.image ? URL.createObjectURL(data.image) : inventory.imageUrl),
+        imageUrl: response?.imageUrl
+          ? resolveImageUrl(response.imageUrl)
+          : (data.image ? URL.createObjectURL(data.image) : inventory.imageUrl),
       };
 
       showToast('Inventory updated successfully.', 'success');
@@ -95,7 +98,7 @@ export default function EditInventoryModal({ inventory, isOpen, onClose, onUpdat
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
           <Input label="Project" {...register('name')} />
 
-          <Input label="Block" {...register('block')} />
+          <Input label="Sector" {...register('sector')} />
 
           <Input label="Developer" {...register('actualDeveloperName')} />
 

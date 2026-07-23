@@ -68,40 +68,78 @@ function InventoryCard({
     }
   };
 
-  // ---- Share: teen options — Image / Details / Link ----
-  const handleShareImage = async (e) => {
+  // ---- Share: ab sirf DO options — "Image + Details" ek saath, aur "Web URL" ----
+
+  // Option 1: Image aur uski details (Developer • Sector • Project) ek hi
+  // native share sheet mein saath jaati hain.
+const handleShareImageWithDetails = async (e) => {
     e.stopPropagation();
     setShareOpen(false);
+
+    const detailsLine1 = sectorName || '';
+    const detailsLine2 = [actualDeveloperName, name].filter(Boolean).join(', ');
+    const lines = [detailsLine1, detailsLine2].filter(Boolean);
+
     if (!imageUrl) {
-      showToast('Is inventory ki koi image nahi hai.', 'error');
+      const result = await shareContent({ title: middleLabel || topLabel, text: lines.join('\n') });
+      if (result === 'copied') showToast('Details clipboard mein copy ho gayi.', 'success');
+      if (result === 'unsupported') showToast('Sharing is not supported on this device.', 'info');
       return;
     }
+
     try {
-      const res = await fetch(imageUrl);
-      const blob = await res.blob();
-      const file = new File([blob], `${topLabel || 'inventory'}.jpg`, {
-        type: blob.type || 'image/jpeg',
+      // Image load karo taaki canvas par draw kar sakein.
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      const loaded = new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
       });
+      img.src = imageUrl;
+      await loaded;
+
+      // Neeche caption ke liye extra height (line ke hisaab se).
+      const padding = 24;
+      const lineHeight = 40;
+      const captionHeight = padding * 2 + lines.length * lineHeight;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight + captionHeight;
+      const ctx = canvas.getContext('2d');
+
+      // Original image upar.
+      ctx.drawImage(img, 0, 0);
+
+      // Caption ka background (safed patti).
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, img.naturalHeight, canvas.width, captionHeight);
+
+      // Caption text.
+      ctx.fillStyle = '#1e1e1e';
+      ctx.font = `bold ${lineHeight - 12}px sans-serif`;
+      ctx.textBaseline = 'top';
+      lines.forEach((line, i) => {
+        ctx.fillText(line, padding, img.naturalHeight + padding + i * lineHeight);
+      });
+
+      const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.92));
+      const file = new File([blob], `${topLabel || 'inventory'}.jpg`, { type: 'image/jpeg' });
+
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({ files: [file], title: middleLabel || topLabel });
       } else {
-        await downloadFile(imageUrl, `${topLabel || 'inventory'}.jpg`);
+        const url = URL.createObjectURL(blob);
+        await downloadFile(url, `${topLabel || 'inventory'}.jpg`);
+        URL.revokeObjectURL(url);
         showToast('Is device par image share nahi ho sakti — download kar di gayi.', 'info');
       }
     } catch {
-      showToast('Image share nahi ho payi. Dobara try karo.', 'error');
+      showToast('Share nahi ho paya. Dobara try karo.', 'error');
     }
   };
 
-  const handleShareDetails = async (e) => {
-    e.stopPropagation();
-    setShareOpen(false);
-    const detailsText = [actualDeveloperName, sectorName, name].filter(Boolean).join(' • ');
-    const result = await shareContent({ title: middleLabel || topLabel, text: detailsText });
-    if (result === 'copied') showToast('Details clipboard mein copy ho gayi.', 'success');
-    if (result === 'unsupported') showToast('Sharing is not supported on this device.', 'info');
-  };
-
+  // Option 2: Sirf web URL share hoga.
   const handleShareUrl = async (e) => {
     e.stopPropagation();
     setShareOpen(false);
@@ -273,18 +311,13 @@ function InventoryCard({
               {shareOpen && (
                 <ul className="inv-card__share-menu" onClick={(e) => e.stopPropagation()}>
                   <li>
-                    <button type="button" onClick={handleShareImage} disabled={!imageUrl}>
-                      Share Image
-                    </button>
-                  </li>
-                  <li>
-                    <button type="button" onClick={handleShareDetails}>
-                      Share Details
+                    <button type="button" onClick={handleShareImageWithDetails} disabled={!imageUrl}>
+                      Share Image with Details
                     </button>
                   </li>
                   <li>
                     <button type="button" onClick={handleShareUrl}>
-                      Share Link
+                      Share Web URL
                     </button>
                   </li>
                 </ul>
