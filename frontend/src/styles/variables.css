@@ -4,7 +4,7 @@
   --color-bg-gradient: linear-gradient(180deg, #f5fbff 0%, #eef7fc 50%, #dff4ff 100%); /* Ice to Sky Blue */
   --color-surface: rgba(255, 255, 255, 0.75); /* Glassmorphism base */
   --color-surface-hover: rgba(223, 244, 255, 0.4);
-  --color-text: #1e3a5f;             /* Deep muted navy for accessible contrast */
+  --color-text: #0f1823;             /* Deep muted navy for accessible contrast */
   --color-text-muted: #627d98;       /* Calm muted steel blue */
   --color-border: rgba(111, 188, 207, 0.25); /* Subtle muted teal border */
 
@@ -25,7 +25,8 @@
   --font-heading: 'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif;
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
-  --font-size-xs: clamp(0.72rem, 0.7rem + 0.1vw, 0.78rem);
+--font-size-xxs: clamp(0.6rem, 0.58rem + 0.08vw, 0.65rem);
+--font-size-xs: clamp(0.72rem, 0.7rem + 0.1vw, 0.78rem);
   --font-size-sm: clamp(0.82rem, 0.8rem + 0.15vw, 0.9rem);
   --font-size-base: clamp(0.92rem, 0.9rem + 0.2vw, 1rem);
   --font-size-lg: clamp(1.1rem, 1rem + 0.5vw, 1.25rem);

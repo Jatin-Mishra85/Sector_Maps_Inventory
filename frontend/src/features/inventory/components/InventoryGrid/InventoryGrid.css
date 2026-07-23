@@ -18,5 +18,5 @@
 }
 
 @media (min-width: 1280px) {
-  .inv-grid { grid-template-columns: repeat(2, 1fr); }
+  .inv-grid { grid-template-columns: repeat(3, 1fr); }
 }

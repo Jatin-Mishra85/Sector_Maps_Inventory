@@ -105,4 +105,4 @@ async function remove(req, res) {
     }
 }
 
-module.exports = { getAll, getNextCardNumber, getById, create, update, remove };
+module.exports = { getAll, getNextCardNumber, getById, create, update, remove, mapInventoryRow };

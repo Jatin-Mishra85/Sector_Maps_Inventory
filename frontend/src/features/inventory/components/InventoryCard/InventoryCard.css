@@ -7,10 +7,12 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-soft);
-  padding: var(--space-1);
+  padding: var(--space-1);       /* thoda zyada padding -> card thoda taller feel hoga */
+  min-height: 120px;             /* card ki height fix-ish badhayi, phone-first */
   min-width: 0;
   transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
 }
+
 
 .inv-card:hover {
   box-shadow: var(--shadow-hover);
@@ -20,17 +22,17 @@
 /* ===== Image Frame — Soft Ocean Blue theme styling ===== */
 .inv-card__thumb {
   flex: 0 0 auto;
-  width: 130px;
-  height: 100%;
+  width: 120px;
+  height: 110px;                 /* FIXED height ab yaha se — 100% hata diya
+                                     taaki image chahe kaisi bhi ho, frame same size rahe */
   border-radius: var(--radius-md);
   overflow: hidden;
   border: 1px solid var(--color-border);
   box-shadow: 0 4px 12px rgba(30, 58, 95, 0.06);
   padding: var(--space-1);
   cursor: zoom-in;
-  background: var(--color-accent-light); /* Soft Cyan frame base */
+  background: var(--color-accent-light);
 }
-
 .inv-card__thumb img {
   width: 100%;
   height: 100%;
@@ -82,10 +84,10 @@
 
 .inv-card__sector {
   font-family: var(--font-heading);
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-xs);
   font-weight: 800;
   color: var(--color-text);
-  margin: 0;
+  margin-top: auto;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -97,7 +99,7 @@
   display: flex;
   /* justify-content: end; */
   align-items: center;
-  gap: var(--space-1);
+  gap: var(--space-2);
   flex-shrink: 0;
 }
 
@@ -105,8 +107,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 26px;
+  height: 26px;
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
   background: var(--color-surface-hover);
@@ -152,10 +154,10 @@
 }
 
 .inv-card__title {
-  font-size: var(--font-size-xs);
+  font-size: var(--font-size-xxs);
   font-weight: 500;
   color: var(--color-text-muted);
-  margin: 0;
+  margin-top: auto;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -169,6 +171,7 @@
   -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  /* background: #000; */
 }
 
 /* Adjusted container padding to prevent 3D elements and shadows from getting clipped */
@@ -177,7 +180,7 @@
   justify-content: space-around;
   gap: var(--space-2);
   margin-top: auto;
-  padding: 12px 4px 8px 4px; /* Added bottom and side padding to ensure free space for 3D bounce/press states */
+  padding: 8px 4px 4px 4px; /* Added bottom and side padding to ensure free space for 3D bounce/press states */
   overflow-x: visible;
   -webkit-overflow-scrolling: touch;
 }
@@ -188,13 +191,13 @@
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
-  width: 40px;
-  height: 40px;
+  width: 33px;
+  height: 33px;
   
   /* Typography changes: Bigger, bolder text setup */
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-sm);
   font-weight: 700;
-  letter-spacing: 0.3px;
+  /* letter-spacing: 0.3px; */
   
   /* Color theme & structural 3D parameters */
   color: var(--color-text);
@@ -206,7 +209,6 @@
   border-bottom: 3.5px solid rgba(111, 188, 207, 0.6); 
   box-shadow: 0 4px 6px -1px rgba(30, 58, 95, 0.08), 
               0 2px 4px -1px rgba(30, 58, 95, 0.04);
-  
   cursor: pointer;
   position: relative;
   transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.15s ease;
@@ -214,8 +216,8 @@
 }
 
 .inv-card__action-btn svg {
-  width: 20px;
-  height: 20px;
+  width: 15px;
+  height: 15px;
   stroke-width: 2.2; /* Bolder vector icon scale */
 }
 
@@ -322,11 +324,13 @@
 
 /* Fluid display optimization rules for wide layout variants */
 @media (min-width: 480px) {
+  
+
   .inv-card__thumb {
 /* border: 20PX solid BLACK; */
     width: 112px;
-    height: 112px;
-    padding: var(--space-2);
+    height: 122px;
+    padding: var(--space-1);
   }
 
   .inv-card__action-btn {
