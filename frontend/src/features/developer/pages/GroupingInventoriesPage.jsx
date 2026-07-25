@@ -10,9 +10,12 @@ import { useGroups } from '../hooks/useGroups';
 import { useInventories } from '../../inventory/hooks/useInventories';
 import { groupService } from '../services/groupService';
 import { useToast } from '../../../context/ToastContext';
+import { useAdminAuth } from '../../../context/AdminAuthContext'; // NEW — gates the whole tab
+import AdminAccessModal from '../../admin/components/AdminAccessModal/AdminAccessModal'; // NEW
 
 export default function GroupingInventoriesPage() {
   const { showToast } = useToast();
+  const { isAdminAuthenticated } = useAdminAuth(); // NEW
   const { term, setTerm, debouncedTerm } = useSearch();
   const { groups, refetch: refetchGroups } = useGroups();
 
@@ -115,6 +118,16 @@ export default function GroupingInventoriesPage() {
       setIsRemoving(false);
     }
   };
+
+  // NEW — tab khulte hi agar is session mein admin verify nahi hua, to
+  // seedha access-code screen dikhao, page ka baaki content render hi mat karo.
+  if (!isAdminAuthenticated) {
+    return (
+      <div className="grouping-page">
+        <AdminAccessModal variant="page" />
+      </div>
+    );
+  }
 
   return (
     <div className="grouping-page">

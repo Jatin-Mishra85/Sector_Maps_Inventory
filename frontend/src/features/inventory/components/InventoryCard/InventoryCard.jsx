@@ -9,6 +9,7 @@ function InventoryCard({
   onPreview,
   onEdit,
   onDelete,
+  onAddPhoto, // NEW — placeholder click par photo-capture flow trigger karta hai
   // NEW — selection mode, used by the "Grouping Inventories" page.
   selectable = false,
   isSelected = false,
@@ -44,6 +45,9 @@ function InventoryCard({
   const locationQuery = [name, actualDeveloperName, sectorName].filter(Boolean).join(', ');
   const hasLocation = Boolean(googleMapsUrl) || Boolean(locationQuery);
 
+  // Image na ho ya load fail ho jaye to placeholder "add photo" mode mein chala jaata hai.
+  const showPhotoPlaceholder = !imageUrl || imgError;
+
   // Share dropdown ko bahar click karte hi band karo.
   useEffect(() => {
     if (!shareOpen) return undefined;
@@ -72,7 +76,7 @@ function InventoryCard({
 
   // Option 1: Image aur uski details (Developer • Sector • Project) ek hi
   // native share sheet mein saath jaati hain.
-const handleShareImageWithDetails = async (e) => {
+  const handleShareImageWithDetails = async (e) => {
     e.stopPropagation();
     setShareOpen(false);
 
@@ -175,6 +179,12 @@ const handleShareImageWithDetails = async (e) => {
       onToggleSelect?.();
       return;
     }
+    // Image nahi hai / load fail hui — camera/photo-add flow trigger karo,
+    // preview nahi (kuch preview karne ko hai hi nahi).
+    if (showPhotoPlaceholder) {
+      onAddPhoto?.(inventory);
+      return;
+    }
     onPreview(inventory);
   };
 
@@ -202,10 +212,12 @@ const handleShareImageWithDetails = async (e) => {
         aria-label={
           selectable
             ? `Toggle select ${middleLabel || topLabel || 'inventory'}`
+            : showPhotoPlaceholder
+            ? `Add photo for ${middleLabel || topLabel || 'inventory'}`
             : `Preview image of ${middleLabel || topLabel || 'inventory'}`
         }
       >
-        {!imgError && imageUrl ? (
+        {!showPhotoPlaceholder ? (
           <img
             src={imageUrl}
             alt={middleLabel || topLabel || 'Inventory'}
@@ -220,7 +232,13 @@ const handleShareImageWithDetails = async (e) => {
       <div className="inv-card__content">
         {/* TOP — Sector (ya fallback Project name) + Edit/Delete */}
         <div className="inv-card__top">
-          {topLabel ? <p className="inv-card__sector">{topLabel}</p> : <span />}
+          {topLabel ? (
+            <p className="inv-card__sector" title={topLabel}>
+              {topLabel}
+            </p>
+          ) : (
+            <span />
+          )}
 
           {!selectable && (
             <div className="inv-card__top-actions">
@@ -263,7 +281,11 @@ const handleShareImageWithDetails = async (e) => {
         </div>
 
         {/* MIDDLE — Developer, Project (fallback rules apply) */}
-        {middleLabel ? <h3 className="inv-card__title">{middleLabel}</h3> : null}
+        {middleLabel ? (
+          <h3 className="inv-card__title" title={middleLabel}>
+            {middleLabel}
+          </h3>
+        ) : null}
 
         {/* BOTTOM — Download / Share / Location */}
         {!selectable && (
@@ -286,6 +308,7 @@ const handleShareImageWithDetails = async (e) => {
                   strokeLinejoin="round"
                 />
               </svg>
+              <span className="inv-card__action-btn__label">Download</span>
             </button>
 
             <div className="inv-card__share-wrap" ref={shareRef}>
@@ -306,6 +329,7 @@ const handleShareImageWithDetails = async (e) => {
                   <circle cx="18" cy="19" r="2.4" stroke="currentColor" strokeWidth="1.6" />
                   <path d="M8.1 10.7 15.9 6.3M8.1 13.3l7.8 4.4" stroke="currentColor" strokeWidth="1.6" />
                 </svg>
+                <span className="inv-card__action-btn__label">Share</span>
               </button>
 
               {shareOpen && (
@@ -345,6 +369,7 @@ const handleShareImageWithDetails = async (e) => {
                 />
                 <circle cx="12" cy="9.5" r="2.3" stroke="currentColor" strokeWidth="1.6" />
               </svg>
+              <span className="inv-card__action-btn__label">Location</span>
             </button>
           </div>
         )}

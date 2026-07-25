@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import './DeveloperFilterChips.css';
+import './GroupFilterChips.css';
 import { ALL_DEVELOPERS_ID } from '../../../../constants/appConstants';
 import { classNames } from '../../../../utils/classNames';
 
@@ -8,7 +8,7 @@ const HIDDEN_GROUP_NAMES = ['UNKNOWN DEVELOPER', 'UNASSIGNED'];
 
 // Same horizontal scrollable chips row on ALL screen sizes — just smaller
 // on mobile via CSS media query. No dropdown.
-function DeveloperFilterChips({ developers, selectedId, onSelect, totalCount }) {
+function GroupFilterChips({ developers, selectedId, onSelect, totalCount }) {
   const visibleDevelopers = developers.filter(
     (dev) => !HIDDEN_GROUP_NAMES.includes((dev.name || '').trim().toUpperCase())
   );
@@ -45,4 +45,4 @@ function DeveloperFilterChips({ developers, selectedId, onSelect, totalCount }) 
   );
 }
 
-export default memo(DeveloperFilterChips);
+export default memo(GroupFilterChips);

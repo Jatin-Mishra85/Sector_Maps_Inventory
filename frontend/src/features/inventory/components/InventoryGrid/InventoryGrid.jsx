@@ -4,6 +4,7 @@ import InventoryCard from '../InventoryCard/InventoryCard';
 import InventoryCardSkeleton from '../InventoryCardSkeleton/InventoryCardSkeleton';
 import ImagePreview from '../ImagePreview/ImagePreview';
 import EditInventoryModal from '../EditInventoryModal/EditInventoryModal'; // TEMPORARY
+import InventoryPhotoUploadModal from '../InventoryPhotoUploadModal/InventoryPhotoUploadModal'; // NEW
 import EmptyState from '../../../../components/common/EmptyState/EmptyState';
 import RetryState from '../../../../components/common/RetryState/RetryState';
 // TEMPORARILY DISABLED — BOOKMARK FEATURE
@@ -32,9 +33,10 @@ export default function InventoryGrid({
   const { isAdminAuthenticated } = useAdminAuth(); // NEW
   const [previewInventory, setPreviewInventory] = useState(null);
   const [editingInventory, setEditingInventory] = useState(null); // TEMPORARY
+  const [photoUploadInventory, setPhotoUploadInventory] = useState(null); // NEW — camera/photo-add flow
   const [localOverrides, setLocalOverrides] = useState({}); // TEMPORARY — id -> patched fields
   const [deletedIds, setDeletedIds] = useState(new Set()); // TEMPORARY — ids removed from view immediately
-  // NEW — { type: 'edit' | 'delete', inventory } while waiting on admin code verification
+  // NEW — { type: 'edit' | 'delete' | 'photo', inventory } while waiting on admin code verification
   const [pendingAdminAction, setPendingAdminAction] = useState(null);
 
   // INFINITE SCROLL — watches an invisible div at the bottom of the grid.
@@ -114,9 +116,10 @@ export default function InventoryGrid({
     }
   };
 
-  // NEW — Edit and Delete both go through this gate. If already
-  // authenticated for this session, the action runs immediately; otherwise
-  // it's parked in `pendingAdminAction` until the admin code is verified.
+  // NEW — Edit, Delete, aur Photo-add — teeno isi gate se guzarte hain. Agar
+  // is session mein already authenticated hai to action seedha chal jaata
+  // hai; warna `pendingAdminAction` mein park ho jaata hai jab tak admin
+  // code verify nahi ho jaata.
   const handleEditRequest = (inventory) => {
     if (isAdminAuthenticated) {
       setEditingInventory(inventory);
@@ -133,6 +136,15 @@ export default function InventoryGrid({
     }
   };
 
+  // NEW — InventoryCard ke "add photo" placeholder se aata hai.
+  const handleAddPhotoRequest = (inventory) => {
+    if (isAdminAuthenticated) {
+      setPhotoUploadInventory(inventory);
+    } else {
+      setPendingAdminAction({ type: 'photo', inventory });
+    }
+  };
+
   const handleAdminAccessSuccess = () => {
     if (!pendingAdminAction) return;
     const { type, inventory } = pendingAdminAction;
@@ -140,6 +152,8 @@ export default function InventoryGrid({
       setEditingInventory(inventory);
     } else if (type === 'delete') {
       handleDelete(inventory);
+    } else if (type === 'photo') {
+      setPhotoUploadInventory(inventory);
     }
     setPendingAdminAction(null);
   };
@@ -156,6 +170,7 @@ export default function InventoryGrid({
             onPreview={setPreviewInventory}
             onEdit={handleEditRequest} // CHANGED — gated behind admin auth
             onDelete={handleDeleteRequest} // CHANGED — gated behind admin auth
+            onAddPhoto={handleAddPhotoRequest} // NEW — gated behind admin auth
           />
         ))}
       </div>
@@ -185,7 +200,16 @@ export default function InventoryGrid({
         availableGroups={groups}
       />
 
-      {/* NEW — shown before Edit or Delete runs, unless already authenticated this session */}
+      {/* NEW — camera-first photo capture flow for the placeholder click */}
+      {photoUploadInventory && (
+        <InventoryPhotoUploadModal
+          inventory={photoUploadInventory}
+          onUploaded={handleUpdated}
+          onClose={() => setPhotoUploadInventory(null)}
+        />
+      )}
+
+      {/* NEW — shown before Edit, Delete, or Photo-add runs, unless already authenticated this session */}
       {pendingAdminAction && (
         <AdminAccessModal
           onSuccess={handleAdminAccessSuccess}

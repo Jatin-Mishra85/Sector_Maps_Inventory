@@ -2,14 +2,21 @@
   position: fixed;
   inset: 0;
   z-index: var(--z-toast);
-  background: rgba(15, 16, 20, 0.96); /* Slightly darker for better image isolation */
+  background: rgba(15, 16, 20, 0.96);
   display: flex;
   flex-direction: column;
-  /* Safe area inset support for modern edge-to-edge mobile screens and foldables */
   padding-top: env(safe-area-inset-top, 0px);
   padding-bottom: env(safe-area-inset-bottom, 0px);
   padding-left: env(safe-area-inset-left, 0px);
   padding-right: env(safe-area-inset-right, 0px);
+}
+
+/* True browser fullscreen mode: element fills the whole screen,
+   safe-area insets no longer needed since chrome UI is gone */
+.img-preview:fullscreen,
+.img-preview:-webkit-full-screen {
+  padding: 0;
+  background: #0f1014;
 }
 
 .img-preview__toolbar {
@@ -17,11 +24,11 @@
   justify-content: flex-end;
   gap: var(--space-3);
   padding: var(--space-4);
-  z-index: 2; /* Ensures buttons sit above the stage if image overlaps */
+  z-index: 2;
+  flex-wrap: wrap;
 }
 
 .img-preview__btn {
-  /* Increased sizing to 44px minimum to satisfy touch target guidelines for mobile/Fold devices */
   width: 44px;
   height: 44px;
   border-radius: 50%;
@@ -33,12 +40,17 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.2s ease, transform 0.15s ease;
   -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
 }
 
 .img-preview__btn:hover {
   background: rgba(255, 255, 255, 0.25);
+}
+
+.img-preview__btn:active {
+  transform: scale(0.92);
 }
 
 .img-preview__stage {
@@ -49,38 +61,58 @@
   overflow: hidden;
   touch-action: none;
   position: relative;
-  /* Adds a small buffer safety zone so images never tightly hit the screen edges */
-  padding: var(--space-2); 
+  padding: var(--space-2);
+  overscroll-behavior: contain;
 }
 
 .img-preview__image {
-  /* Utilizing viewport dimensions combined with clamp protects layout flow across 
-     strange foldable aspect ratios (like the Z Fold 4's cover vs internal display) */
-  max-width: 96vw;
-  max-height: 82vh; 
-  width: auto;
-  height: auto;
+    max-width:100%;
+    max-height:100%;
   object-fit: contain;
-  transition: transform 0.15s ease-out;
+  transition: none;
   cursor: zoom-in;
   user-select: none;
   -webkit-user-drag: none;
+    transform-origin: center center;
+  will-change: transform;
 }
 
-/* Adjustments specifically targeted at small outer displays or landscape foldables */
+/* Small phones / short landscape (foldables outer screen etc.) */
 @media (max-width: 480px), (max-height: 480px) {
   .img-preview__toolbar {
     padding: var(--space-2) var(--space-3);
     gap: var(--space-2);
   }
-  
+
   .img-preview__btn {
     width: 40px;
     height: 40px;
     font-size: 1rem;
   }
-  
-  .img-preview__image {
-    max-height: 85vh;
+}
+
+/* Tablets */
+@media (min-width: 481px) and (max-width: 1024px) {
+  .img-preview__toolbar {
+    padding: var(--space-3) var(--space-4);
+  }
+}
+
+/* Large / desktop screens — keep image from feeling lost in a huge stage,
+   slightly bigger buttons and breathing room */
+@media (min-width: 1200px) {
+  .img-preview__toolbar {
+    padding: var(--space-5) var(--space-6);
+    gap: var(--space-4);
+  }
+
+  .img-preview__btn {
+    width: 48px;
+    height: 48px;
+    font-size: 1.3rem;
+  }
+
+  .img-preview__stage {
+    padding: var(--space-4);
   }
 }

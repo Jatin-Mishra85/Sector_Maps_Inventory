@@ -2,7 +2,7 @@ import { useState } from 'react';
 import './HomePage.css';
 import SearchBar from '../features/search/components/SearchBar/SearchBar';
 import { useSearch } from '../features/search/hooks/useSearch';
-import DeveloperFilterChips from '../features/developer/components/DeveloperFilterChips/DeveloperFilterChips';
+import GroupFilterChips from '../features/developer/components/DeveloperFilterChips/GroupFilterChips';
 import { useGroups } from '../features/developer/hooks/useGroups';
 import InventoryGrid from '../features/inventory/components/InventoryGrid/InventoryGrid';
 import { useInventories } from '../features/inventory/hooks/useInventories';
@@ -33,7 +33,7 @@ export default function HomePage() {
         <SearchBar value={term} onChange={setTerm} />
 
         {!groupsLoading && (
-          <DeveloperFilterChips
+          <GroupFilterChips
             developers={groups}
             selectedId={selectedGroupId}
             onSelect={setSelectedGroupId}
