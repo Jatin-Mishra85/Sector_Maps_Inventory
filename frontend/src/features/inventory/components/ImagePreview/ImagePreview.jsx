@@ -47,7 +47,7 @@ export default function ImagePreview({ isOpen, images, onClose }) {
     }
   }, [isOpen, resetView]);
 
-  // --- Back button handling (unchanged) ---
+  // --- Back button handling ---
   useEffect(() => {
     if (isOpen) {
       window.history.pushState({ imgPreview: true }, '');
@@ -76,9 +76,15 @@ export default function ImagePreview({ isOpen, images, onClose }) {
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, [isOpen]);
 
+  // FIX: don't reset pushedHistoryRef here — the popstate handler above is
+  // the single source of truth for clearing it. Resetting it here too meant
+  // that by the time the async `history.back()` actually fired popstate,
+  // the ref was already false, so the popstate handler's `onClose()` never
+  // ran — leaving the preview open until a *second* click hit the `else`
+  // branch and called onClose() directly. One click now correctly triggers
+  // history.back() -> popstate -> onClose(), in that order, every time.
   const handleClose = useCallback(() => {
     if (pushedHistoryRef.current) {
-      pushedHistoryRef.current = false;
       window.history.back();
     } else {
       onClose();

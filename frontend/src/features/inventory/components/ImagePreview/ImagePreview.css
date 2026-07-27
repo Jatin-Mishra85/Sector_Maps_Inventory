@@ -3,8 +3,6 @@
   inset: 0;
   z-index: var(--z-toast);
   background: rgba(15, 16, 20, 0.96);
-  display: flex;
-  flex-direction: column;
   padding-top: env(safe-area-inset-top, 0px);
   padding-bottom: env(safe-area-inset-bottom, 0px);
   padding-left: env(safe-area-inset-left, 0px);
@@ -19,13 +17,25 @@
   background: #0f1014;
 }
 
+/* Floats over the image instead of taking its own row — this is what
+   removes the black strip at the top and lets the stage below use the
+   full screen height. */
 .img-preview__toolbar {
+  position: absolute;
+  top: env(safe-area-inset-top, 0px);
+  left: 0;
+  right: 0;
   display: flex;
   justify-content: flex-end;
   gap: var(--space-3);
   padding: var(--space-4);
   z-index: 2;
   flex-wrap: wrap;
+  pointer-events: none; /* empty space in the toolbar row is click-through */
+}
+
+.img-preview__toolbar > * {
+  pointer-events: auto; /* buttons themselves stay clickable */
 }
 
 .img-preview__btn {
@@ -33,7 +43,7 @@
   height: 44px;
   border-radius: 50%;
   border: none;
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(68, 68, 68, 0.687);
   color: #fff;
   font-size: 1.2rem;
   cursor: pointer;
@@ -43,6 +53,7 @@
   transition: background-color 0.2s ease, transform 0.15s ease;
   -webkit-tap-highlight-color: transparent;
   flex-shrink: 0;
+  backdrop-filter: blur(4px); /* keeps buttons legible when sitting directly over the image */
 }
 
 .img-preview__btn:hover {
@@ -54,13 +65,13 @@
 }
 
 .img-preview__stage {
-  flex: 1;
+  position: absolute;
+  inset: 0; /* fills the entire screen now that the toolbar is overlaid, not stacked */
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
   touch-action: none;
-  position: relative;
   padding: var(--space-2);
   overscroll-behavior: contain;
 }

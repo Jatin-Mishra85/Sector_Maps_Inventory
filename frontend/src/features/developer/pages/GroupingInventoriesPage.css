@@ -1,142 +1,248 @@
+/* ============================================================
+   Grouping Inventories — multi-group input + filter system
+   Design: "site plan / blueprint legend" — tabs as a segmented
+   control, groups as map-pin tags. Mobile-first, scales up.
+   ============================================================ */
+
 .grouping-page {
+  --gp-ink: #1b2a38;
+  --gp-muted: #64707c;
+  --gp-line: #dce2e7;
+  --gp-surface: #ffffff;
+  --gp-paper: #f4f6f8;
+  --gp-blue: #2f6690;
+  --gp-blue-soft: #e8f0f5;
+  --gp-amber: #d68c34;
+  --gp-amber-soft: #fbf1e2;
+  --gp-rust: #b5482f;
+  --gp-rust-soft: #fbeae6;
+}
+
+/* ---------- Filter tabs: segmented pill control ---------- */
+.grouping-page__filter-tabs {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  margin-bottom: 12px;
+  background: var(--gp-paper);
+  border: 1px solid var(--gp-line);
+  border-radius: 10px;
+  width: 100%;
+}
+
+.grouping-page__filter-tab {
+  flex: 1;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--gp-muted);
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.grouping-page__filter-tab:hover {
+  color: var(--gp-ink);
+}
+
+.grouping-page__filter-tab--active {
+  background: var(--gp-surface);
+  color: var(--gp-ink);
+  box-shadow: 0 1px 2px rgba(27, 42, 56, 0.12);
+}
+
+.grouping-page__filter-tab:focus-visible,
+.grouping-page__group-chip:focus-visible,
+.grouping-page__add-group-field-btn:focus-visible,
+.grouping-page__remove-group-field-btn:focus-visible {
+  outline: 2px solid var(--gp-blue);
+  outline-offset: 2px;
+}
+
+/* ---------- Group legend chips ("which item is in which group") ---------- */
+.grouping-page__group-chips {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 2px 2px 10px;
+  margin-bottom: 6px;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.grouping-page__group-chip {
+  scroll-snap-align: start;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 6px 12px 6px 10px;
+  border: 1px solid var(--gp-line);
+  border-radius: 999px;
+  background: var(--gp-surface);
+  color: var(--gp-ink);
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+/* the "pin dot" — signature touch, marks each group like a legend on a map */
+.grouping-page__group-chip::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--gp-blue);
+  flex: none;
+}
+
+.grouping-page__group-chip:hover {
+  border-color: var(--gp-blue);
+}
+
+.grouping-page__group-chip--active {
+  background: var(--gp-blue-soft);
+  border-color: var(--gp-blue);
+  color: var(--gp-blue);
+}
+
+.grouping-page__group-chip--active::before {
+  background: var(--gp-blue);
+}
+
+/* ---------- Multi-group input rows ---------- */
+.grouping-page__group-inputs {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  padding-bottom: 90px;
-}
-
-.grouping-page__title {
-  text-align: center;
-  margin: 0;
-}
-
-.grouping-page__search-row {
-  display: flex;
-  justify-content: center;
-}
-
-/* Desktop/laptop (default, min-width 641px+): Group input + Select-All
-   side by side in ONE row. */
-.grouping-page__controls-row {
-  display: flex;
-  flex-direction: row;
-  align-items: flex-end;
-  gap: 16px;
-}
-
-/* Mobile (640px and below): Group input takes its own full-width row,
-   Select-All + count sit on their own row underneath it. */
-@media (max-width: 640px) {
-  .grouping-page__controls-row {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
-  }
-}
-
-.grouping-page__select-row {
-  display: flex;
-  align-items: center;
   gap: 10px;
-  flex: 0 0 auto;
-  white-space: nowrap;
-  padding-bottom: 2px;
-}
-
-@media (max-width: 640px) {
-  .grouping-page__select-row {
-    justify-content: flex-end;
-    padding-bottom: 0;
-  }
-}
-
-.grouping-page__select-all-btn {
-  padding: 10px 16px;
-  border-radius: 999px;
-  border: 1px solid #d0d5dd;
-  background: #fff;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.grouping-page__select-all-btn:hover {
-  background: #f3f4f6;
-}
-
-.grouping-page__selected-count {
-  font-size: 13px;
-  color: #6b7280;
-  white-space: nowrap;
-}
-
-@media (max-width: 480px) {
-  .grouping-page__select-all-btn {
-    padding: 8px 12px;
-    font-size: 13px;
-  }
-  .grouping-page__selected-count {
-    font-size: 12px;
-  }
-}
-
-.grouping-page__error {
-  text-align: center;
-  color: #dc2626;
-  font-size: 14px;
-}
-
-.grouping-page__grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 16px;
-}
-
-.grouping-page__load-more {
-  display: flex;
-  justify-content: center;
-}
-
-.grouping-page__footer {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 50;
-  display: flex;
-  gap: 12px;
-  padding: 12px 16px;
-  background: #fff;
-  border-top: 1px solid #e5e7eb;
-  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.06);
-}
-
-.grouping-page__save-btn,
-.grouping-page__remove-btn {
-  flex: 1;
   padding: 12px;
+  margin-bottom: 16px;
+  background: var(--gp-paper);
+  border: 1px solid var(--gp-line);
+  border-radius: 12px;
+}
+
+.grouping-page__group-input-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.grouping-page__group-input-row > *:first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.grouping-page__remove-group-field-btn {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--gp-line);
   border-radius: 8px;
-  border: none;
+  background: var(--gp-surface);
+  color: var(--gp-rust);
   font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.grouping-page__remove-group-field-btn:hover {
+  background: var(--gp-rust-soft);
+  border-color: var(--gp-rust);
+}
+
+.grouping-page__add-group-field-btn {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 1px dashed var(--gp-blue);
+  border-radius: 8px;
+  background: var(--gp-blue-soft);
+  color: var(--gp-blue);
+  font-size: 13.5px;
   font-weight: 600;
   cursor: pointer;
-  background: #e5e7eb;
-  color: #9ca3af;
-  transition: background 0.15s, color 0.15s;
+  transition: background-color 0.15s ease;
 }
 
-.grouping-page__save-btn--active {
-  background: #16a34a;
-  color: #fff;
+.grouping-page__add-group-field-btn:hover {
+  background: #dbe9f1;
 }
 
-.grouping-page__remove-btn--active {
-  background: #dc2626;
-  color: #fff;
+/* ---------- Empty state ---------- */
+.grouping-page__empty {
+  text-align: center;
+  color: var(--gp-muted);
+  font-size: 14px;
+  padding: 32px 16px;
+  margin: 8px 0;
+  background: var(--gp-paper);
+  border: 1px dashed var(--gp-line);
+  border-radius: 12px;
 }
 
-.grouping-page__save-btn:disabled,
-.grouping-page__remove-btn:disabled {
-  cursor: not-allowed;
+/* ============================================================
+   Responsive — mobile first, scale up for tablet/desktop
+   ============================================================ */
+
+/* Tablet and up */
+@media (min-width: 640px) {
+  .grouping-page__filter-tabs {
+    width: max-content;
+  }
+
+  .grouping-page__filter-tab {
+    flex: none;
+    padding: 8px 20px;
+  }
+
+  .grouping-page__group-inputs {
+    flex-direction: column;
+  }
+
+  .grouping-page__group-input-row {
+    max-width: 480px;
+  }
+}
+
+/* Desktop and up */
+@media (min-width: 1024px) {
+  .grouping-page__group-inputs {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .grouping-page__group-input-row {
+    width: 280px;
+  }
+
+  .grouping-page__add-group-field-btn {
+    align-self: center;
+  }
+}
+
+/* Respect reduced-motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .grouping-page__filter-tab,
+  .grouping-page__group-chip,
+  .grouping-page__add-group-field-btn,
+  .grouping-page__remove-group-field-btn {
+    transition: none;
+  }
 }

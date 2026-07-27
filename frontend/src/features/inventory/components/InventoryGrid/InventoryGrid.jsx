@@ -15,8 +15,8 @@ import RetryState from '../../../../components/common/RetryState/RetryState';
 import { inventoryService } from '../../services/inventoryService'; // TEMPORARY — for hard delete
 import { useToast } from '../../../../context/ToastContext'; // TEMPORARY — for delete toasts
 import { useGroups } from '../../../developer/hooks/useGroups'; // NEW — for Grouping multi-select dropdown
-import { useAdminAuth } from '../../../../context/AdminAuthContext'; // NEW — gates Edit/Delete
-import AdminAccessModal from '../../../admin/components/AdminAccessModal/AdminAccessModal'; // NEW
+import { useAdminAuth } from '../../../../context/AdminAuthContext'; // Ab sirf DELETE ke liye use hota hai
+import AdminAccessModal from '../../../admin/components/AdminAccessModal/AdminAccessModal';
 
 export default function InventoryGrid({
   inventories,
@@ -30,13 +30,13 @@ export default function InventoryGrid({
   // const { isBookmarked, toggleBookmark } = useBookmarks(); // TEMPORARILY DISABLED
   const { showToast } = useToast(); // TEMPORARY
   const { groups } = useGroups(); // NEW — passed to EditInventoryModal's Grouping dropdown
-  const { isAdminAuthenticated } = useAdminAuth(); // NEW
+  const { isAdminAuthenticated } = useAdminAuth(); // Ab sirf Delete gate ke liye
   const [previewInventory, setPreviewInventory] = useState(null);
   const [editingInventory, setEditingInventory] = useState(null); // TEMPORARY
   const [photoUploadInventory, setPhotoUploadInventory] = useState(null); // NEW — camera/photo-add flow
   const [localOverrides, setLocalOverrides] = useState({}); // TEMPORARY — id -> patched fields
   const [deletedIds, setDeletedIds] = useState(new Set()); // TEMPORARY — ids removed from view immediately
-  // NEW — { type: 'edit' | 'delete' | 'photo', inventory } while waiting on admin code verification
+  // Ab sirf 'delete' ke liye use hota hai — Edit/Photo ab admin code nahi maangte
   const [pendingAdminAction, setPendingAdminAction] = useState(null);
 
   // INFINITE SCROLL — watches an invisible div at the bottom of the grid.
@@ -116,18 +116,12 @@ export default function InventoryGrid({
     }
   };
 
-  // NEW — Edit, Delete, aur Photo-add — teeno isi gate se guzarte hain. Agar
-  // is session mein already authenticated hai to action seedha chal jaata
-  // hai; warna `pendingAdminAction` mein park ho jaata hai jab tak admin
-  // code verify nahi ho jaata.
+  // CHANGED — Edit ab admin gate ke bina seedha chalta hai
   const handleEditRequest = (inventory) => {
-    if (isAdminAuthenticated) {
-      setEditingInventory(inventory);
-    } else {
-      setPendingAdminAction({ type: 'edit', inventory });
-    }
+    setEditingInventory(inventory);
   };
 
+  // Delete abhi bhi admin code maangta hai
   const handleDeleteRequest = (inventory) => {
     if (isAdminAuthenticated) {
       handleDelete(inventory);
@@ -136,24 +130,16 @@ export default function InventoryGrid({
     }
   };
 
-  // NEW — InventoryCard ke "add photo" placeholder se aata hai.
+  // CHANGED — Photo-add ab admin gate ke bina seedha chalta hai
   const handleAddPhotoRequest = (inventory) => {
-    if (isAdminAuthenticated) {
-      setPhotoUploadInventory(inventory);
-    } else {
-      setPendingAdminAction({ type: 'photo', inventory });
-    }
+    setPhotoUploadInventory(inventory);
   };
 
   const handleAdminAccessSuccess = () => {
     if (!pendingAdminAction) return;
     const { type, inventory } = pendingAdminAction;
-    if (type === 'edit') {
-      setEditingInventory(inventory);
-    } else if (type === 'delete') {
+    if (type === 'delete') {
       handleDelete(inventory);
-    } else if (type === 'photo') {
-      setPhotoUploadInventory(inventory);
     }
     setPendingAdminAction(null);
   };
@@ -168,9 +154,9 @@ export default function InventoryGrid({
             // isBookmarked={isBookmarked(inv.id)} // TEMPORARILY DISABLED
             // onToggleBookmark={toggleBookmark} // TEMPORARILY DISABLED
             onPreview={setPreviewInventory}
-            onEdit={handleEditRequest} // CHANGED — gated behind admin auth
-            onDelete={handleDeleteRequest} // CHANGED — gated behind admin auth
-            onAddPhoto={handleAddPhotoRequest} // NEW — gated behind admin auth
+            onEdit={handleEditRequest} // CHANGED — ab bina admin gate ke
+            onDelete={handleDeleteRequest} // Still gated behind admin auth
+            onAddPhoto={handleAddPhotoRequest} // CHANGED — ab bina admin gate ke
           />
         ))}
       </div>
@@ -209,7 +195,7 @@ export default function InventoryGrid({
         />
       )}
 
-      {/* NEW — shown before Edit, Delete, or Photo-add runs, unless already authenticated this session */}
+      {/* Ab sirf Delete se pehle dikhta hai */}
       {pendingAdminAction && (
         <AdminAccessModal
           onSuccess={handleAdminAccessSuccess}

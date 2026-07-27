@@ -3,12 +3,13 @@ import './AdminInventoryFormPage.css';
 import InventoryCard from '../../inventory/components/InventoryCard/InventoryCard';
 import Button from '../../../components/common/Button/Button';
 import { useBookmarks } from '../../inventory/hooks/useBookmarks';
-import { useAdminAuth } from '../../../context/AdminAuthContext';
 import { useGroups } from '../../developer/hooks/useGroups';
 import DeveloperBatchInventoryForm from '../components/DeveloperBatchInventoryForm/DeveloperBatchInventoryForm';
-import AdminAccessModal from '../components/AdminAccessModal/AdminAccessModal';
 
 // Temporary standalone page — will be removed once the real Admin Panel exists.
+// NOTE: Admin-code gate REMOVED from this page on purpose — Add Inventory
+// ab bina admin code ke khulta hai. Only Delete still requires the code
+// (gated inside InventoryGrid.jsx).
 
 const FORM_TYPES = [
   { id: 'developer-batch', label: 'Developer Batch (Bulk Projects)' },
@@ -18,18 +19,9 @@ export default function AdminInventoryFormPage() {
   const [createdInventory, setCreatedInventory] = useState(null);
   const [formType, setFormType] = useState('developer-batch');
   const { isBookmarked, toggleBookmark } = useBookmarks();
-  const { isAdminAuthenticated } = useAdminAuth();
   const { groups } = useGroups();
 
   const handleAddAnother = () => setCreatedInventory(null);
-
-  if (!isAdminAuthenticated) {
-    return (
-      <div className="admin-page">
-        <AdminAccessModal variant="page" />
-      </div>
-    );
-  }
 
   return (
     <div className="admin-page">

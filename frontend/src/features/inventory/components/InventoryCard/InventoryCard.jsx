@@ -6,7 +6,7 @@ import { useToast } from '../../../../context/ToastContext';
 
 // TEMP — 10 placeholder images used for the card thumbnail only, so real
 // property photos aren't shown on the listing grid yet. Preview mode still
-// opens the ACTUAL image (see handleThumbClick -> onPreview(inventory),
+// opens the ACTUAL image (see handlePreviewClick -> onPreview(inventory),
 // which is untouched). To revert: delete this block + getPlaceholderUrl(),
 // and change the thumb <img src={...}> back to {imageUrl}.
 //
@@ -26,6 +26,24 @@ function getPlaceholderUrl(id) {
   return PLACEHOLDER_IMAGES[Math.abs(hash) % PLACEHOLDER_IMAGES.length];
 }
 
+// "Updated X days/hours ago" — purely optional. Only renders if the
+// inventory object actually carries an updatedAt/updatedAtISO field; older
+// records without it simply don't show this row (no fabricated data).
+function formatUpdatedAgo(dateInput) {
+  if (!dateInput) return null;
+  const date = new Date(dateInput);
+  if (Number.isNaN(date.getTime())) return null;
+
+  const diffMs = Date.now() - date.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffDays <= 0) {
+    const diffHours = Math.max(1, Math.floor(diffMs / (1000 * 60 * 60)));
+    return `Updated ${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
+  }
+  return `Updated ${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
+}
+
 function InventoryCard({
   inventory,
   onPreview,
@@ -39,8 +57,17 @@ function InventoryCard({
 }) {
   const { showToast } = useToast();
   const [imgError, setImgError] = useState(false);
-  const [shareOpen, setShareOpen] = useState(false);
-  const shareRef = useRef(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [menuStyle, setMenuStyle] = useState(null); // fixed-position coords, computed on open
+  const menuRef = useRef(null);
+  const dotsBtnRef = useRef(null);
+
+  // Standalone share button + its own small dropdown (Share with details / Share link).
+  // Lives OUTSIDE the 3-dot menu now — see header JSX below.
+  const [shareMenuOpen, setShareMenuOpen] = useState(false);
+  const [shareMenuStyle, setShareMenuStyle] = useState(null);
+  const shareMenuRef = useRef(null);
+  const shareBtnRef = useRef(null);
 
   const {
     id,
@@ -49,6 +76,8 @@ function InventoryCard({
     sectorName,
     imageUrl,
     googleMapsUrl,
+    city, // optional — only used if present on the record
+    updatedAt, // optional — only used if present on the record
   } = inventory;
 
   // TEMP — same placeholder every render for a given card (based on id),
@@ -59,12 +88,12 @@ function InventoryCard({
   // Project name dikhao.
   const topLabel = sectorName || name || '';
 
-  // MIDDLE LABEL — "Developer, Project". Jo bhi field khaali hai wo drop
-  // ho jayegi (Developer nahi hai to sirf Project, ya vice versa). Agar
-  // DONO khaali hain (sirf Sector hai), to yahan bhi Sector hi dikhega —
-  // taaki middle line kabhi poori tarah blank na ho jab kuch data hai.
+  // SECONDARY LINE — city if we have it, otherwise fall back to the old
+  // "Developer, Project" combo so nothing goes blank on existing data.
   const middleParts = [actualDeveloperName, name].filter(Boolean);
-  const middleLabel = middleParts.length ? middleParts.join(', ') : sectorName || '';
+  const middleLabel = city || (middleParts.length ? middleParts.join(', ') : sectorName || '');
+
+  const updatedLabel = formatUpdatedAgo(updatedAt);
 
   // LOCATION — agar admin ne explicit Google Maps URL diya hai wahi use hoga,
   // warna Developer + Project + Sector se ek Maps search query ban jayegi.
@@ -76,19 +105,118 @@ function InventoryCard({
   // wo sirf temp-display ke liye hai jab image EXIST karti hai.)
   const showPhotoPlaceholder = !imageUrl || imgError;
 
-  // Share dropdown ko bahar click karte hi band karo.
+  // 3-dot menu aur share menu — dono ko bahar click karte hi band karo.
   useEffect(() => {
-    if (!shareOpen) return undefined;
+    if (!menuOpen && !shareMenuOpen) return undefined;
     const handleClickOutside = (e) => {
-      if (shareRef.current && !shareRef.current.contains(e.target)) setShareOpen(false);
+      if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false);
+      if (shareMenuRef.current && !shareMenuRef.current.contains(e.target)) setShareMenuOpen(false);
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [shareOpen]);
+  }, [menuOpen, shareMenuOpen]);
+
+  // Smart positioning — dropdown apne hi card par overlay na kare. Agar
+  // neeche (viewport mein) space kam hai to menu UPAR khulega (previous
+  // card ke upar), warna neeche (agle card ke upar) — jaisa position sahi
+  // baithe waisa flip ho jaata hai. Mobile (<640px) par CSS bottom-sheet
+  // sambhal leta hai, isliye wahan inline positioning skip.
+  useEffect(() => {
+    if (!menuOpen) {
+      setMenuStyle(null);
+      return undefined;
+    }
+    const isMobile = window.innerWidth < 640;
+    if (isMobile) {
+      setMenuStyle(null);
+      return undefined;
+    }
+    const btn = dotsBtnRef.current;
+    if (!btn) return undefined;
+
+    const computePosition = () => {
+      const rect = btn.getBoundingClientRect();
+      const MENU_WIDTH = 210;
+      const MENU_HEIGHT_ESTIMATE = 220;
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      const openUpward = spaceBelow < MENU_HEIGHT_ESTIMATE && spaceAbove > spaceBelow;
+
+      const left = Math.min(
+        Math.max(8, rect.right - MENU_WIDTH),
+        window.innerWidth - MENU_WIDTH - 8
+      );
+
+      setMenuStyle({
+        position: 'fixed',
+        left,
+        width: MENU_WIDTH,
+        ...(openUpward
+          ? { bottom: window.innerHeight - rect.top + 6, top: 'auto' }
+          : { top: rect.bottom + 6, bottom: 'auto' }),
+      });
+    };
+
+    computePosition();
+    window.addEventListener('resize', computePosition);
+    window.addEventListener('scroll', computePosition, true);
+    return () => {
+      window.removeEventListener('resize', computePosition);
+      window.removeEventListener('scroll', computePosition, true);
+    };
+  }, [menuOpen]);
+
+  // Same smart positioning, standalone share button ke liye — chhota menu
+  // hai (sirf 2 options) isliye height estimate kam rakha.
+  useEffect(() => {
+    if (!shareMenuOpen) {
+      setShareMenuStyle(null);
+      return undefined;
+    }
+    const isMobile = window.innerWidth < 640;
+    if (isMobile) {
+      setShareMenuStyle(null);
+      return undefined;
+    }
+    const btn = shareBtnRef.current;
+    if (!btn) return undefined;
+
+    const computePosition = () => {
+      const rect = btn.getBoundingClientRect();
+      const MENU_WIDTH = 190;
+      const MENU_HEIGHT_ESTIMATE = 150; // 3 items now (location, image, page link)
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      const openUpward = spaceBelow < MENU_HEIGHT_ESTIMATE && spaceAbove > spaceBelow;
+
+      const left = Math.min(
+        Math.max(8, rect.right - MENU_WIDTH),
+        window.innerWidth - MENU_WIDTH - 8
+      );
+
+      setShareMenuStyle({
+        position: 'fixed',
+        left,
+        width: MENU_WIDTH,
+        ...(openUpward
+          ? { bottom: window.innerHeight - rect.top + 6, top: 'auto' }
+          : { top: rect.bottom + 6, bottom: 'auto' }),
+      });
+    };
+
+    computePosition();
+    window.addEventListener('resize', computePosition);
+    window.addEventListener('scroll', computePosition, true);
+    return () => {
+      window.removeEventListener('resize', computePosition);
+      window.removeEventListener('scroll', computePosition, true);
+    };
+  }, [shareMenuOpen]);
 
   // ---- Download: image seedha download hoti hai ----
   const handleDownload = async (e) => {
     e.stopPropagation();
+    setMenuOpen(false);
     if (!imageUrl) {
       showToast('Is inventory ki koi image nahi hai.', 'error');
       return;
@@ -100,83 +228,58 @@ function InventoryCard({
     }
   };
 
-  // ---- Share: ab sirf DO options — "Image + Details" ek saath, aur "Web URL" ----
+  // ---- Share: TEEN options — Location, Image, Page Link ----
+  // Ye teeno standalone share button ke apne dropdown mein hain, 3-dot
+  // menu mein nahi (wahan sirf Download/Edit/Delete hai).
 
-  // Option 1: Image aur uski details (Developer • Sector • Project) ek hi
-  // native share sheet mein saath jaati hain.
-  const handleShareImageWithDetails = async (e) => {
+  // Option 1: Location share — googleMapsUrl (agar admin ne diya hai) warna
+  // Developer + Project + Sector se bani Maps search query, link ki tarah share hoti hai.
+  const handleShareLocation = async (e) => {
     e.stopPropagation();
-    setShareOpen(false);
-
-    const detailsLine1 = sectorName || '';
-    const detailsLine2 = [actualDeveloperName, name].filter(Boolean).join(', ');
-    const lines = [detailsLine1, detailsLine2].filter(Boolean);
-
-    if (!imageUrl) {
-      const result = await shareContent({ title: middleLabel || topLabel, text: lines.join('\n') });
-      if (result === 'copied') showToast('Details clipboard mein copy ho gayi.', 'success');
-      if (result === 'unsupported') showToast('Sharing is not supported on this device.', 'info');
+    setShareMenuOpen(false);
+    if (!hasLocation) {
+      showToast('Is inventory ki location available nahi hai.', 'error');
       return;
     }
+    const url =
+      googleMapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationQuery)}`;
+    const result = await shareContent({ title: middleLabel || topLabel, url });
+    if (result === 'copied') showToast('Location link clipboard mein copy ho gaya.', 'success');
+    if (result === 'unsupported') showToast('Sharing is not supported on this device.', 'info');
+  };
 
+  // Option 2: Sirf image share hoti hai — bina caption/details overlay ke,
+  // seedha original imageUrl ki file native share sheet mein jaati hai.
+  const handleShareImage = async (e) => {
+    e.stopPropagation();
+    setShareMenuOpen(false);
+    if (!imageUrl) {
+      showToast('Is inventory ki koi image nahi hai.', 'error');
+      return;
+    }
     try {
-      // Image load karo taaki canvas par draw kar sakein.
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      const loaded = new Promise((resolve, reject) => {
-        img.onload = resolve;
-        img.onerror = reject;
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      const file = new File([blob], `${topLabel || 'inventory'}.jpg`, {
+        type: blob.type || 'image/jpeg',
       });
-      img.src = imageUrl;
-      await loaded;
-
-      // Neeche caption ke liye extra height (line ke hisaab se).
-      const padding = 24;
-      const lineHeight = 40;
-      const captionHeight = padding * 2 + lines.length * lineHeight;
-
-      const canvas = document.createElement('canvas');
-      canvas.width = img.naturalWidth;
-      canvas.height = img.naturalHeight + captionHeight;
-      const ctx = canvas.getContext('2d');
-
-      // Original image upar.
-      ctx.drawImage(img, 0, 0);
-
-      // Caption ka background (safed patti).
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, img.naturalHeight, canvas.width, captionHeight);
-
-      // Caption text.
-      ctx.fillStyle = '#1e1e1e';
-      ctx.font = `bold ${lineHeight - 12}px sans-serif`;
-      ctx.textBaseline = 'top';
-      lines.forEach((line, i) => {
-        ctx.fillText(line, padding, img.naturalHeight + padding + i * lineHeight);
-      });
-
-      const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.92));
-      const file = new File([blob], `${topLabel || 'inventory'}.jpg`, { type: 'image/jpeg' });
 
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({ files: [file], title: middleLabel || topLabel });
       } else {
-        const url = URL.createObjectURL(blob);
-        await downloadFile(url, `${topLabel || 'inventory'}.jpg`);
-        URL.revokeObjectURL(url);
+        await downloadFile(imageUrl, `${topLabel || 'inventory'}.jpg`);
         showToast('Is device par image share nahi ho sakti — download kar di gayi.', 'info');
       }
     } catch {
-      showToast('Share nahi ho paya. Dobara try karo.', 'error');
+      showToast('Image share nahi ho payi. Dobara try karo.', 'error');
     }
   };
 
-  // Option 2: Sirf web URL share hoga.
-  const handleShareUrl = async (e) => {
+  // Option 3: Page link share — /inventory/:id wala detail page abhi tak
+  // bana nahi hai, URL yahan pehle se ready rakha hai jab wo page ban jaye.
+  const handleSharePageLink = async (e) => {
     e.stopPropagation();
-    setShareOpen(false);
-    // NOTE: /inventory/:id wala detail page abhi tak bana nahi hai —
-    // URL yahan pehle se ready rakha hai jab wo page ban jaye.
+    setShareMenuOpen(false);
     const detailUrl = `${window.location.origin}/inventory/${id}`;
     const result = await shareContent({ title: middleLabel || topLabel, url: detailUrl });
     if (result === 'copied') showToast('Link clipboard mein copy ho gaya.', 'success');
@@ -194,21 +297,24 @@ function InventoryCard({
 
   const handleEditClick = (e) => {
     e.stopPropagation();
+    setMenuOpen(false);
     onEdit?.(inventory);
   };
 
   const handleDeleteClick = (e) => {
     e.stopPropagation();
+    setMenuOpen(false);
     onDelete?.(inventory);
   };
 
-  const handleThumbClick = () => {
+  // Shared by the thumbnail click AND the "Preview" pill — image ho to
+  // preview kholo, na ho to camera/photo-add flow trigger karo.
+  const handlePreviewClick = (e) => {
+    e?.stopPropagation();
     if (selectable) {
       onToggleSelect?.();
       return;
     }
-    // Image nahi hai / load fail hui — camera/photo-add flow trigger karo,
-    // preview nahi (kuch preview karne ko hai hi nahi).
     if (showPhotoPlaceholder) {
       onAddPhoto?.(inventory);
       return;
@@ -241,7 +347,7 @@ function InventoryCard({
         <button
           type="button"
           className="inv-card__thumb"
-          onClick={handleThumbClick}
+          onClick={handlePreviewClick}
           aria-label={
             selectable
               ? `Toggle select ${middleLabel || topLabel || 'inventory'}`
@@ -263,7 +369,7 @@ function InventoryCard({
         </button>
 
         <div className="inv-card__content">
-          {/* HEADER — bold title (Sector) + Edit/Delete icon buttons with always-visible tooltip labels */}
+          {/* HEADER — bold sector name + standalone share button + 3-dot menu button */}
           <div className="inv-card__header">
             {topLabel ? (
               <h3 className="inv-card__title" title={topLabel}>
@@ -274,146 +380,246 @@ function InventoryCard({
             )}
 
             {!selectable && (
-              <div className="inv-card__top-actions">
-                <button
-                  type="button"
-                  className="inv-card__icon-btn inv-card__icon-btn--edit"
-                  onClick={handleEditClick}
-                  aria-label={`Edit ${middleLabel || topLabel || 'inventory'}`}
-                  title="Edit inventory"
-                >
-                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" aria-hidden="true">
-                    <path
-                      d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17v3Z"
-                      stroke="currentColor"
-                      strokeWidth="1.8"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </button>
+              <div className="inv-card__header-actions">
+                {/* ===== Standalone SHARE button — separate from 3-dot menu ===== */}
+                <div className="inv-card__share-wrap" ref={shareMenuRef}>
+                  <button
+                    type="button"
+                    ref={shareBtnRef}
+                    className="inv-card__share-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setMenuOpen(false);
+                      setShareMenuOpen((open) => !open);
+                    }}
+                    aria-haspopup="true"
+                    aria-expanded={shareMenuOpen}
+                    aria-label={`Share ${middleLabel || topLabel || 'inventory'}`}
+                  >
+                    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" aria-hidden="true">
+                      <circle cx="20" cy="5" r="3" stroke="currentColor" strokeWidth="2.2" />
+                      <circle cx="6" cy="12" r="3" stroke="currentColor" strokeWidth="2.2" />
+                      <circle cx="20" cy="19" r="2.8" stroke="currentColor" strokeWidth="2.2" />
+                      <path d="M8.1 10.7 15.9 6.3M8.1 13.3l7.8 4.4" stroke="currentColor" strokeWidth="2.2" />
+                    </svg>
+                  </button>
 
-                <button
-                  type="button"
-                  className="inv-card__icon-btn inv-card__icon-btn--danger"
-                  onClick={handleDeleteClick}
-                  aria-label={`Delete ${middleLabel || topLabel || 'inventory'}`}
-                  title="Permanently delete this inventory"
-                >
-                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" aria-hidden="true">
-                    <path
-                      d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m2 0-.8 12a2 2 0 0 1-2 1.9H9.8a2 2 0 0 1-2-1.9L7 7h10ZM10 11v6M14 11v6"
-                      stroke="currentColor"
-                      strokeWidth="1.8"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </button>
+                  {shareMenuOpen && (
+                    <>
+                      <div className="inv-card__menu-backdrop" onClick={() => setShareMenuOpen(false)} />
+                      <ul
+                        className="inv-card__menu inv-card__share-menu"
+                        style={shareMenuStyle || undefined}
+                        onClick={(e) => e.stopPropagation()}
+                        role="menu"
+                      >
+                        <li>
+                          <button
+                            type="button"
+                            onClick={handleShareLocation}
+                            disabled={!hasLocation}
+                            role="menuitem"
+                          >
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
+                              <path
+                                d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21Z"
+                                stroke="currentColor"
+                                strokeWidth="1.8"
+                              />
+                              <circle cx="12" cy="9.5" r="2.3" stroke="currentColor" strokeWidth="1.8" />
+                            </svg>
+                            Share location
+                          </button>
+                        </li>
+                        <li>
+                          <button
+                            type="button"
+                            onClick={handleShareImage}
+                            disabled={!imageUrl}
+                            role="menuitem"
+                          >
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
+                              <rect
+                                x="3.5"
+                                y="5.5"
+                                width="17"
+                                height="13"
+                                rx="2"
+                                stroke="currentColor"
+                                strokeWidth="1.8"
+                              />
+                              <circle cx="8.5" cy="10" r="1.5" stroke="currentColor" strokeWidth="1.6" />
+                              <path
+                                d="m5 16 4.5-4.5L12 14l3-3 4 4"
+                                stroke="currentColor"
+                                strokeWidth="1.8"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                            Share image
+                          </button>
+                        </li>
+                        <li>
+                          <button type="button" onClick={handleSharePageLink} role="menuitem">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
+                              <path
+                                d="M9 15 15 9M10 6l1.4-1.4a4 4 0 0 1 5.7 5.7L15.7 11.7M14 18l-1.4 1.4a4 4 0 0 1-5.7-5.7L8.3 12.3"
+                                stroke="currentColor"
+                                strokeWidth="1.8"
+                                strokeLinecap="round"
+                              />
+                            </svg>
+                            Share page link
+                          </button>
+                        </li>
+                      </ul>
+                    </>
+                  )}
+                </div>
+
+                {/* ===== 3-dot menu — Download / Edit / Delete ===== */}
+                <div className="inv-card__menu-wrap" ref={menuRef}>
+                  <button
+                    type="button"
+                    ref={dotsBtnRef}
+                    className="inv-card__dots-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShareMenuOpen(false);
+                      setMenuOpen((open) => !open);
+                    }}
+                    aria-haspopup="true"
+                    aria-expanded={menuOpen}
+                    aria-label={`More actions for ${middleLabel || topLabel || 'inventory'}`}
+                  >
+                    <svg viewBox="0 0 24 24" width="15" height="14" fill="none" aria-hidden="true">
+                      <circle cx="12" cy="5" r="2.3" fill="#777" />
+                      <circle cx="12" cy="12" r="2.3" fill="#777" />
+                      <circle cx="12" cy="19" r="2.3" fill="#777" />
+                    </svg>
+                  </button>
+
+                  {menuOpen && (
+                    <>
+                      <div className="inv-card__menu-backdrop" onClick={() => setMenuOpen(false)} />
+                      <ul
+                        className="inv-card__menu"
+                        style={menuStyle || undefined}
+                        onClick={(e) => e.stopPropagation()}
+                        role="menu"
+                      >
+                        <li>
+                          <button type="button" onClick={handleDownload} disabled={!imageUrl} role="menuitem">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
+                              <path
+                                d="M12 4v11m0 0-4-4m4 4 4-4M5 19h14"
+                                stroke="currentColor"
+                                strokeWidth="1.8"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                            Download image
+                          </button>
+                        </li>
+                        <li>
+                          <button type="button" onClick={handleEditClick} role="menuitem">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
+                              <path
+                                d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17v3Z"
+                                stroke="currentColor"
+                                strokeWidth="1.8"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                            Edit
+                          </button>
+                        </li>
+                        <li>
+                          <button
+                            type="button"
+                            className="inv-card__menu-danger"
+                            onClick={handleDeleteClick}
+                            role="menuitem"
+                          >
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
+                              <path
+                                d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m2 0-.8 12a2 2 0 0 1-2 1.9H9.8a2 2 0 0 1-2-1.9L7 7h10ZM10 11v6M14 11v6"
+                                stroke="currentColor"
+                                strokeWidth="1.8"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                            Delete
+                          </button>
+                        </li>
+                      </ul>
+                    </>
+                  )}
+                </div>
               </div>
             )}
           </div>
 
-          {/* Muted description line — Developer, Project (fallback rules apply) */}
+          {/* Secondary line — city (or Developer/Project fallback) */}
           {middleLabel ? (
             <p className="inv-card__description" title={middleLabel}>
               {middleLabel}
             </p>
           ) : null}
 
+          {/* Updated-ago row — only renders when the record actually has updatedAt */}
+          {updatedLabel && (
+            <p className="inv-card__updated">
+              <span className="inv-card__updated-dot" aria-hidden="true" />
+              {updatedLabel}
+            </p>
+          )}
+
           {!selectable && (
-            <>
+            <div className="inv-card__pills">
+              <button
+                type="button"
+                className="inv-card__pill"
+                onClick={handlePreviewClick}
+                aria-label={`Preview ${middleLabel || topLabel || 'inventory'}`}
+              >
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" aria-hidden="true">
+                  <path
+                    d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                  />
+                  <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.8" />
+                </svg>
+                Preview
+              </button>
 
-              {/* Action tiles — Download / Share / Location */}
-              <div className="inv-card__actions">
-                <button
-                  type="button"
-                  className="inv-card__action-tile"
-                  onClick={handleDownload}
-                  disabled={!imageUrl}
-                  aria-disabled={!imageUrl}
-                  aria-label={`Download image of ${middleLabel || topLabel || 'inventory'}`}
-                  title={imageUrl ? 'Download image' : 'No image available'}
-                >
-                  <span className="inv-card__action-icon inv-card__action-icon--purple">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" aria-hidden="true">
-                      <path
-                        d="M12 4v11m0 0-4-4m4 4 4-4M5 19h14"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </span>
-                  <span className="inv-card__action-label">Download</span>
-                </button>
-
-                <div className="inv-card__share-wrap" ref={shareRef}>
-                  <button
-                    type="button"
-                    className="inv-card__action-tile"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShareOpen((open) => !open);
-                    }}
-                    aria-haspopup="true"
-                    aria-expanded={shareOpen}
-                    aria-label={`Share ${middleLabel || topLabel || 'inventory'}`}
-                  >
-                    <span className="inv-card__action-icon inv-card__action-icon--green">
-                      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" aria-hidden="true">
-                        <circle cx="18" cy="5" r="2.4" stroke="currentColor" strokeWidth="1.8" />
-                        <circle cx="6" cy="12" r="2.4" stroke="currentColor" strokeWidth="1.8" />
-                        <circle cx="18" cy="19" r="2.4" stroke="currentColor" strokeWidth="1.8" />
-                        <path d="M8.1 10.7 15.9 6.3M8.1 13.3l7.8 4.4" stroke="currentColor" strokeWidth="1.8" />
-                      </svg>
-                    </span>
-                    <span className="inv-card__action-label">Share</span>
-                  </button>
-
-                  {shareOpen && (
-                    <ul className="inv-card__share-menu" onClick={(e) => e.stopPropagation()}>
-                      <li>
-                        <button type="button" onClick={handleShareImageWithDetails} disabled={!imageUrl}>
-                          Share Image with Details
-                        </button>
-                      </li>
-                      <li>
-                        <button type="button" onClick={handleShareUrl}>
-                          Share Web URL
-                        </button>
-                      </li>
-                    </ul>
-                  )}
-                </div>
-
-                <button
-                  type="button"
-                  className="inv-card__action-tile"
-                  onClick={handleLocation}
-                  disabled={!hasLocation}
-                  aria-disabled={!hasLocation}
-                  aria-label={
-                    hasLocation
-                      ? `View location of ${middleLabel || topLabel || 'inventory'}`
-                      : 'Location not available'
-                  }
-                  title={hasLocation ? 'View on Google Maps' : 'Location not available'}
-                >
-                  <span className="inv-card__action-icon inv-card__action-icon--blue">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" aria-hidden="true">
-                      <path
-                        d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21Z"
-                        stroke="currentColor"
-                        strokeWidth="1.8"
-                      />
-                      <circle cx="12" cy="9.5" r="2.3" stroke="currentColor" strokeWidth="1.8" />
-                    </svg>
-                  </span>
-                  <span className="inv-card__action-label">Location</span>
-                </button>
-              </div>
-            </>
+              <button
+                type="button"
+                className="inv-card__pill"
+                onClick={handleLocation}
+                disabled={!hasLocation}
+                aria-disabled={!hasLocation}
+                aria-label={
+                  hasLocation
+                    ? `View location of ${middleLabel || topLabel || 'inventory'}`
+                    : 'Location not available'
+                }
+              >
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" aria-hidden="true">
+                  <path
+                    d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21Z"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                  />
+                  <circle cx="12" cy="9.5" r="2.3" stroke="currentColor" strokeWidth="1.8" />
+                </svg>
+                Location
+              </button>
+            </div>
           )}
         </div>
       </div>

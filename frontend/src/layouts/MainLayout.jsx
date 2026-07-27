@@ -15,7 +15,7 @@ export default function MainLayout() {
     <div className="main-layout">
       <header className="main-layout__header">
         <div className="main-layout__container">
-          <Link to={isUnlocked ? '/' : '/admin'} className="main-layout__brand" onClick={closeMenu}>
+          <Link to="/" className="main-layout__brand" onClick={closeMenu}>
             <span className="main-layout__logo">
               <img src={logoSrc} alt="The Builder Bazar Logo" width="28" height="28" />
             </span>
@@ -43,15 +43,17 @@ export default function MainLayout() {
             <span />
           </button>
         </div>
-
-        <nav className={`main-layout__nav main-layout__nav--mobile ${menuOpen ? 'main-layout__nav--mobile-open' : ''}`}>
-          <Link to="/" className="main-layout__nav-link" onClick={closeMenu}>Home</Link>
-          <Link to="/admin" className="main-layout__nav-link" onClick={closeMenu}>Add Inventory</Link>
-          <Link to="/grouping" className="main-layout__nav-link" onClick={closeMenu}>Grouping</Link>
-        </nav>
       </header>
 
       {menuOpen && <div className="main-layout__overlay" onClick={closeMenu} />}
+
+      <nav
+        className={`main-layout__nav main-layout__nav--mobile ${menuOpen ? 'main-layout__nav--mobile-open' : ''}`}
+      >
+        <Link to="/" className="main-layout__nav-link" onClick={closeMenu}>Home</Link>
+        <Link to="/admin" className="main-layout__nav-link" onClick={closeMenu}>Add Inventory</Link>
+        <Link to="/grouping" className="main-layout__nav-link" onClick={closeMenu}>Grouping</Link>
+      </nav>
 
       <main className="main-layout__content">
         <div className="main-layout__container">

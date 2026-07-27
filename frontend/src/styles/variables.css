@@ -22,6 +22,7 @@
   --color-danger: #bd6d58;           /* muted terracotta, not alarm-red */
 
   /* ===== Typography ===== */
+   --font-header: 'Archivo Black', sans-serif;
   --font-heading: 'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif;
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 

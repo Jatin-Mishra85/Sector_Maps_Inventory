@@ -10,19 +10,29 @@ import { useGroups } from '../hooks/useGroups';
 import { useInventories } from '../../inventory/hooks/useInventories';
 import { groupService } from '../services/groupService';
 import { useToast } from '../../../context/ToastContext';
-import { useAdminAuth } from '../../../context/AdminAuthContext'; // NEW — gates the whole tab
-import AdminAccessModal from '../../admin/components/AdminAccessModal/AdminAccessModal'; // NEW
+
+// NOTE: Admin-code gate REMOVED from this page on purpose — Grouping tab
+// ab bina admin code ke khulta hai. Only Delete still requires the code
+// (gated inside InventoryGrid.jsx).
+
+const FILTER_MODES = [
+  { key: 'all', label: 'All' },
+  { key: 'grouped', label: 'Grouped' },
+  { key: 'ungrouped', label: 'Ungrouped' },
+];
 
 export default function GroupingInventoriesPage() {
   const { showToast } = useToast();
-  const { isAdminAuthenticated } = useAdminAuth(); // NEW
   const { term, setTerm, debouncedTerm } = useSearch();
   const { groups, refetch: refetchGroups } = useGroups();
 
-  const [groupName, setGroupName] = useState('');
+  const [groupNames, setGroupNames] = useState(['']);
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [isSaving, setIsSaving] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
+
+  const [filterMode, setFilterMode] = useState('all');
+  const [selectedGroupFilter, setSelectedGroupFilter] = useState(null);
 
   const {
     inventories,
@@ -34,40 +44,62 @@ export default function GroupingInventoriesPage() {
     refetch: refetchInventories,
   } = useInventories({ searchTerm: debouncedTerm });
 
-  const trimmedGroupName = groupName.trim();
+  const updateGroupName = (index, value) => {
+    setGroupNames((prev) => prev.map((g, i) => (i === index ? value : g)));
+  };
 
-  const membership = useMemo(() => {
-    const upperGroupName = trimmedGroupName.toUpperCase();
-    let anyInGroup = false;
-    let anyNotInGroup = false;
+  const addGroupField = () => {
+    setGroupNames((prev) => [...prev, '']);
+  };
 
-    selectedIds.forEach((id) => {
-      const inv = inventories.find((i) => i.id === id);
-      if (!inv) return;
-      const isMember = (inv.groups || []).some(
-        (g) => (g.groupName || '').toUpperCase() === upperGroupName
-      );
-      if (isMember) anyInGroup = true;
-      else anyNotInGroup = true;
+  const removeGroupField = (index) => {
+    setGroupNames((prev) => (prev.length === 1 ? prev : prev.filter((_, i) => i !== index)));
+  };
+
+  const trimmedGroupNames = useMemo(() => {
+    const seen = new Set();
+    const result = [];
+    groupNames.forEach((g) => {
+      const t = g.trim();
+      if (t && !seen.has(t.toUpperCase())) {
+        seen.add(t.toUpperCase());
+        result.push(t);
+      }
     });
+    return result;
+  }, [groupNames]);
 
-    return { anyInGroup, anyNotInGroup };
-  }, [selectedIds, inventories, trimmedGroupName]);
+  const canSave = trimmedGroupNames.length > 0 && selectedIds.size > 0;
+  const canRemove = trimmedGroupNames.length > 0 && selectedIds.size > 0;
 
-  const canSave = trimmedGroupName.length > 0 && selectedIds.size > 0 && membership.anyNotInGroup;
-  const canRemove = trimmedGroupName.length > 0 && selectedIds.size > 0 && membership.anyInGroup;
+  const displayedInventories = useMemo(() => {
+    if (filterMode === 'ungrouped') {
+      return inventories.filter((inv) => !(inv.groups && inv.groups.length > 0));
+    }
+    if (filterMode === 'grouped') {
+      const groupedOnly = inventories.filter((inv) => inv.groups && inv.groups.length > 0);
+      if (!selectedGroupFilter) return groupedOnly;
+      const upperSelected = selectedGroupFilter.toUpperCase();
+      return groupedOnly.filter((inv) =>
+        (inv.groups || []).some((g) => (g.groupName || '').toUpperCase() === upperSelected)
+      );
+    }
+    return inventories;
+  }, [inventories, filterMode, selectedGroupFilter]);
 
-  // SELECT ALL / DESELECT ALL — operates on whatever is currently loaded
-  // (via infinite scroll / "Load More"), not the full DB. If every loaded
-  // card is already selected, the button flips to "Deselect All".
+  const handleFilterModeChange = (mode) => {
+    setFilterMode(mode);
+    if (mode !== 'grouped') setSelectedGroupFilter(null);
+  };
+
   const allLoadedSelected =
-    inventories.length > 0 && inventories.every((inv) => selectedIds.has(inv.id));
+    displayedInventories.length > 0 && displayedInventories.every((inv) => selectedIds.has(inv.id));
 
   const handleToggleSelectAll = () => {
     if (allLoadedSelected) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(inventories.map((inv) => inv.id)));
+      setSelectedIds(new Set(displayedInventories.map((inv) => inv.id)));
     }
   };
 
@@ -84,9 +116,13 @@ export default function GroupingInventoriesPage() {
     if (!canSave) return;
     setIsSaving(true);
     try {
-      const response = await groupService.addInventories(trimmedGroupName, [...selectedIds]);
-      const addedCount = response?.data?.addedCount ?? 0;
-      showToast(`${addedCount} inventories "${trimmedGroupName}" group mein add ho gayi.`, 'success');
+      for (const name of trimmedGroupNames) {
+        await groupService.addInventories(name, [...selectedIds]);
+      }
+      showToast(
+        `${selectedIds.size} inventories ${trimmedGroupNames.length} group(s) [${trimmedGroupNames.join(', ')}] mein add ho gayi.`,
+        'success'
+      );
       setSelectedIds(new Set());
       refetchGroups();
       refetchInventories();
@@ -100,15 +136,19 @@ export default function GroupingInventoriesPage() {
   const handleRemove = async () => {
     if (!canRemove) return;
     const confirmed = window.confirm(
-      `Selected inventories ko "${trimmedGroupName}" group se permanently hatana hai?\n\nYe wapas nahi hoga.`
+      `Selected inventories ko in group(s) se permanently hatana hai?\n\n${trimmedGroupNames.join(', ')}\n\nYe wapas nahi hoga.`
     );
     if (!confirmed) return;
 
     setIsRemoving(true);
     try {
-      const response = await groupService.removeInventories(trimmedGroupName, [...selectedIds]);
-      const removedCount = response?.data?.removedCount ?? 0;
-      showToast(`${removedCount} inventories "${trimmedGroupName}" group se hat gayi.`, 'success');
+      for (const name of trimmedGroupNames) {
+        await groupService.removeInventories(name, [...selectedIds]);
+      }
+      showToast(
+        `${selectedIds.size} inventories ${trimmedGroupNames.length} group(s) se hat gayi.`,
+        'success'
+      );
       setSelectedIds(new Set());
       refetchGroups();
       refetchInventories();
@@ -119,16 +159,6 @@ export default function GroupingInventoriesPage() {
     }
   };
 
-  // NEW — tab khulte hi agar is session mein admin verify nahi hua, to
-  // seedha access-code screen dikhao, page ka baaki content render hi mat karo.
-  if (!isAdminAuthenticated) {
-    return (
-      <div className="grouping-page">
-        <AdminAccessModal variant="page" />
-      </div>
-    );
-  }
-
   return (
     <div className="grouping-page">
       <h1 className="grouping-page__title">Grouping Inventories</h1>
@@ -137,20 +167,73 @@ export default function GroupingInventoriesPage() {
         <SearchBar value={term} onChange={setTerm} />
       </div>
 
-      <GroupTypeInput value={groupName} onChange={setGroupName} availableGroups={groups} />
+      <div className="grouping-page__filter-tabs">
+        {FILTER_MODES.map((mode) => (
+          <button
+            key={mode.key}
+            type="button"
+            className={`grouping-page__filter-tab${filterMode === mode.key ? ' grouping-page__filter-tab--active' : ''}`}
+            onClick={() => handleFilterModeChange(mode.key)}
+          >
+            {mode.label}
+          </button>
+        ))}
+      </div>
 
-      {!loading && inventories.length > 0 && (
-        <div className="grouping-page__select-row">
+      {filterMode === 'grouped' && groups.length > 0 && (
+        <div className="grouping-page__group-chips">
           <button
             type="button"
-            className="grouping-page__select-all-btn"
-            onClick={handleToggleSelectAll}
+            className={`grouping-page__group-chip${!selectedGroupFilter ? ' grouping-page__group-chip--active' : ''}`}
+            onClick={() => setSelectedGroupFilter(null)}
           >
+            All Groups
+          </button>
+          {groups.map((g) => (
+            <button
+              key={g.id}
+              type="button"
+              className={`grouping-page__group-chip${selectedGroupFilter === g.name ? ' grouping-page__group-chip--active' : ''}`}
+              onClick={() => setSelectedGroupFilter(g.name)}
+            >
+              {g.name}
+              {typeof g.inventoryCount === 'number' ? ` (${g.inventoryCount})` : ''}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div className="grouping-page__group-inputs">
+        {groupNames.map((name, index) => (
+          <div className="grouping-page__group-input-row" key={index}>
+            <GroupTypeInput
+              value={name}
+              onChange={(val) => updateGroupName(index, val)}
+              availableGroups={groups}
+            />
+            {groupNames.length > 1 && (
+              <button
+                type="button"
+                className="grouping-page__remove-group-field-btn"
+                onClick={() => removeGroupField(index)}
+                aria-label="Remove this group field"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+        ))}
+        <button type="button" className="grouping-page__add-group-field-btn" onClick={addGroupField}>
+          + Other Category
+        </button>
+      </div>
+
+      {!loading && displayedInventories.length > 0 && (
+        <div className="grouping-page__select-row">
+          <button type="button" className="grouping-page__select-all-btn" onClick={handleToggleSelectAll}>
             {allLoadedSelected ? 'Deselect All' : 'Select All'}
           </button>
-          <span className="grouping-page__selected-count">
-            {selectedIds.size} selected
-          </span>
+          <span className="grouping-page__selected-count">{selectedIds.size} selected</span>
         </div>
       )}
 
@@ -160,7 +243,7 @@ export default function GroupingInventoriesPage() {
         {loading && Array.from({ length: 8 }).map((_, i) => <InventoryCardSkeleton key={i} />)}
 
         {!loading &&
-          inventories.map((inv) => (
+          displayedInventories.map((inv) => (
             <InventoryCard
               key={inv.id}
               inventory={inv}
@@ -171,6 +254,14 @@ export default function GroupingInventoriesPage() {
             />
           ))}
       </div>
+
+      {!loading && !displayedInventories.length && !error && (
+        <p className="grouping-page__empty">
+          {filterMode === 'grouped' && 'Is filter me koi grouped inventory nahi mili.'}
+          {filterMode === 'ungrouped' && 'Sab inventories kisi na kisi group me hain.'}
+          {filterMode === 'all' && 'Koi inventory nahi mili.'}
+        </p>
+      )}
 
       {!loading && hasMore && (
         <div className="grouping-page__load-more">
