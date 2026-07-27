@@ -136,24 +136,48 @@ async function displaySequenceExists(displaySequence, excludeInventoryId = null)
 
 // ---- Reads ----
 
-async function getAll() {
+async function getAll({ page = 1, limit = 12, developerId } = {}) {
     const pool = await getPool();
-    const result = await pool.request().query(`
-        SELECT i.*, d.DeveloperName, s.SectorName, p.ProjectName, img.ImagePath
-        FROM Inventory i
-        LEFT JOIN Developers d ON d.DeveloperId = i.DeveloperId
-        LEFT JOIN Sectors s ON s.SectorId = i.SectorId
-        LEFT JOIN Projects p ON p.ProjectId = i.ProjectId
-        LEFT JOIN Images img ON img.ImageId = i.ImageId
-        ORDER BY i.DisplaySequence
+    const offset = (page - 1) * limit;
+
+    const request = pool.request()
+        .input('Offset', sql.Int, offset)
+        .input('Limit', sql.Int, limit);
+
+    let whereClause = '';
+    if (developerId) {
+        request.input('DeveloperId', sql.Int, developerId);
+        whereClause = 'WHERE i.DeveloperId = @DeveloperId';
+    }
+
+    const dataResult = await request.query(`
+        SELECT * FROM (
+            SELECT i.*, d.DeveloperName, s.SectorName, p.ProjectName, img.ImagePath,
+                   ROW_NUMBER() OVER (ORDER BY i.DisplaySequence) AS RowNum
+            FROM Inventory i
+            LEFT JOIN Developers d ON d.DeveloperId = i.DeveloperId
+            LEFT JOIN Sectors s ON s.SectorId = i.SectorId
+            LEFT JOIN Projects p ON p.ProjectId = i.ProjectId
+            LEFT JOIN Images img ON img.ImageId = i.ImageId
+            ${whereClause}
+        ) AS sub
+        WHERE RowNum > @Offset AND RowNum <= (@Offset + @Limit)
+        ORDER BY RowNum
     `);
 
-    const rows = result.recordset;
+    const countRequest = pool.request();
+    if (developerId) countRequest.input('DeveloperId', sql.Int, developerId);
+    const countResult = await countRequest.query(`
+        SELECT COUNT(*) AS Total FROM Inventory i
+        ${whereClause}
+    `);
+
+    const rows = dataResult.recordset;
     const groupsMap = await getGroupsForInventoryIds(rows.map((r) => r.InventoryId));
+    const items = rows.map((r) => ({ ...r, Groups: groupsMap[r.InventoryId] || [] }));
 
-    return rows.map((r) => ({ ...r, Groups: groupsMap[r.InventoryId] || [] }));
+    return { items, total: countResult.recordset[0].Total };
 }
-
 async function getById(inventoryId) {
     const pool = await getPool();
     const result = await pool.request()

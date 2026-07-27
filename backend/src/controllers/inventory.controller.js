@@ -50,14 +50,27 @@ function mapInventoryRow(row) {
 
 async function getAll(req, res) {
     try {
-        const inventory = await inventoryService.getAllInventory();
-        res.status(200).json(inventory.map(mapInventoryRow));
+        const page = parseInt(req.query.page, 10) || 1;
+        const limit = parseInt(req.query.limit, 10) || 12;
+        const developerId = req.query.developerId ? parseInt(req.query.developerId, 10) : undefined;
+
+        const { items, total } = await inventoryService.getAllInventory({ page, limit, developerId });
+
+        res.status(200).json({
+            success: true,
+            data: {
+                items: items.map(mapInventoryRow),
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit),
+            },
+        });
     } catch (err) {
         console.error('❌ getAll Inventory error:', err);
         res.status(err.statusCode || 500).json({ message: err.message });
     }
 }
-
 // GET /api/inventory/next-card-number — form isse agla free Card No fetch karta hai.
 async function getNextCardNumber(req, res) {
     try {

@@ -15,8 +15,8 @@ function validate(data) {
     }
 }
 
-async function getAllInventory() {
-    return inventoryRepository.getAll();
+async function getAllInventory({ page, limit, developerId } = {}) {
+    return inventoryRepository.getAll({ page, limit, developerId });
 }
 
 async function getInventoryById(inventoryId) {
