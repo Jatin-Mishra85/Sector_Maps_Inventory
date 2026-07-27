@@ -1,8 +1,30 @@
-import { memo, useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import './InventoryCard.css';
 import { downloadFile } from '../../../../utils/download';
 import { shareContent } from '../../../../utils/share';
 import { useToast } from '../../../../context/ToastContext';
+
+// TEMP — 10 placeholder images used for the card thumbnail only, so real
+// property photos aren't shown on the listing grid yet. Preview mode still
+// opens the ACTUAL image (see handleThumbClick -> onPreview(inventory),
+// which is untouched). To revert: delete this block + getPlaceholderUrl(),
+// and change the thumb <img src={...}> back to {imageUrl}.
+//
+// Files must exist at: frontend/public/placeholders/placeholder-1.jpg ... placeholder-10.jpg
+// (Vite serves anything in /public/ directly from the site root, no import needed.)
+const PLACEHOLDER_IMAGES = Array.from(
+  { length: 10 },
+  (_, i) => `/placeholders/placeholder-${i + 1}.jpg`
+);
+
+function getPlaceholderUrl(id) {
+  const str = String(id ?? '');
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash * 31 + str.charCodeAt(i)) | 0;
+  }
+  return PLACEHOLDER_IMAGES[Math.abs(hash) % PLACEHOLDER_IMAGES.length];
+}
 
 function InventoryCard({
   inventory,
@@ -29,6 +51,10 @@ function InventoryCard({
     googleMapsUrl,
   } = inventory;
 
+  // TEMP — same placeholder every render for a given card (based on id),
+  // so it doesn't flicker/change on re-render.
+  const placeholderThumbUrl = useMemo(() => getPlaceholderUrl(id), [id]);
+
   // TOP LABEL — Sector normally. Agar iska Sector nahi hai, uski jagah
   // Project name dikhao.
   const topLabel = sectorName || name || '';
@@ -46,6 +72,8 @@ function InventoryCard({
   const hasLocation = Boolean(googleMapsUrl) || Boolean(locationQuery);
 
   // Image na ho ya load fail ho jaye to placeholder "add photo" mode mein chala jaata hai.
+  // (Ye "no real image at all" wala case hai — is se PLACEHOLDER_IMAGES ka koi lena dena nahi,
+  // wo sirf temp-display ke liye hai jab image EXIST karti hai.)
   const showPhotoPlaceholder = !imageUrl || imgError;
 
   // Share dropdown ko bahar click karte hi band karo.
@@ -185,6 +213,10 @@ function InventoryCard({
       onAddPhoto?.(inventory);
       return;
     }
+    // TEMP note: thumbnail placeholder dikha raha hai, lekin yahan `inventory`
+    // as-is (real imageUrl ke saath) pass ho raha hai — preview mein ACTUAL
+    // image hi khulegi, kyunki downstream ImagePreview `inventory.imageUrl`
+    // use karta hai, thumbnail wala placeholder nahi.
     onPreview(inventory);
   };
 
@@ -205,174 +237,185 @@ function InventoryCard({
         </label>
       )}
 
-      <button
-        type="button"
-        className="inv-card__thumb"
-        onClick={handleThumbClick}
-        aria-label={
-          selectable
-            ? `Toggle select ${middleLabel || topLabel || 'inventory'}`
-            : showPhotoPlaceholder
-            ? `Add photo for ${middleLabel || topLabel || 'inventory'}`
-            : `Preview image of ${middleLabel || topLabel || 'inventory'}`
-        }
-      >
-        {!showPhotoPlaceholder ? (
-          <img
-            src={imageUrl}
-            alt={middleLabel || topLabel || 'Inventory'}
-            loading="lazy"
-            onError={() => setImgError(true)}
-          />
-        ) : (
-          <div className="inv-card__thumb-fallback" aria-hidden="true" />
-        )}
-      </button>
-
-      <div className="inv-card__content">
-        {/* TOP — Sector (ya fallback Project name) + Edit/Delete */}
-        <div className="inv-card__top">
-          {topLabel ? (
-            <p className="inv-card__sector" title={topLabel}>
-              {topLabel}
-            </p>
+      <div className="inv-card__body">
+        <button
+          type="button"
+          className="inv-card__thumb"
+          onClick={handleThumbClick}
+          aria-label={
+            selectable
+              ? `Toggle select ${middleLabel || topLabel || 'inventory'}`
+              : showPhotoPlaceholder
+              ? `Add photo for ${middleLabel || topLabel || 'inventory'}`
+              : `Preview image of ${middleLabel || topLabel || 'inventory'}`
+          }
+        >
+          {!showPhotoPlaceholder ? (
+            <img
+              src={placeholderThumbUrl /* TEMP — was: imageUrl */}
+              alt={middleLabel || topLabel || 'Inventory'}
+              loading="lazy"
+              onError={() => setImgError(true)}
+            />
           ) : (
-            <span />
+            <div className="inv-card__thumb-fallback" aria-hidden="true" />
           )}
+        </button>
+
+        <div className="inv-card__content">
+          {/* HEADER — bold title (Sector) + Edit/Delete icon buttons with always-visible tooltip labels */}
+          <div className="inv-card__header">
+            {topLabel ? (
+              <h3 className="inv-card__title" title={topLabel}>
+                {topLabel}
+              </h3>
+            ) : (
+              <span />
+            )}
+
+            {!selectable && (
+              <div className="inv-card__top-actions">
+                <button
+                  type="button"
+                  className="inv-card__icon-btn inv-card__icon-btn--edit"
+                  onClick={handleEditClick}
+                  aria-label={`Edit ${middleLabel || topLabel || 'inventory'}`}
+                  title="Edit inventory"
+                >
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" aria-hidden="true">
+                    <path
+                      d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17v3Z"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </button>
+
+                <button
+                  type="button"
+                  className="inv-card__icon-btn inv-card__icon-btn--danger"
+                  onClick={handleDeleteClick}
+                  aria-label={`Delete ${middleLabel || topLabel || 'inventory'}`}
+                  title="Permanently delete this inventory"
+                >
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" aria-hidden="true">
+                    <path
+                      d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m2 0-.8 12a2 2 0 0 1-2 1.9H9.8a2 2 0 0 1-2-1.9L7 7h10ZM10 11v6M14 11v6"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Muted description line — Developer, Project (fallback rules apply) */}
+          {middleLabel ? (
+            <p className="inv-card__description" title={middleLabel}>
+              {middleLabel}
+            </p>
+          ) : null}
 
           {!selectable && (
-            <div className="inv-card__top-actions">
-              <button
-                type="button"
-                className="inv-card__icon-btn-sm"
-                onClick={handleEditClick}
-                aria-label={`Edit ${middleLabel || topLabel || 'inventory'}`}
-                title="Edit inventory"
-              >
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" aria-hidden="true">
-                  <path
-                    d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17v3Z"
-                    stroke="currentColor"
-                    strokeWidth="1.6"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </button>
+            <>
 
-              <button
-                type="button"
-                className="inv-card__icon-btn-sm inv-card__icon-btn-sm--danger"
-                onClick={handleDeleteClick}
-                aria-label={`Delete ${middleLabel || topLabel || 'inventory'}`}
-                title="Permanently delete this inventory"
-              >
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" aria-hidden="true">
-                  <path
-                    d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m2 0-.8 12a2 2 0 0 1-2 1.9H9.8a2 2 0 0 1-2-1.9L7 7h10ZM10 11v6M14 11v6"
-                    stroke="currentColor"
-                    strokeWidth="1.6"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </button>
-            </div>
+              {/* Action tiles — Download / Share / Location */}
+              <div className="inv-card__actions">
+                <button
+                  type="button"
+                  className="inv-card__action-tile"
+                  onClick={handleDownload}
+                  disabled={!imageUrl}
+                  aria-disabled={!imageUrl}
+                  aria-label={`Download image of ${middleLabel || topLabel || 'inventory'}`}
+                  title={imageUrl ? 'Download image' : 'No image available'}
+                >
+                  <span className="inv-card__action-icon inv-card__action-icon--purple">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" aria-hidden="true">
+                      <path
+                        d="M12 4v11m0 0-4-4m4 4 4-4M5 19h14"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </span>
+                  <span className="inv-card__action-label">Download</span>
+                </button>
+
+                <div className="inv-card__share-wrap" ref={shareRef}>
+                  <button
+                    type="button"
+                    className="inv-card__action-tile"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShareOpen((open) => !open);
+                    }}
+                    aria-haspopup="true"
+                    aria-expanded={shareOpen}
+                    aria-label={`Share ${middleLabel || topLabel || 'inventory'}`}
+                  >
+                    <span className="inv-card__action-icon inv-card__action-icon--green">
+                      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" aria-hidden="true">
+                        <circle cx="18" cy="5" r="2.4" stroke="currentColor" strokeWidth="1.8" />
+                        <circle cx="6" cy="12" r="2.4" stroke="currentColor" strokeWidth="1.8" />
+                        <circle cx="18" cy="19" r="2.4" stroke="currentColor" strokeWidth="1.8" />
+                        <path d="M8.1 10.7 15.9 6.3M8.1 13.3l7.8 4.4" stroke="currentColor" strokeWidth="1.8" />
+                      </svg>
+                    </span>
+                    <span className="inv-card__action-label">Share</span>
+                  </button>
+
+                  {shareOpen && (
+                    <ul className="inv-card__share-menu" onClick={(e) => e.stopPropagation()}>
+                      <li>
+                        <button type="button" onClick={handleShareImageWithDetails} disabled={!imageUrl}>
+                          Share Image with Details
+                        </button>
+                      </li>
+                      <li>
+                        <button type="button" onClick={handleShareUrl}>
+                          Share Web URL
+                        </button>
+                      </li>
+                    </ul>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  className="inv-card__action-tile"
+                  onClick={handleLocation}
+                  disabled={!hasLocation}
+                  aria-disabled={!hasLocation}
+                  aria-label={
+                    hasLocation
+                      ? `View location of ${middleLabel || topLabel || 'inventory'}`
+                      : 'Location not available'
+                  }
+                  title={hasLocation ? 'View on Google Maps' : 'Location not available'}
+                >
+                  <span className="inv-card__action-icon inv-card__action-icon--blue">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" aria-hidden="true">
+                      <path
+                        d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21Z"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                      />
+                      <circle cx="12" cy="9.5" r="2.3" stroke="currentColor" strokeWidth="1.8" />
+                    </svg>
+                  </span>
+                  <span className="inv-card__action-label">Location</span>
+                </button>
+              </div>
+            </>
           )}
         </div>
-
-        {/* MIDDLE — Developer, Project (fallback rules apply) */}
-        {middleLabel ? (
-          <h3 className="inv-card__title" title={middleLabel}>
-            {middleLabel}
-          </h3>
-        ) : null}
-
-        {/* BOTTOM — Download / Share / Location */}
-        {!selectable && (
-          <div className="inv-card__actions">
-            <button
-              type="button"
-              className="inv-card__action-btn"
-              onClick={handleDownload}
-              disabled={!imageUrl}
-              aria-disabled={!imageUrl}
-              aria-label={`Download image of ${middleLabel || topLabel || 'inventory'}`}
-              title={imageUrl ? 'Download image' : 'No image available'}
-            >
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
-                <path
-                  d="M12 4v11m0 0-4-4m4 4 4-4M5 19h14"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              <span className="inv-card__action-btn__label">Download</span>
-            </button>
-
-            <div className="inv-card__share-wrap" ref={shareRef}>
-              <button
-                type="button"
-                className="inv-card__action-btn"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShareOpen((open) => !open);
-                }}
-                aria-haspopup="true"
-                aria-expanded={shareOpen}
-                aria-label={`Share ${middleLabel || topLabel || 'inventory'}`}
-              >
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
-                  <circle cx="18" cy="5" r="2.4" stroke="currentColor" strokeWidth="1.6" />
-                  <circle cx="6" cy="12" r="2.4" stroke="currentColor" strokeWidth="1.6" />
-                  <circle cx="18" cy="19" r="2.4" stroke="currentColor" strokeWidth="1.6" />
-                  <path d="M8.1 10.7 15.9 6.3M8.1 13.3l7.8 4.4" stroke="currentColor" strokeWidth="1.6" />
-                </svg>
-                <span className="inv-card__action-btn__label">Share</span>
-              </button>
-
-              {shareOpen && (
-                <ul className="inv-card__share-menu" onClick={(e) => e.stopPropagation()}>
-                  <li>
-                    <button type="button" onClick={handleShareImageWithDetails} disabled={!imageUrl}>
-                      Share Image with Details
-                    </button>
-                  </li>
-                  <li>
-                    <button type="button" onClick={handleShareUrl}>
-                      Share Web URL
-                    </button>
-                  </li>
-                </ul>
-              )}
-            </div>
-
-            <button
-              type="button"
-              className="inv-card__action-btn"
-              onClick={handleLocation}
-              disabled={!hasLocation}
-              aria-disabled={!hasLocation}
-              aria-label={
-                hasLocation
-                  ? `View location of ${middleLabel || topLabel || 'inventory'}`
-                  : 'Location not available'
-              }
-              title={hasLocation ? 'View on Google Maps' : 'Location not available'}
-            >
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
-                <path
-                  d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21Z"
-                  stroke="currentColor"
-                  strokeWidth="1.6"
-                />
-                <circle cx="12" cy="9.5" r="2.3" stroke="currentColor" strokeWidth="1.6" />
-              </svg>
-              <span className="inv-card__action-btn__label">Location</span>
-            </button>
-          </div>
-        )}
       </div>
     </article>
   );

@@ -1,4 +1,4 @@
-// backend/services/group.service.js
+// backend/src/services/group.service.js
 const groupRepository = require('../repositories/group.repository');
 
 async function getAllGroups() {
@@ -43,9 +43,10 @@ async function deleteGroup(groupId) {
     return true;
 }
 
-async function addInventoriesToGroup(groupId, inventoryIds) {
-    if (!groupId) {
-        const error = new Error('GroupId is required.');
+// groupName se group dhoondo/banao, phir usme inventories add karo.
+async function addInventoriesToGroup(groupName, inventoryIds) {
+    if (!groupName || groupName.trim() === '') {
+        const error = new Error('GroupName is required.');
         error.statusCode = 400;
         throw error;
     }
@@ -54,12 +55,14 @@ async function addInventoriesToGroup(groupId, inventoryIds) {
         error.statusCode = 400;
         throw error;
     }
-    return groupRepository.addInventoriesToGroup(groupId, inventoryIds);
+    const group = await groupRepository.findOrCreateByName(groupName.trim());
+    return groupRepository.addInventoriesToGroup(group.GroupId, inventoryIds);
 }
 
-async function removeInventoriesFromGroup(groupId, inventoryIds) {
-    if (!groupId) {
-        const error = new Error('GroupId is required.');
+// groupName se existing group dhoondo (agar nahi mila to error), phir inventories remove karo.
+async function removeInventoriesFromGroup(groupName, inventoryIds) {
+    if (!groupName || groupName.trim() === '') {
+        const error = new Error('GroupName is required.');
         error.statusCode = 400;
         throw error;
     }
@@ -68,7 +71,21 @@ async function removeInventoriesFromGroup(groupId, inventoryIds) {
         error.statusCode = 400;
         throw error;
     }
-    return groupRepository.removeInventoriesFromGroup(groupId, inventoryIds);
+    const group = await groupRepository.getByName(groupName.trim());
+    if (!group) {
+        const error = new Error('Group not found.');
+        error.statusCode = 404;
+        throw error;
+    }
+    return groupRepository.removeInventoriesFromGroup(group.GroupId, inventoryIds);
 }
 
-module.exports = { getAllGroups, getGroupById, createGroup, updateGroup, deleteGroup, addInventoriesToGroup, removeInventoriesFromGroup };
+module.exports = {
+    getAllGroups,
+    getGroupById,
+    createGroup,
+    updateGroup,
+    deleteGroup,
+    addInventoriesToGroup,
+    removeInventoriesFromGroup,
+};

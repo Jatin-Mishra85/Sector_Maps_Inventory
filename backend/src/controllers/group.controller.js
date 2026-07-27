@@ -1,4 +1,4 @@
-// backend/controllers/group.controller.js
+// backend/src/controllers/group.controller.js
 const groupService = require('../services/group.service');
 
 async function getAll(req, res) {
@@ -49,8 +49,8 @@ async function remove(req, res) {
 
 async function addInventoriesToGroup(req, res) {
     try {
-        const { groupId, inventoryIds } = req.body;
-        const result = await groupService.addInventoriesToGroup(groupId, inventoryIds);
+        const { groupName, inventoryIds } = req.body;
+        const result = await groupService.addInventoriesToGroup(groupName, inventoryIds);
         res.status(200).json(result);
     } catch (err) {
         res.status(err.statusCode || 500).json({ message: err.message });
@@ -59,8 +59,8 @@ async function addInventoriesToGroup(req, res) {
 
 async function removeInventoriesFromGroup(req, res) {
     try {
-        const { groupId, inventoryIds } = req.body;
-        const removedCount = await groupService.removeInventoriesFromGroup(groupId, inventoryIds);
+        const { groupName, inventoryIds } = req.body;
+        const removedCount = await groupService.removeInventoriesFromGroup(groupName, inventoryIds);
         res.status(200).json({ removedCount });
     } catch (err) {
         res.status(err.statusCode || 500).json({ message: err.message });

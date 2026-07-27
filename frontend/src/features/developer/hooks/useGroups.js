@@ -5,9 +5,9 @@ import { parseApiError } from '../../../services/errorHandler';
 function mapGroup(item) {
   return {
     ...item,
-    id: item.id,
-    name: item.name,
-    inventoryCount: item.inventoryCount,
+    id: item.GroupId,
+    name: item.GroupName,
+    inventoryCount: item.inventoryCount ?? 0, // backend abhi count nahi bhejta, default 0
   };
 }
 
@@ -20,9 +20,8 @@ export function useGroups() {
     setLoading(true);
     setError(null);
     try {
-      const response = await groupService.getAll();
-      const payload = response?.data ?? {};
-      const rawItems = Array.isArray(payload) ? payload : payload?.items || [];
+      const response = await groupService.getAll(); // apiClient interceptor already unwraps .data
+      const rawItems = Array.isArray(response) ? response : response?.items || [];
       setGroups(rawItems.map(mapGroup));
     } catch (err) {
       setError(parseApiError(err));

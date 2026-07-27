@@ -4,7 +4,17 @@ const { getPool, sql } = require('../database/connection');
 
 async function getAll() {
     const pool = await getPool();
-    const result = await pool.request().query('SELECT * FROM Groups ORDER BY GroupId');
+    const result = await pool.request().query(`
+        SELECT
+            g.GroupId,
+            g.GroupName,
+            g.CreatedAt,
+            COUNT(ig.InventoryId) AS inventoryCount
+        FROM Groups g
+        LEFT JOIN InventoryGroups ig ON ig.GroupId = g.GroupId
+        GROUP BY g.GroupId, g.GroupName, g.CreatedAt
+        ORDER BY g.GroupId
+    `);
     return result.recordset;
 }
 
@@ -13,6 +23,14 @@ async function getById(groupId) {
     const result = await pool.request()
         .input('GroupId', sql.Int, groupId)
         .query('SELECT * FROM Groups WHERE GroupId = @GroupId');
+    return result.recordset[0] || null;
+}
+
+async function getByName(groupName) {
+    const pool = await getPool();
+    const result = await pool.request()
+        .input('GroupName', sql.NVarChar(255), groupName)
+        .query('SELECT * FROM Groups WHERE GroupName = @GroupName');
     return result.recordset[0] || null;
 }
 
@@ -26,6 +44,18 @@ async function create(groupName) {
             VALUES (@GroupName)
         `);
     return result.recordset[0];
+}
+
+// Naam se group dhoondo; agar nahi mila to naya bana do.
+async function findOrCreateByName(groupName) {
+    const existing = await getByName(groupName);
+    if (existing) {
+        console.log('[DEBUG] Found existing group:', existing);
+        return existing;
+    }
+    const created = await create(groupName);
+    console.log('[DEBUG] Newly created group:', created);
+    return created;
 }
 
 async function update(groupId, groupName) {
@@ -85,4 +115,14 @@ async function removeInventoriesFromGroup(groupId, inventoryIds) {
     return result.rowsAffected[0];
 }
 
-module.exports = { getAll, getById, create, update, remove, addInventoriesToGroup, removeInventoriesFromGroup };
+module.exports = {
+    getAll,
+    getById,
+    getByName,
+    create,
+    findOrCreateByName,
+    update,
+    remove,
+    addInventoriesToGroup,
+    removeInventoriesFromGroup,
+};

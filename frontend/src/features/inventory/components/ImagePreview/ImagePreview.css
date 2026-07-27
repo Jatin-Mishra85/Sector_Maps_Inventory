@@ -66,15 +66,20 @@
 }
 
 .img-preview__image {
-    max-width:100%;
-    max-height:100%;
   object-fit: contain;
-  transition: none;
+  transition: none; /* instant while actively pinching/dragging — a transition here fights your finger */
   cursor: zoom-in;
   user-select: none;
   -webkit-user-drag: none;
-    transform-origin: center center;
+  transform-origin: center center;
   will-change: transform;
+}
+
+/* Applied only when NOT mid-gesture (double-tap toggle, end-of-pinch
+   snap back to bounds/center). Gives the Google-Photos-style "settle"
+   animation without ever fighting an active touch. */
+.img-preview__image--settled {
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* Small phones / short landscape (foldables outer screen etc.) */

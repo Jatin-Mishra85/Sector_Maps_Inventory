@@ -1,25 +1,25 @@
 :root {
-  /* ===== Colors — calm, professional soft ocean blue palette ===== */
-  --color-bg: #f5fbff;               /* Ice Blue */
-  --color-bg-gradient: linear-gradient(180deg, #f5fbff 0%, #eef7fc 50%, #dff4ff 100%); /* Ice to Sky Blue */
-  --color-surface: rgba(255, 255, 255, 0.75); /* Glassmorphism base */
-  --color-surface-hover: rgba(223, 244, 255, 0.4);
-  --color-text: #0f1823;             /* Deep muted navy for accessible contrast */
-  --color-text-muted: #627d98;       /* Calm muted steel blue */
-  --color-border: rgba(111, 188, 207, 0.25); /* Subtle muted teal border */
+  /* ===== Colors — calm, warm neutral palette (sage + clay), no icy blue ===== */
+  --color-bg: #faf8f5;               /* warm off-white */
+  --color-bg-gradient: linear-gradient(180deg, #faf8f5 0%, #f6f3ee 50%, #efe9e0 100%); /* warm sand fade */
+  --color-surface: rgba(255, 255, 255, 0.82);
+  --color-surface-hover: rgba(239, 233, 224, 0.55);
+  --color-text: #2b2a26;             /* warm near-black, easy on the eyes */
+  --color-text-muted: #8a8478;       /* warm neutral gray */
+  --color-border: rgba(0, 0, 0, 0.08); /* neutral hairline, no color cast */
 
-  --color-primary: #4fa3d1;          /* Soft Ocean Blue */
-  --color-primary-hover: #3b8cb8;
-  --color-primary-tint: rgba(79, 163, 209, 0.08);
+  --color-primary: #6f8f7a;          /* muted sage green — calm, non-clinical */
+  --color-primary-hover: #5f7d69;
+  --color-primary-tint: rgba(111, 143, 122, 0.10);
   --color-on-primary: #ffffff;
 
-  --color-accent: #6fbccf;           /* Muted Teal */
-  --color-accent-light: #beefff;     /* Soft Cyan */
-  --color-accent-hover: #54a0b3;
+  --color-accent: #b58a63;           /* warm clay/tan */
+  --color-accent-light: #f0e6d8;     /* soft sand (replaces icy cyan) */
+  --color-accent-hover: #a17750;
 
-  --color-success: #439671;
-  --color-warning: #d99136;
-  --color-danger: #cd5347;
+  --color-success: #5f8a70;
+  --color-warning: #c98f3f;
+  --color-danger: #bd6d58;           /* muted terracotta, not alarm-red */
 
   /* ===== Typography ===== */
   --font-heading: 'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif;
@@ -29,7 +29,7 @@
   --font-size-micro: clamp(0.5rem, 0.48rem + 0.08vw, 0.55rem);
   --font-size-nano: clamp(0.4rem, 0.38rem + 0.08vw, 0.45rem);
   --font-size-pico: clamp(0.3rem, 0.28rem + 0.08vw, 0.35rem);
---font-size-xs: clamp(0.72rem, 0.7rem + 0.1vw, 0.78rem);
+  --font-size-xs: clamp(0.72rem, 0.7rem + 0.1vw, 0.78rem);
   --font-size-sm: clamp(0.82rem, 0.8rem + 0.15vw, 0.9rem);
   --font-size-base: clamp(0.92rem, 0.9rem + 0.2vw, 1rem);
   --font-size-lg: clamp(1.1rem, 1rem + 0.5vw, 1.25rem);
@@ -52,8 +52,8 @@
   --radius-md: 12px;
   --radius-lg: 20px;
 
-  /* Premium soft depth effects */
-  --shadow-soft: 0 8px 32px 0 rgba(30, 58, 95, 0.04);
-  --shadow-hover: 0 12px 40px 0 rgba(30, 58, 95, 0.08);
+  /* Soft, warm-neutral depth — no blue cast in the shadow color */
+  --shadow-soft: 0 8px 32px 0 rgba(30, 26, 20, 0.05);
+  --shadow-hover: 0 12px 40px 0 rgba(30, 26, 20, 0.09);
   --glass-blur: blur(12px);
 }

@@ -17,8 +17,18 @@ export default function InventoryPhotoUploadModal({ inventory, onUploaded, onClo
   const [pendingImageSrc, setPendingImageSrc] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
 
-  // Mount hote hi camera input click kar do — user ko ek extra tap nahi karna padta.
+  // FIX — React.StrictMode (dev-only) mounts + re-runs effects once extra
+  // on purpose, so `cameraInputRef.current?.click()` was firing twice back
+  // to back. The second click interrupted the first file-picker session
+  // before its onChange could fire, so no file was ever picked, no crop
+  // modal opened properly, and no upload request ever went out.
+  // This ref makes sure the camera only actually opens once per real mount,
+  // in both StrictMode-dev and normal production behavior.
+  const hasTriggeredCameraRef = useRef(false);
+
   useEffect(() => {
+    if (hasTriggeredCameraRef.current) return;
+    hasTriggeredCameraRef.current = true;
     cameraInputRef.current?.click();
   }, []);
 

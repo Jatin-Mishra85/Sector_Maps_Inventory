@@ -26,9 +26,7 @@ export default function MainLayout() {
           </Link>
 
           <nav className="main-layout__nav main-layout__nav--desktop">
-            {isUnlocked && (
-              <Link to="/" className="main-layout__nav-link">Home</Link>
-            )}
+            <Link to="/" className="main-layout__nav-link">Home</Link>
             <Link to="/admin" className="main-layout__nav-link">Add Inventory</Link>
             <Link to="/grouping" className="main-layout__nav-link">Grouping</Link>
           </nav>
@@ -47,9 +45,7 @@ export default function MainLayout() {
         </div>
 
         <nav className={`main-layout__nav main-layout__nav--mobile ${menuOpen ? 'main-layout__nav--mobile-open' : ''}`}>
-          {isUnlocked && (
-            <Link to="/" className="main-layout__nav-link" onClick={closeMenu}>Home</Link>
-          )}
+          <Link to="/" className="main-layout__nav-link" onClick={closeMenu}>Home</Link>
           <Link to="/admin" className="main-layout__nav-link" onClick={closeMenu}>Add Inventory</Link>
           <Link to="/grouping" className="main-layout__nav-link" onClick={closeMenu}>Grouping</Link>
         </nav>

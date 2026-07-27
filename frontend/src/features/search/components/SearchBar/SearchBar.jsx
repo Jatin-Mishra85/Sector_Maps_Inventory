@@ -5,6 +5,7 @@ import { useVoiceSearch } from '../../hooks/useVoiceSearch';
 import { useSuggestions } from '../../hooks/useSuggestions';
 import { useToast } from '../../../../context/ToastContext';
 import { classNames } from '../../../../utils/classNames';
+import VoiceSearchOverlay from './VoiceSearchOverlay';
 
 function SearchBar({ value, onChange, placeholder = 'Search by project, sector, or developer' }) {
   const { showToast } = useToast();
@@ -21,8 +22,21 @@ function SearchBar({ value, onChange, placeholder = 'Search by project, sector, 
     [onChange]
   );
 
-  const { isSupported, isListening, error, startListening, stopListening } = useVoiceSearch({
+  // Error ab yahan seedha render ke beech nahi, balki hook ke apne
+  // useEffect ke andar se (safe side-effect ke roop mein) aata hai —
+  // isse woh infinite-toast/re-render loop khatam ho gaya jo pehle
+  // "if (error === 'not-allowed') showToast(...)" render body mein
+  // likhne se ho raha tha.
+  const handleVoiceError = useCallback(
+    (_code, message) => {
+      showToast(message, 'error');
+    },
+    [showToast]
+  );
+
+  const { isSupported, isListening, interimTranscript, startListening, stopListening } = useVoiceSearch({
     onResult: handleVoiceResult,
+    onError: handleVoiceError,
   });
 
   const handleMicClick = () => {
@@ -32,10 +46,6 @@ function SearchBar({ value, onChange, placeholder = 'Search by project, sector, 
     }
     startListening();
   };
-
-  if (error === 'not-allowed') {
-    showToast('Microphone access was denied. Please allow it to use voice search.', 'error');
-  }
 
   const handleSuggestionClick = (label) => {
     onChange(label);
@@ -100,7 +110,6 @@ function SearchBar({ value, onChange, placeholder = 'Search by project, sector, 
                 strokeLinecap="round"
               />
             </svg>
-            {isListening && <span className="search-bar__mic-pulse" aria-hidden="true" />}
           </button>
         )}
       </div>
@@ -122,6 +131,12 @@ function SearchBar({ value, onChange, placeholder = 'Search by project, sector, 
           ))}
         </ul>
       )}
+
+      <VoiceSearchOverlay
+        isOpen={isListening}
+        interimTranscript={interimTranscript}
+        onStop={stopListening}
+      />
     </div>
   );
 }

@@ -28,7 +28,7 @@ body {
   position: relative;
 }
 
-/* Ambient organic background shape to match the ocean-inspired depth */
+/* Ambient organic background shape — soft warm glow, replaces the icy-cyan blob */
 body::before {
   content: "";
   position: fixed;
@@ -36,7 +36,7 @@ body::before {
   right: -5%;
   width: 50vw;
   height: 50vw;
-  background: radial-gradient(circle, rgba(190, 239, 255, 0.45) 0%, rgba(245, 251, 255, 0) 70%);
+  background: radial-gradient(circle, rgba(240, 230, 216, 0.55) 0%, rgba(250, 248, 245, 0) 70%);
   filter: blur(60px);
   z-index: -1;
   pointer-events: none;
@@ -95,7 +95,7 @@ p, span, h1, h2, h3, h4 {
   box-sizing: border-box;
 }
 
-/* Glassmorphism utility layer for your components/cards to use */
+/* Utility layer for cards/panels to use */
 .glass-panel {
   background: var(--color-surface);
   backdrop-filter: var(--glass-blur);

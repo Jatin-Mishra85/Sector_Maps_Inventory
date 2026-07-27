@@ -1,52 +1,56 @@
 /* ============================================================
    InventoryCard.css
-   Key fix: .inv-card__thumb is now position:absolute (top/left/
-   bottom set) so the image NEVER dictates the card's height.
-   The card's height is driven purely by .inv-card__content
-   (text + buttons). The image just fills whatever height that
-   produces, using object-fit: cover.
+   Visual redesign: horizontal card — left portrait thumbnail,
+   right content (bold title + always-visible tooltip icon
+   buttons, muted description, divider, 3 equal action tiles).
+   All existing markup hooks/behaviour are purely re-styled here;
+   no functional class removed, only restructured.
    ============================================================ */
 
 .inv-card {
-  position: relative;           /* containing block for the absolute thumb */
+  position: relative;
   display: block;
-  background: var(--color-surface);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--color-border);
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.07);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-soft);
-  padding: var(--space-2);
-  min-height: 145px;             /* guarantees the thumb always has enough room */
+  box-shadow: 0 4px 16px rgba(20, 20, 20, 0.05);
+  padding: var(--space-2) 10px;
   min-width: 0;
   transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
+  min-height: 140px;
 }
 
 .inv-card:hover {
-  box-shadow: var(--shadow-hover);
+  box-shadow: 0 10px 28px rgba(20, 20, 20, 0.08);
   transform: translateY(-1px);
 }
 
-/* ===== Image Frame — height comes FROM the card, never the reverse ===== */
+.inv-card__body {
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-3);
+  min-width: 0;
+  height: 100%;
+}
+
+/* ===== Portrait image thumbnail (left) ===== */
 .inv-card__thumb {
-  position: absolute;
-  top: var(--space-2);
-  left: var(--space-2);
-  bottom: var(--space-2);        /* top+bottom both set -> height is computed, not intrinsic */
-  width: 110px;                  /* mobile-first width */
+  flex-shrink: 0;
+  width: 100px;
+  min-height: 100%;
   border-radius: var(--radius-md);
   overflow: hidden;
-  border: 1px solid var(--color-border);
-  box-shadow: 0 4px 12px rgba(30, 58, 95, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.126);
+  box-shadow: 0 4px 12px rgba(20, 20, 20, 0.112);
   padding: 0;
   cursor: zoom-in;
-  background: var(--color-accent-light);
+  background: #efece6;
 }
 
 .inv-card__thumb img {
   width: 100%;
-  height: 100%;                  /* now valid — parent has a real computed height */
-  object-fit: cover;             /* portrait, landscape, square — all get cropped to fill */
+  height: 100%;
+  object-fit: cover;
   display: block;
   transition: transform 0.3s ease;
 }
@@ -55,44 +59,42 @@
   transform: scale(1.05);
 }
 
-/* ===== "Add photo" placeholder — clickable, camera icon, opens camera on click ===== */
+/* ===== "Add photo" placeholder — clickable, camera icon ===== */
 .inv-card__thumb-fallback {
   width: 100%;
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--color-accent-light) 0%, #ccefff 100%);
+  background: linear-gradient(135deg, #efece6 0%, #e4e0d6 100%);
   position: relative;
   cursor: pointer;
   transition: background 0.2s ease;
 }
 
 .inv-card__thumb:hover .inv-card__thumb-fallback {
-  background: linear-gradient(135deg, #ccefff 0%, var(--color-accent-light) 100%);
+  background: linear-gradient(135deg, #e4e0d6 0%, #efece6 100%);
 }
 
 .inv-card__thumb-fallback::after {
   content: '';
-  width: 30px;
-  height: 30px;
-  background: var(--color-primary);
+  width: 28px;
+  height: 28px;
+  background: #8a8478;
   -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z' stroke='black' stroke-width='1.6' stroke-linejoin='round'/%3E%3Ccircle cx='12' cy='13' r='3.2' stroke='black' stroke-width='1.6'/%3E%3Cpath d='M14.5 9.5h1.5' stroke='black' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z' stroke='black' stroke-width='1.6' stroke-linejoin='round'/%3E%3Ccircle cx='12' cy='13' r='3.2' stroke='black' stroke-width='1.6'/%3E%3Cpath d='M14.5 9.5h1.5' stroke='black' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 
-/* ===== Content column — pushed right to clear the absolutely-positioned thumb ===== */
+/* ===== Content column (right) ===== */
 .inv-card__content {
-  margin-left: 122px;            /* thumb width (110px) + gap (12px) */
+  flex: 1 1 auto;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  min-height: 100%;
 }
 
-/* ===== TOP BAR — Sector (left) + Edit/Delete (right) ===== */
-.inv-card__top {
+/* ===== HEADER — bold title + Edit/Delete icon buttons ===== */
+.inv-card__header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -100,139 +102,162 @@
   min-width: 0;
 }
 
-.inv-card__sector {
+.inv-card__title {
   font-family: var(--font-heading);
-  font-size: var(--font-size-xs);
+  font-size: var(--font-size-base);
   font-weight: 800;
   color: var(--color-text);
+  letter-spacing: -0.01em;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   min-width: 0;
-  flex: 1;
-  padding-right: var(--space-2);
+  flex: 1 1 auto;
+  padding-top: 2px;
 }
 
 .inv-card__top-actions {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: 12px;
   flex-shrink: 0;
 }
 
-.inv-card__icon-btn-sm {
+.inv-card__icon-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   flex-shrink: 0;
-  border: 1px solid transparent;
-  border-radius: var(--radius-sm);
-  background: var(--color-primary-tint);   /* always visible, not just on hover */
-  color: var(--color-primary);
+  border: none;
+  border-radius: 999px;
+  background: rgba(120, 120, 120, 0.1);
+  color: #6b6b6b;
   cursor: pointer;
-  transition: background-color 0.18s ease, color 0.18s ease,
-    box-shadow 0.18s ease, transform 0.12s ease;
+  transition: background-color 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease;
   -webkit-tap-highlight-color: transparent;
 }
 
-.inv-card__icon-btn-sm svg {
+.inv-card__icon-btn svg {
   width: 16px;
   height: 16px;
-  stroke-width: 2;
 }
 
-.inv-card__icon-btn-sm:hover {
-  box-shadow: 0 2px 8px rgba(30, 58, 95, 0.1);
+.inv-card__icon-btn:hover {
+  box-shadow: 0 2px 8px rgba(30, 58, 95, 0.14);
   transform: translateY(-1px);
 }
 
-.inv-card__icon-btn-sm:active {
-  transform: translateY(0) scale(0.96);
+.inv-card__icon-btn:active {
+  transform: translateY(0) scale(0.94);
   box-shadow: none;
 }
 
-.inv-card__icon-btn-sm--danger {
-  background: rgba(205, 83, 71, 0.12);
-  color: var(--color-danger);
+.inv-card__icon-btn--edit {
+  background: rgba(132, 199, 160, 0.214);
+  color: #468f63;
 }
 
-.inv-card__icon-btn-sm--danger:hover {
-  background: rgba(205, 83, 71, 0.18);
+.inv-card__icon-btn--edit:hover {
+  background: rgba(74, 156, 108, 0.365);
 }
 
-.inv-card__icon-btn-sm:disabled {
+.inv-card__icon-btn--danger {
+  background: rgba(255, 159, 138, 0.341);
+  color: #be5238;
+}
+
+.inv-card__icon-btn--danger:hover {
+  background: rgba(196, 122, 105, 0.22);
+}
+
+.inv-card__icon-btn:disabled {
   opacity: 0.45;
   cursor: not-allowed;
   box-shadow: none;
   transform: none;
 }
 
-.inv-card__title {
-  flex: 1 1 auto;        /* baaki bacha hua vertical space le lega, top aur actions ke beech */
-  width: 100%;
-  display: flex;
-  /* align-items: center;  */
-  font-size: var(--font-size-xxs);
+/* ===== Muted description line ===== */
+.inv-card__description {
+  font-size: var(--font-size-xs);
   font-weight: 500;
-  color: var(--color-text-muted);
+  color: #8a8478;
+  margin-top: 2px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.inv-card__description {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-muted);
-  margin: 2px 0 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 1;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
 
-/* ===== BOTTOM — Download / Share / Location — all equal size, one row ===== */
+
+/* ===== BOTTOM — 3 equal-width action tiles ===== */
 .inv-card__actions {
   display: flex;
   gap: var(--space-2);
   margin-top: auto;
-  padding: 8px 2px 2px 2px;
 }
 
-.inv-card__action-btn {
+.inv-card__action-tile {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  flex: 1 1 0;                   /* equal width for all three buttons */
+  flex: 1 1 0;
   min-width: 0;
-  min-height: 50px;              /* consistent height for all three */
+  min-height: 48px;
   gap: 4px;
-  padding: var(--space-1) 0;
-
-  /* color: rgb(0, 128, 255); */
-  color: rgb(59, 59, 59);
-  background: linear-gradient(180deg, #ffffff 0%, var(--color-bg) 100%);
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-border);
+  padding: 6px 4px;
+  
+  /* background: #f7f6f3; */
+  background: #fff;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(0, 0, 0, 0.09);
   
   cursor: pointer;
   position: relative;
-  transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.15s ease;
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.15s ease, border-color 0.15s ease;
   -webkit-tap-highlight-color: transparent;
+  /* background-color: red; */
 }
 
-.inv-card__action-btn svg {
-  width: 18px;
-  height: 18px;
-  stroke-width: 6.6 ;
+.inv-card__action-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  flex-shrink: 0;
+  /* background-color: red; */
 }
 
-.inv-card__action-btn__label {
+.inv-card__action-icon svg {
+  width: 15px;
+  height: 15px;
+}
+
+.inv-card__action-icon--purple {
+  background: rgba(222, 169, 255, 0.337);
+  color: #6e2aa1;
+}
+
+.inv-card__action-icon--green {
+  background: rgba(168, 255, 204, 0.354);
+  color: #328654;
+}
+
+.inv-card__action-icon--blue {
+  background: rgba(126, 186, 255, 0.395);
+  color: #38598a;
+}
+
+.inv-card__action-label {
   display: block;
-  font-size: var(--font-size-micro);
-  font-weight: 800;
+  font-size: var(--font-size-nano);
+  font-weight: 700;
+  color: var(--color-text);
   line-height: 1;
   white-space: nowrap;
   overflow: hidden;
@@ -240,44 +265,38 @@
   max-width: 100%;
 }
 
-.inv-card__action-btn:hover:not(:disabled) {
-  background: linear-gradient(180deg, #ffffff 0%, var(--color-surface-hover) 100%);
-  border-color: var(--color-primary);
-  border-bottom-color: var(--color-primary);
+.inv-card__action-tile:hover:not(:disabled) {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.12);
   transform: translateY(-1px);
-  box-shadow: 0 6px 8px -1px rgba(30, 58, 95, 0.12),
-              0 3px 6px -1px rgba(30, 58, 95, 0.06);
+  box-shadow: 0 6px 14px -4px rgba(30, 30, 30, 0.1);
 }
 
-.inv-card__action-btn:active:not(:disabled) {
-  transform: translateY(2.5px);
-  border-bottom-width: 1px;
-  background: var(--color-bg);
-  box-shadow: inset 0 3px 6px rgba(30, 58, 95, 0.14),
-              0 1px 2px rgba(30, 58, 95, 0.02);
+.inv-card__action-tile:active:not(:disabled) {
+  transform: translateY(0);
+  background: #efeeeb;
+  box-shadow: none;
 }
 
-.inv-card__action-btn:focus-visible {
+.inv-card__action-tile:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
-.inv-card__action-btn:disabled {
+.inv-card__action-tile:disabled {
   opacity: 0.45;
   cursor: not-allowed;
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
   box-shadow: none;
   transform: none;
 }
 
 .inv-card__share-wrap {
   position: relative;
-  flex: 1 1 0;                   /* same equal-width rule as the other two buttons */
+  flex: 1 1 0;
   min-width: 0;
 }
 
-.inv-card__share-wrap .inv-card__action-btn {
+.inv-card__share-wrap .inv-card__action-tile {
   width: 100%;
   height: 100%;
 }
@@ -285,8 +304,9 @@
 .inv-card__share-menu {
   position: absolute;
   bottom: calc(100% + 10px);
-  left: -50px;
-  min-width: 160px;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 180px;
   list-style: none;
   margin: 0;
   padding: var(--space-1);
@@ -337,7 +357,7 @@
   position: absolute;
   top: 8px;
   left: 8px;
-  z-index: 5;                     /* sits above the absolutely-positioned thumb */
+  z-index: 5;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 4px;
@@ -347,37 +367,75 @@
 /* ===== Wider screens ===== */
 @media (min-width: 480px) {
   .inv-card {
-    min-height: 176px;
-    padding: var(--space-2) var(--space-3);
+    padding: var(--space-4);
+    min-height: 190px;
   }
 
   .inv-card__thumb {
-    top: var(--space-2);
-    left: var(--space-3);
-    bottom: var(--space-2);
-    width: 120px;
+    width: 112px;
+    min-height: 100%;
   }
 
-  .inv-card__content {
-    margin-left: 136px;          /* 120px thumb + 16px gap */
+  .inv-card__title {
+    font-size: var(--font-size-xl);
   }
 
-  .inv-card__action-btn {
-    min-height: 56px;
-    padding: var(--space-2) var(--space-2);
-    border-bottom-width: 3px;
+  .inv-card__icon-btn {
+    width: 36px;
+    height: 36px;
   }
 
-  .inv-card__action-btn:active:not(:disabled) {
-    transform: translateY(2px);
+  .inv-card__icon-btn svg {
+    width: 17px;
+    height: 17px;
   }
 
-  .inv-card__action-btn svg {
-    width: 18px;
-    height: 18px;
+  .inv-card__action-tile {
+    min-height: 60px;
+    gap: 5px;
   }
 
-  .inv-card__action-btn__label {
+  .inv-card__action-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .inv-card__action-icon svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .inv-card__action-label {
     font-size: var(--font-size-xs);
+  }
+}
+
+/* ===== Very small screens — keep tooltip pills from overflowing the card ===== */
+@media (max-width: 359px) {
+  .inv-card__thumb {
+    width: 80px;
+    min-height: 76px;
+  }
+
+  .inv-card__title {
+    font-size: var(--font-size-base);
+  }
+
+  .inv-card__top-actions {
+    gap: var(--space-2);
+  }
+
+  .inv-card__icon-btn {
+    width: 30px;
+    height: 30px;
+  }
+
+  .inv-card__icon-tooltip {
+    font-size: 9px;
+    padding: 3px 7px;
+  }
+
+  .inv-card__action-label {
+    font-size: 9px;
   }
 }
