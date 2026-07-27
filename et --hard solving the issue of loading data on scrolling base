@@ -1,0 +1,119 @@
+[33mcommit 9d943f6bd81a8739a52402c1a38c7615fd898c18[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: Jatin Mishra <jatin.mishra858@gmail.com>
+Date:   Mon Jul 27 22:12:06 2026 +0530
+
+    oh god
+
+[33mcommit f4664499811c9806137bd3d1dc9fa6f88e21ccc4[m
+Author: Jatin Mishra <jatin.mishra858@gmail.com>
+Date:   Mon Jul 27 21:58:57 2026 +0530
+
+    i change the name of files
+
+[33mcommit 120441079a1e9359e060e30eac210dfe92c78d90[m
+Author: Jatin Mishra <jatin.mishra858@gmail.com>
+Date:   Mon Jul 27 21:50:39 2026 +0530
+
+    thist is one more try to name correction
+
+[33mcommit fd6533818d7d0893a13976c203212fb87344e877[m
+Author: Jatin Mishra <jatin.mishra858@gmail.com>
+Date:   Mon Jul 27 21:44:57 2026 +0530
+
+    inventroy services name correction
+
+[33mcommit 1f9fd3fbb0030106a22a98366e3694e2ec68112d[m
+Author: Jatin Mishra <jatin.mishra858@gmail.com>
+Date:   Mon Jul 27 21:41:25 2026 +0530
+
+    nameing correction again
+
+[33mcommit 3f625bb491895bf02ae7f091fa50b359920acfba[m[33m ([m[1;31morigin/Version.0.3[m[33m, [m[1;32mVersion.0.3[m[33m)[m
+Author: Jatin Mishra <jatin.mishra858@gmail.com>
+Date:   Mon Jul 27 19:04:04 2026 +0530
+
+    solving the issue of loading data on scrolling base
+
+[33mcommit 82ef56b50575fb7c386fa72fa0e6f8df465b2a75[m[33m ([m[1;31morigin/Version.0.2[m[33m, [m[1;32mVersion.0.2[m[33m)[m
+Author: Jatin Mishra <jatin.mishra858@gmail.com>
+Date:   Mon Jul 27 17:56:45 2026 +0530
+
+    last ui 100% satisfied
+
+[33mcommit 0428b1e1fa1a6980f2c154f47610545e379ae1a5[m
+Author: Jatin Mishra <jatin.mishra858@gmail.com>
+Date:   Mon Jul 27 11:28:01 2026 +0530
+
+    every thing is working perfectly now
+
+[33mcommit 0c2230be2da4dab6ef6c23750c1ba0d673339585[m
+Author: Jatin Mishra <jatin.mishra858@gmail.com>
+Date:   Sat Jul 25 19:08:06 2026 +0530
+
+    adding photo click and crop system but it neet to be improve img qulaity is low
+
+[33mcommit f97134de111532b9f900129693420217c6158aa3[m
+Author: Jatin Mishra <jatin.mishra858@gmail.com>
+Date:   Thu Jul 23 22:35:55 2026 +0530
+
+    i adjust card size
+
+[33mcommit 1293413e607ebb01a19210fe32fd92f1de66c390[m
+Author: Jatin Mishra <jatin.mishra858@gmail.com>
+Date:   Thu Jul 23 09:33:17 2026 +0530
+
+    now img upload is done and share issue is also done
+
+[33mcommit 70a122a3b54f16e17e31aa5d10ebcbca6ba284d9[m
+Author: Jatin Mishra <jatin.mishra858@gmail.com>
+Date:   Fri Jul 17 18:55:23 2026 +0530
+
+    Search problem get resolved but image cannot be upload yet
+
+[33mcommit 397544f1185342c48a8530175d66a43a24475ec0[m
+Author: Jatin Mishra <jatin.mishra858@gmail.com>
+Date:   Thu Jul 16 10:25:31 2026 +0530
+
+    half of frontend is done now we starts from img upload and grouping baar
+
+[33mcommit 2112e7703d438904fee54a19d8db707407ad0d28[m
+Author: Jatin Mishra <jatin.mishra858@gmail.com>
+Date:   Wed Jul 15 18:45:45 2026 +0530
+
+    changing the full structure of db now backend is done but frontend is pannding
+
+[33mcommit f3d829beb93a777c0f81a19648bcf11c1223ecef[m
+Author: Jatin Mishra <jatin.mishra858@gmail.com>
+Date:   Mon Jul 13 19:28:14 2026 +0530
+
+    data filled
+
+[33mcommit b26cab0b5bb183f644632f8bb73bd072ec7e141c[m
+Author: Jatin Mishra <jatin.mishra858@gmail.com>
+Date:   Mon Jul 13 08:48:57 2026 +0530
+
+    2 new form registratoin methods uploaded
+
+[33mcommit 9ba994dd221649ac194cbc2ee6c59316accc76db[m
+Author: Jatin Mishra <jatin.mishra858@gmail.com>
+Date:   Sat Jul 11 18:41:49 2026 +0530
+
+    i need to change many setup because my elements are wrong
+
+[33mcommit 15e3c8f352024dea18c73eb8d74a765c11bb564a[m
+Author: Jatin Mishra <jatin.mishra858@gmail.com>
+Date:   Sat Jul 11 09:27:18 2026 +0530
+
+     adding google map and img uploading later feature
+
+[33mcommit 0fb73b3903c0e50b7ce698ff8e1bcd9f79209f30[m
+Author: Jatin Mishra <jatin.mishra858@gmail.com>
+Date:   Fri Jul 10 17:02:53 2026 +0530
+
+    backend frontend is done now i have to improve ui and add some elements
+
+[33mcommit 6da8d21c341e6540fd85d5509cc4fc457455eceb[m
+Author: Jatin Mishra <jatin.mishra858@gmail.com>
+Date:   Fri Jul 10 04:35:06 2026 +0530
+
+    First commit

@@ -1,8 +1,8 @@
-// backend/routes/inventoryGroup.routes.js
-// Mount in app.js: app.use('/api/inventory-groups', require('./routes/inventoryGroup.routes'));
+// backend/routes/Inventorygroup.routes.js
+// Mount in app.js: app.use('/api/inventory-groups', require('./routes/Inventorygroup.routes'));
 const express = require('express');
 const router = express.Router();
-const inventoryGroupController = require('../controllers/inventoryGroup.controller');
+const inventoryGroupController = require('../controllers/inventorygroup.controller');
 
 router.get('/inventory/:inventoryId', inventoryGroupController.getGroupsForInventory); // groups tagged on one inventory
 router.get('/group/:groupId', inventoryGroupController.getInventoryForGroup);          // inventory items tagged with one group
