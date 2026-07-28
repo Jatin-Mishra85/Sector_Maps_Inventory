@@ -1,4 +1,4 @@
-  const searchRepository = require('../repositories/search.repository');
+const searchRepository = require('../repositories/search.repository');
 
 async function searchInventories({ keyword, inventoryType, page, limit }) {
     const safePage = page > 0 ? page : 1;
@@ -23,7 +23,7 @@ async function searchInventories({ keyword, inventoryType, page, limit }) {
 
 async function suggestInventories({ keyword, limitPerCategory }) {
     if (!keyword || !keyword.trim()) {
-        return { developers: [], sectors: [], projects: [], groups: [] };
+        return { items: [], fuzzy: false };
     }
     return searchRepository.suggestInventories({ keyword, limitPerCategory });
 }

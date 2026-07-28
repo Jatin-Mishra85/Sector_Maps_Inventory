@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
-
+const cookieParser = require('cookie-parser');
 const appConfig = require('./config/app.config');
 const requestLogger = require('./middleware/requestLogger.middleware');
 const notFoundHandler = require('./middleware/notFound.middleware');
@@ -18,7 +18,11 @@ const app = express();
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
 }));
-app.use(cors());
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  credentials: true,
+}));
+app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -27,6 +31,8 @@ if (appConfig.isDevelopment) {
 }
 
 app.use(requestLogger);
+const { attachUser } = require('./middleware/auth.middleware');
+app.use(attachUser);
 
 // ==============================
 // STATIC FILES

@@ -10,7 +10,10 @@ const imageRoutes = require("./image.routes");
 const inventoryGroupRoutes = require("./Inventorygroup.routes");
 const adminRoutes = require("./admin.routes");
 const searchRoutes = require("./search.routes");
+const authRoutes = require("./auth.routes");
+const interactionsRoutes = require("./interactions.routes");   // ← naya
 
+router.use("/auth", authRoutes);
 router.use("/developers", developerRoutes);
 router.use("/sectors", sectorRoutes);
 router.use("/projects", projectRoutes);
@@ -20,5 +23,6 @@ router.use("/images", imageRoutes);
 router.use("/inventory-groups", inventoryGroupRoutes);
 router.use("/admin", adminRoutes);
 router.use("/search", searchRoutes);
+router.use("/interactions", interactionsRoutes);   // ← naya
 
 module.exports = router;
