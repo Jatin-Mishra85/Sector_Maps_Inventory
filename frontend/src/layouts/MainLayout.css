@@ -106,7 +106,7 @@
   position: relative;
   font-size: var(--font-size-sm);
   font-weight: 600;
-  color: var(--color-on-primary);
+  color: black;
   text-decoration: none;
   opacity: 1;
   z-index: 99; 
@@ -287,4 +287,148 @@
   .main-layout__footer {
     text-align: left;
   }
+}
+
+
+
+/* ===== Active nav link ===== */
+.main-layout__nav-link--active {
+  color: var(--color-accent);
+}
+
+.main-layout__nav-link--active::after {
+  width: 100%;
+}
+
+/* ===== Login button — pill style ===== */
+.main-layout__login-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 22px;
+  border-radius: 999px;
+  border: 1.5px solid currentColor;
+  background: transparent;
+  color: black;
+  font-weight: 700;
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: background 0.25s ease, color 0.25s ease, transform 0.15s ease, box-shadow 0.25s ease;
+}
+
+.main-layout__login-btn:hover {
+  background: var(--color-primary);
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+.main-layout__login-btn:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.main-layout__login-btn--mobile {
+  width: 100%;
+  margin-top: var(--space-2);
+  color: var(--color-on-primary);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.main-layout__login-btn--mobile:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--color-on-primary);
+  box-shadow: none;
+}
+
+/* ===== Profile chip — desktop ===== */
+.main-layout__profile-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 16px 5px 5px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.05);
+  text-decoration: none;
+  color: var(--color-on-primary);
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.main-layout__profile-chip:hover {
+  background: rgba(0, 0, 0, 0.09);
+  transform: translateY(-1px);
+}
+
+.main-layout__profile-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.main-layout__profile-avatar--fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-accent);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.main-layout__profile-name {
+  max-width: 130px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ===== Mobile drawer refinements ===== */
+.main-layout__nav-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.15);
+  margin: var(--space-2) 0;
+}
+
+.main-layout__nav--mobile .main-layout__nav-link--logout {
+  background: none;
+  border: none;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  width: 100%;
+  color: #ff9b9b;
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  padding: var(--space-3) 0;
+  transition: color 0.2s ease;
+}
+
+.main-layout__nav--mobile .main-layout__nav-link--logout:hover {
+  color: #ff5c5c;
+}
+
+/* ===== Hamburger — professional animated version ===== */
+.main-layout__hamburger {
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+}
+
+.main-layout__hamburger:hover {
+  background-color: rgba(0, 0, 0, 0.06);
+}
+
+.main-layout__hamburger:active {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.main-layout__hamburger span {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease, background-color 0.2s ease;
+}
+
+.main-layout__hamburger--open span {
+  background: var(--color-accent);
 }

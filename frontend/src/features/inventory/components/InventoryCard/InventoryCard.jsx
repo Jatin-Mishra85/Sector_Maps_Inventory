@@ -3,6 +3,7 @@ import './InventoryCard.css';
 import { downloadFile } from '../../../../utils/download';
 import { shareContent } from '../../../../utils/share';
 import { useToast } from '../../../../context/ToastContext';
+import { InventoryActionsSave, InventoryActionsReport } from '../../../../components/InventoryActions/InventoryActions';
 
 // TEMP — 10 placeholder images used for the card thumbnail only, so real
 // property photos aren't shown on the listing grid yet. Preview mode still
@@ -137,7 +138,7 @@ function InventoryCard({
     const computePosition = () => {
       const rect = btn.getBoundingClientRect();
       const MENU_WIDTH = 210;
-      const MENU_HEIGHT_ESTIMATE = 220;
+      const MENU_HEIGHT_ESTIMATE = 280; // bumped up — menu now has Save + Report too
       const spaceBelow = window.innerHeight - rect.bottom;
       const spaceAbove = rect.top;
       const openUpward = spaceBelow < MENU_HEIGHT_ESTIMATE && spaceAbove > spaceBelow;
@@ -167,7 +168,7 @@ function InventoryCard({
   }, [menuOpen]);
 
   // Same smart positioning, standalone share button ke liye — chhota menu
-  // hai (sirf 2 options) isliye height estimate kam rakha.
+  // hai (sirf 3 options) isliye height estimate kam rakha.
   useEffect(() => {
     if (!shareMenuOpen) {
       setShareMenuStyle(null);
@@ -230,7 +231,7 @@ function InventoryCard({
 
   // ---- Share: TEEN options — Location, Image, Page Link ----
   // Ye teeno standalone share button ke apne dropdown mein hain, 3-dot
-  // menu mein nahi (wahan sirf Download/Edit/Delete hai).
+  // menu mein nahi (wahan Download/Edit/Save/Report/Delete hai).
 
   // Option 1: Location share — googleMapsUrl (agar admin ne diya hai) warna
   // Developer + Project + Sector se bani Maps search query, link ki tarah share hoti hai.
@@ -396,10 +397,10 @@ function InventoryCard({
                     aria-expanded={shareMenuOpen}
                     aria-label={`Share ${middleLabel || topLabel || 'inventory'}`}
                   >
-                    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" aria-hidden="true">
-                      <circle cx="20" cy="5" r="3" stroke="currentColor" strokeWidth="2.2" />
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" aria-hidden="true">
+                      <circle cx="18" cy="5" r="3" stroke="currentColor" strokeWidth="2.2" />
                       <circle cx="6" cy="12" r="3" stroke="currentColor" strokeWidth="2.2" />
-                      <circle cx="20" cy="19" r="2.8" stroke="currentColor" strokeWidth="2.2" />
+                      <circle cx="18" cy="19" r="2.8" stroke="currentColor" strokeWidth="2.2" />
                       <path d="M8.1 10.7 15.9 6.3M8.1 13.3l7.8 4.4" stroke="currentColor" strokeWidth="2.2" />
                     </svg>
                   </button>
@@ -478,7 +479,7 @@ function InventoryCard({
                   )}
                 </div>
 
-                {/* ===== 3-dot menu — Download / Edit / Delete ===== */}
+                {/* ===== 3-dot menu — Save / Download / Edit / Report / Delete ===== */}
                 <div className="inv-card__menu-wrap" ref={menuRef}>
                   <button
                     type="button"
@@ -509,6 +510,7 @@ function InventoryCard({
                         onClick={(e) => e.stopPropagation()}
                         role="menu"
                       >
+                        <InventoryActionsSave inventoryId={id} onCloseMenu={() => setMenuOpen(false)} />
                         <li>
                           <button type="button" onClick={handleDownload} disabled={!imageUrl} role="menuitem">
                             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
@@ -536,6 +538,7 @@ function InventoryCard({
                             Edit
                           </button>
                         </li>
+                        <InventoryActionsReport inventoryId={id} onCloseMenu={() => setMenuOpen(false)} />
                         <li>
                           <button
                             type="button"

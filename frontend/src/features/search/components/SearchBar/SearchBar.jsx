@@ -5,15 +5,17 @@ import { useVoiceSearch } from '../../hooks/useVoiceSearch';
 import { useSuggestions } from '../../hooks/useSuggestions';
 import { useToast } from '../../../../context/ToastContext';
 import { classNames } from '../../../../utils/classNames';
-import VoiceSearchOverlay from './VoiceSearchOverlay';
 
 function SearchBar({ value, onChange, placeholder = 'Search by project, sector, or developer' }) {
   const { showToast } = useToast();
   const [isFocused, setIsFocused] = useState(false);
   const wrapRef = useRef(null);
 
-  const { suggestions } = useSuggestions(value);
-  const showDropdown = isFocused && value.trim().length > 0 && suggestions.length > 0;
+  const { suggestions, fuzzy, searched } = useSuggestions(value);
+  const trimmedValue = value.trim();
+  const hasSuggestions = suggestions.length > 0;
+  const showNotFound = searched && trimmedValue.length > 0 && !hasSuggestions;
+  const showDropdown = isFocused && trimmedValue.length > 0 && (hasSuggestions || showNotFound);
 
   const handleVoiceResult = useCallback(
     (transcript) => {
@@ -22,11 +24,6 @@ function SearchBar({ value, onChange, placeholder = 'Search by project, sector, 
     [onChange]
   );
 
-  // Error ab yahan seedha render ke beech nahi, balki hook ke apne
-  // useEffect ke andar se (safe side-effect ke roop mein) aata hai —
-  // isse woh infinite-toast/re-render loop khatam ho gaya jo pehle
-  // "if (error === 'not-allowed') showToast(...)" render body mein
-  // likhne se ho raha tha.
   const handleVoiceError = useCallback(
     (_code, message) => {
       showToast(message, 'error');
@@ -47,14 +44,18 @@ function SearchBar({ value, onChange, placeholder = 'Search by project, sector, 
     startListening();
   };
 
-  const handleSuggestionClick = (label) => {
-    onChange(label);
+  const handleSuggestionClick = (name) => {
+    onChange(name);
     setIsFocused(false);
   };
 
+  // Jab tak bol rahe hain, input ki value live interim transcript se
+  // dikhao — user ko lagega jaise wo khud type kar raha hai. Final result
+  // aate hi useVoiceSearch khud onChange(final) call kar deta hai.
+  const displayValue = isListening ? interimTranscript : value;
+
   return (
     <div className="search-bar" ref={wrapRef}>
-      {/* Unified pill — search icon + input + mic all live inside ONE bordered shell */}
       <div className={classNames('search-bar__pill', isFocused && 'search-bar__pill--focused')}>
         <svg
           className="search-bar__search-icon"
@@ -71,7 +72,7 @@ function SearchBar({ value, onChange, placeholder = 'Search by project, sector, 
 
         <Input
           name="search"
-          value={value}
+          value={displayValue}
           onChange={(e) => onChange(e.target.value)}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setTimeout(() => setIsFocused(false), 150)}
@@ -79,6 +80,7 @@ function SearchBar({ value, onChange, placeholder = 'Search by project, sector, 
           aria-label="Search inventories"
           className="search-bar__input-wrap"
           autoComplete="off"
+          readOnly={isListening}
         />
 
         {isSupported && (
@@ -90,25 +92,13 @@ function SearchBar({ value, onChange, placeholder = 'Search by project, sector, 
             aria-pressed={isListening}
             title={isListening ? 'Stop voice search' : 'Search by voice'}
           >
-            <svg
-              viewBox="0 0 24 24"
-              width="19"
-              height="19"
-              fill="none"
-              aria-hidden="true"
-              focusable="false"
-            >
+            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" aria-hidden="true" focusable="false">
               <path
                 d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Z"
                 stroke="currentColor"
                 strokeWidth="1.8"
               />
-              <path
-                d="M19 11a7 7 0 0 1-14 0M12 18v3"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-              />
+              <path d="M19 11a7 7 0 0 1-14 0M12 18v3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
             </svg>
           </button>
         )}
@@ -116,27 +106,32 @@ function SearchBar({ value, onChange, placeholder = 'Search by project, sector, 
 
       {showDropdown && (
         <ul className="search-bar__dropdown" role="listbox">
-          {suggestions.map((s, i) => (
-            <li key={`${s.category}-${s.label}-${i}`}>
-              <button
-                type="button"
-                className="search-bar__suggestion"
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => handleSuggestionClick(s.label)}
-              >
-                <span className="search-bar__suggestion-label">{s.label}</span>
-                <span className="search-bar__suggestion-category">{s.category}</span>
-              </button>
+          {fuzzy && hasSuggestions && (
+            <li className="search-bar__dropdown-hint">Did you mean:</li>
+          )}
+
+          {hasSuggestions &&
+            suggestions.map((s) => (
+              <li key={`${s.Category}-${s.Id}`}>
+                <button
+                  type="button"
+                  className="search-bar__suggestion"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => handleSuggestionClick(s.Name)}
+                >
+                  <span className="search-bar__suggestion-label">{s.Name}</span>
+                  <span className="search-bar__suggestion-category">{s.Category}</span>
+                </button>
+              </li>
+            ))}
+
+          {showNotFound && (
+            <li className="search-bar__suggestion search-bar__suggestion--not-found">
+              "{trimmedValue}" not found
             </li>
-          ))}
+          )}
         </ul>
       )}
-
-      <VoiceSearchOverlay
-        isOpen={isListening}
-        interimTranscript={interimTranscript}
-        onStop={stopListening}
-      />
     </div>
   );
 }
