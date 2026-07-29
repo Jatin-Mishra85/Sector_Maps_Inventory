@@ -5,14 +5,6 @@ import { shareContent } from '../../../../utils/share';
 import { useToast } from '../../../../context/ToastContext';
 import { InventoryActionsSave, InventoryActionsReport } from '../../../../components/InventoryActions/InventoryActions';
 
-// TEMP — 10 placeholder images used for the card thumbnail only, so real
-// property photos aren't shown on the listing grid yet. Preview mode still
-// opens the ACTUAL image (see handlePreviewClick -> onPreview(inventory),
-// which is untouched). To revert: delete this block + getPlaceholderUrl(),
-// and change the thumb <img src={...}> back to {imageUrl}.
-//
-// Files must exist at: frontend/public/placeholders/placeholder-1.jpg ... placeholder-10.jpg
-// (Vite serves anything in /public/ directly from the site root, no import needed.)
 const PLACEHOLDER_IMAGES = Array.from(
   { length: 10 },
   (_, i) => `/placeholders/placeholder-${i + 1}.jpg`
@@ -27,9 +19,6 @@ function getPlaceholderUrl(id) {
   return PLACEHOLDER_IMAGES[Math.abs(hash) % PLACEHOLDER_IMAGES.length];
 }
 
-// "Updated X days/hours ago" — purely optional. Only renders if the
-// inventory object actually carries an updatedAt/updatedAtISO field; older
-// records without it simply don't show this row (no fabricated data).
 function formatUpdatedAgo(dateInput) {
   if (!dateInput) return null;
   const date = new Date(dateInput);
@@ -51,64 +40,52 @@ function InventoryCard({
   onEdit,
   onDelete,
   onAddPhoto,
-  isSaved = false,        // ← NAYA
-  onSaveToggle,            // ← NAYA
+  isSaved = false,
+  onSaveToggle,
   selectable = false,
   isSelected = false,
-  onRequireLogin,   // ← NAYA
+  onRequireLogin,
   onToggleSelect,
 }) {
   const { showToast } = useToast();
   const [imgError, setImgError] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [menuStyle, setMenuStyle] = useState(null); // fixed-position coords, computed on open
+  const [menuStyle, setMenuStyle] = useState(null);
+  const [menuOpenUpward, setMenuOpenUpward] = useState(false);
   const menuRef = useRef(null);
   const dotsBtnRef = useRef(null);
 
-  // Standalone share button + its own small dropdown (Share with details / Share link).
-  // Lives OUTSIDE the 3-dot menu now — see header JSX below.
   const [shareMenuOpen, setShareMenuOpen] = useState(false);
   const [shareMenuStyle, setShareMenuStyle] = useState(null);
+  const [shareMenuOpenUpward, setShareMenuOpenUpward] = useState(false);
   const shareMenuRef = useRef(null);
   const shareBtnRef = useRef(null);
 
   const {
     id,
-    name, // "Project"
-    actualDeveloperName, // "Developer"
+    name,
+    actualDeveloperName,
     sectorName,
     imageUrl,
     googleMapsUrl,
-    city, // optional — only used if present on the record
-    updatedAt, // optional — only used if present on the record
+    city,
+    updatedAt,
   } = inventory;
 
-  // TEMP — same placeholder every render for a given card (based on id),
-  // so it doesn't flicker/change on re-render.
   const placeholderThumbUrl = useMemo(() => getPlaceholderUrl(id), [id]);
 
-  // TOP LABEL — Sector normally. Agar iska Sector nahi hai, uski jagah
-  // Project name dikhao.
   const topLabel = sectorName || name || '';
 
-  // SECONDARY LINE — city if we have it, otherwise fall back to the old
-  // "Developer, Project" combo so nothing goes blank on existing data.
   const middleParts = [actualDeveloperName, name].filter(Boolean);
   const middleLabel = city || (middleParts.length ? middleParts.join(', ') : sectorName || '');
 
   const updatedLabel = formatUpdatedAgo(updatedAt);
 
-  // LOCATION — agar admin ne explicit Google Maps URL diya hai wahi use hoga,
-  // warna Developer + Project + Sector se ek Maps search query ban jayegi.
   const locationQuery = [name, actualDeveloperName, sectorName].filter(Boolean).join(', ');
   const hasLocation = Boolean(googleMapsUrl) || Boolean(locationQuery);
 
-  // Image na ho ya load fail ho jaye to placeholder "add photo" mode mein chala jaata hai.
-  // (Ye "no real image at all" wala case hai — is se PLACEHOLDER_IMAGES ka koi lena dena nahi,
-  // wo sirf temp-display ke liye hai jab image EXIST karti hai.)
   const showPhotoPlaceholder = !imageUrl || imgError;
 
-  // 3-dot menu aur share menu — dono ko bahar click karte hi band karo.
   useEffect(() => {
     if (!menuOpen && !shareMenuOpen) return undefined;
     const handleClickOutside = (e) => {
@@ -119,19 +96,13 @@ function InventoryCard({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [menuOpen, shareMenuOpen]);
 
-  // Smart positioning — dropdown apne hi card par overlay na kare. Agar
-  // neeche (viewport mein) space kam hai to menu UPAR khulega (previous
-  // card ke upar), warna neeche (agle card ke upar) — jaisa position sahi
-  // baithe waisa flip ho jaata hai. Mobile (<640px) par CSS bottom-sheet
-  // sambhal leta hai, isliye wahan inline positioning skip.
+  // Smart positioning for the 3-dot menu — runs on EVERY screen size now
+  // (mobile included), so the menu is always a small anchored popover
+  // right under the button, with the tail pointing at it.
   useEffect(() => {
     if (!menuOpen) {
       setMenuStyle(null);
-      return undefined;
-    }
-    const isMobile = window.innerWidth < 640;
-    if (isMobile) {
-      setMenuStyle(null);
+      setMenuOpenUpward(false);
       return undefined;
     }
     const btn = dotsBtnRef.current;
@@ -139,8 +110,8 @@ function InventoryCard({
 
     const computePosition = () => {
       const rect = btn.getBoundingClientRect();
-      const MENU_WIDTH = 210;
-      const MENU_HEIGHT_ESTIMATE = 280; // bumped up — menu now has Save + Report too
+      const MENU_WIDTH = Math.min(210, window.innerWidth - 24);
+      const MENU_HEIGHT_ESTIMATE = 280;
       const spaceBelow = window.innerHeight - rect.bottom;
       const spaceAbove = rect.top;
       const openUpward = spaceBelow < MENU_HEIGHT_ESTIMATE && spaceAbove > spaceBelow;
@@ -150,13 +121,18 @@ function InventoryCard({
         window.innerWidth - MENU_WIDTH - 8
       );
 
+      const buttonCenter = rect.left + rect.width / 2;
+      const arrowLeft = Math.min(Math.max(buttonCenter - left, 16), MENU_WIDTH - 16);
+
+      setMenuOpenUpward(openUpward);
       setMenuStyle({
         position: 'fixed',
         left,
         width: MENU_WIDTH,
+        '--menu-arrow-left': `${arrowLeft}px`,
         ...(openUpward
-          ? { bottom: window.innerHeight - rect.top + 6, top: 'auto' }
-          : { top: rect.bottom + 6, bottom: 'auto' }),
+          ? { bottom: window.innerHeight - rect.top + 10, top: 'auto' }
+          : { top: rect.bottom + 10, bottom: 'auto' }),
       });
     };
 
@@ -169,16 +145,12 @@ function InventoryCard({
     };
   }, [menuOpen]);
 
-  // Same smart positioning, standalone share button ke liye — chhota menu
-  // hai (sirf 3 options) isliye height estimate kam rakha.
+  // Same idea for the standalone share button's dropdown — also runs on
+  // every screen size now.
   useEffect(() => {
     if (!shareMenuOpen) {
       setShareMenuStyle(null);
-      return undefined;
-    }
-    const isMobile = window.innerWidth < 640;
-    if (isMobile) {
-      setShareMenuStyle(null);
+      setShareMenuOpenUpward(false);
       return undefined;
     }
     const btn = shareBtnRef.current;
@@ -186,8 +158,8 @@ function InventoryCard({
 
     const computePosition = () => {
       const rect = btn.getBoundingClientRect();
-      const MENU_WIDTH = 190;
-      const MENU_HEIGHT_ESTIMATE = 150; // 3 items now (location, image, page link)
+      const MENU_WIDTH = Math.min(190, window.innerWidth - 24);
+      const MENU_HEIGHT_ESTIMATE = 150;
       const spaceBelow = window.innerHeight - rect.bottom;
       const spaceAbove = rect.top;
       const openUpward = spaceBelow < MENU_HEIGHT_ESTIMATE && spaceAbove > spaceBelow;
@@ -197,13 +169,18 @@ function InventoryCard({
         window.innerWidth - MENU_WIDTH - 8
       );
 
+      const buttonCenter = rect.left + rect.width / 2;
+      const arrowLeft = Math.min(Math.max(buttonCenter - left, 16), MENU_WIDTH - 16);
+
+      setShareMenuOpenUpward(openUpward);
       setShareMenuStyle({
         position: 'fixed',
         left,
         width: MENU_WIDTH,
+        '--menu-arrow-left': `${arrowLeft}px`,
         ...(openUpward
-          ? { bottom: window.innerHeight - rect.top + 6, top: 'auto' }
-          : { top: rect.bottom + 6, bottom: 'auto' }),
+          ? { bottom: window.innerHeight - rect.top + 10, top: 'auto' }
+          : { top: rect.bottom + 10, bottom: 'auto' }),
       });
     };
 
@@ -216,7 +193,6 @@ function InventoryCard({
     };
   }, [shareMenuOpen]);
 
-  // ---- Download: image seedha download hoti hai ----
   const handleDownload = async (e) => {
     e.stopPropagation();
     setMenuOpen(false);
@@ -231,12 +207,6 @@ function InventoryCard({
     }
   };
 
-  // ---- Share: TEEN options — Location, Image, Page Link ----
-  // Ye teeno standalone share button ke apne dropdown mein hain, 3-dot
-  // menu mein nahi (wahan Download/Edit/Save/Report/Delete hai).
-
-  // Option 1: Location share — googleMapsUrl (agar admin ne diya hai) warna
-  // Developer + Project + Sector se bani Maps search query, link ki tarah share hoti hai.
   const handleShareLocation = async (e) => {
     e.stopPropagation();
     setShareMenuOpen(false);
@@ -251,8 +221,6 @@ function InventoryCard({
     if (result === 'unsupported') showToast('Sharing is not supported on this device.', 'info');
   };
 
-  // Option 2: Sirf image share hoti hai — bina caption/details overlay ke,
-  // seedha original imageUrl ki file native share sheet mein jaati hai.
   const handleShareImage = async (e) => {
     e.stopPropagation();
     setShareMenuOpen(false);
@@ -278,8 +246,6 @@ function InventoryCard({
     }
   };
 
-  // Option 3: Page link share — /inventory/:id wala detail page abhi tak
-  // bana nahi hai, URL yahan pehle se ready rakha hai jab wo page ban jaye.
   const handleSharePageLink = async (e) => {
     e.stopPropagation();
     setShareMenuOpen(false);
@@ -289,7 +255,6 @@ function InventoryCard({
     if (result === 'unsupported') showToast('Sharing is not supported on this device.', 'info');
   };
 
-  // ---- Location: Google Maps khulega ----
   const handleLocation = (e) => {
     e.stopPropagation();
     if (!hasLocation) return;
@@ -310,8 +275,6 @@ function InventoryCard({
     onDelete?.(inventory);
   };
 
-  // Shared by the thumbnail click AND the "Preview" pill — image ho to
-  // preview kholo, na ho to camera/photo-add flow trigger karo.
   const handlePreviewClick = (e) => {
     e?.stopPropagation();
     if (selectable) {
@@ -322,10 +285,6 @@ function InventoryCard({
       onAddPhoto?.(inventory);
       return;
     }
-    // TEMP note: thumbnail placeholder dikha raha hai, lekin yahan `inventory`
-    // as-is (real imageUrl ke saath) pass ho raha hai — preview mein ACTUAL
-    // image hi khulegi, kyunki downstream ImagePreview `inventory.imageUrl`
-    // use karta hai, thumbnail wala placeholder nahi.
     onPreview(inventory);
   };
 
@@ -360,23 +319,17 @@ function InventoryCard({
         >
           {!showPhotoPlaceholder ? (
             <img
-              src={placeholderThumbUrl /* TEMP — was: imageUrl */}
+              src={placeholderThumbUrl}
               alt={middleLabel || topLabel || 'Inventory'}
               loading="lazy"
               onError={() => setImgError(true)}
             />
           ) : (
             <div className="inv-card__thumb-fallback" aria-hidden="true" />
-
           )}
-
-
-
-
         </button>
 
         <div className="inv-card__content">
-          {/* HEADER — bold sector name + standalone share button + 3-dot menu button */}
           <div className="inv-card__header">
             {topLabel ? (
               <h3 className="inv-card__title" title={topLabel}>
@@ -388,7 +341,6 @@ function InventoryCard({
 
             {!selectable && (
               <div className="inv-card__header-actions">
-                {/* ===== Standalone SHARE button — separate from 3-dot menu ===== */}
                 <div className="inv-card__share-wrap" ref={shareMenuRef}>
                   <button
                     type="button"
@@ -415,7 +367,7 @@ function InventoryCard({
                     <>
                       <div className="inv-card__menu-backdrop" onClick={() => setShareMenuOpen(false)} />
                       <ul
-                        className="inv-card__menu inv-card__share-menu"
+                        className={`inv-card__menu inv-card__share-menu${shareMenuOpenUpward ? ' inv-card__menu--arrow-bottom' : ''}`}
                         style={shareMenuStyle || undefined}
                         onClick={(e) => e.stopPropagation()}
                         role="menu"
@@ -485,7 +437,6 @@ function InventoryCard({
                   )}
                 </div>
 
-                {/* ===== 3-dot menu — Save / Download / Edit / Report / Delete ===== */}
                 <div className="inv-card__menu-wrap" ref={menuRef}>
                   <button
                     type="button"
@@ -511,7 +462,7 @@ function InventoryCard({
                     <>
                       <div className="inv-card__menu-backdrop" onClick={() => setMenuOpen(false)} />
                       <ul
-                        className="inv-card__menu"
+                        className={`inv-card__menu${menuOpenUpward ? ' inv-card__menu--arrow-bottom' : ''}`}
                         style={menuStyle || undefined}
                         onClick={(e) => e.stopPropagation()}
                         role="menu"
@@ -550,11 +501,11 @@ function InventoryCard({
                             Edit
                           </button>
                         </li>
-                    <InventoryActionsReport
-  inventoryId={id}
-  onCloseMenu={() => setMenuOpen(false)}
-  onRequireLogin={onRequireLogin}
-/>
+                        <InventoryActionsReport
+                          inventoryId={id}
+                          onCloseMenu={() => setMenuOpen(false)}
+                          onRequireLogin={onRequireLogin}
+                        />
                         <li>
                           <button
                             type="button"
@@ -582,14 +533,12 @@ function InventoryCard({
             )}
           </div>
 
-          {/* Secondary line — city (or Developer/Project fallback) */}
           {middleLabel ? (
             <p className="inv-card__description" title={middleLabel}>
               {middleLabel}
             </p>
           ) : null}
 
-          {/* Updated-ago row — only renders when the record actually has updatedAt */}
           {updatedLabel && (
             <p className="inv-card__updated">
               <span className="inv-card__updated-dot" aria-hidden="true" />

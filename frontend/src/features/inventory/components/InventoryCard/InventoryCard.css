@@ -4,9 +4,10 @@
    (right) — sector name, standalone Share button, 3-dot menu
    (Download/Edit/Delete), secondary line, optional "updated" row,
    Preview/Location pills.
-   All colors/type/radius/shadow pulled from the shared token set
-   in :root (warm sage/clay palette) — no hardcoded hex left in
-   this file except the thumbnail's neutral placeholder background.
+   Dropdown menu (3-dot + share) behaves the SAME on every screen
+   size — a small anchored popover with a connecting tail pointer,
+   positioned right under the button that opened it. No mobile
+   bottom-sheet variant.
    ============================================================ */
 
 .inv-card {
@@ -16,7 +17,7 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-soft);
-  padding: 6px; /* thumbnail sits close to the card edge, doesn't touch it */
+  padding: 6px;
   min-width: 0;
   transition: box-shadow 0.25s ease, border-color 0.25s ease;
 }
@@ -25,24 +26,16 @@
   box-shadow: var(--shadow-hover);
 }
 
-/* NOTE: no transform on this element on purpose. `transform` here would
-   make it a containing block for any position:fixed descendant (like the
-   3-dot dropdown or share dropdown), so the menu would anchor to the card
-   instead of the real viewport and could overlap the wrong card. Press
-   feedback is done on the inner .inv-card__thumb / .inv-card__pill /
-   .inv-card__dots-btn / .inv-card__share-btn instead, which don't have
-   fixed-position children. */
-
 .inv-card__body {
   display: flex;
-  align-items: stretch; /* thumb height = content column height = card height */
+  align-items: stretch;
   gap: 8px;
   min-width: 0;
 }
 
-/* ===== Thumbnail (left) — width fixed, height stretches to card, flush padding ===== */
+/* ===== Thumbnail (left) ===== */
 .inv-card__thumb {
-  position: relative;   /* ← YE LINE ADD KARO */
+  position: relative;
   flex-shrink: 0;
   width: 110px;
   height: auto;
@@ -69,7 +62,6 @@
   display: block;
 }
 
-/* ===== "Add photo" placeholder — clickable, camera icon ===== */
 .inv-card__thumb-fallback {
   width: 100%;
   height: 100%;
@@ -98,7 +90,6 @@
   line-height: 2.5;
 }
 
-/* ===== HEADER — sector name + share button + 3-dot menu button ===== */
 .inv-card__header {
   display: flex;
   align-items: center;
@@ -120,7 +111,6 @@
   flex: 1 1 auto;
 }
 
-/* Groups the share button + 3-dot button together on the right side of the header */
 .inv-card__header-actions {
   display: flex;
   align-items: center;
@@ -159,7 +149,7 @@
   flex-shrink: 0;
 }
 
-/* ===== Standalone SHARE button (separate from 3-dot menu) ===== */
+/* ===== Standalone SHARE button ===== */
 .inv-card__share-wrap {
   position: relative;
   flex-shrink: 0;
@@ -178,7 +168,6 @@
   cursor: pointer;
   transition: background-color 0.15s ease, transform 0.12s ease;
   -webkit-tap-highlight-color: transparent;
-  /* background: #000; */
 }
 
 .inv-card__share-btn:hover {
@@ -189,13 +178,11 @@
   transform: scale(0.9);
 }
 
-/* Its dropdown reuses .inv-card__menu styling (below) but stays narrower
-   since it only ever holds 2 items. */
 .inv-card__share-menu {
   min-width: 170px;
 }
 
-/* ===== 3-dot menu button + dropdown/bottom-sheet ===== */
+/* ===== 3-dot menu button ===== */
 .inv-card__menu-wrap {
   position: relative;
   flex-shrink: 0;
@@ -224,41 +211,89 @@
   transform: scale(0.9);
 }
 
+/* Dim backdrop behind the menu — mainly helps on touch devices (tap
+   anywhere outside to close). Doesn't change the menu's own layout. */
 .inv-card__menu-backdrop {
-  display: none;
+  display: block;
+  position: fixed;
+  inset: 0;
+  background: rgba(43, 42, 38, 0.22);
+  z-index: 19;
 }
 
-/* Fallback (pre-JS-measurement) position — actual top/bottom/left on
-   desktop come from the inline style computed in InventoryCard.jsx, which
-   flips the menu up or down depending on available viewport space so it
-   never sits directly over its own card's content. Shared by both the
-   3-dot menu and the share-button dropdown. */
+/* ===== Dropdown menu (3-dot + share) — SAME anchored popover on every
+   screen size, with a connecting "tail" pointer back to the button.
+   --menu-arrow-left is set inline (from JS) to the horizontal position
+   of the button that opened it, so the tail always points at the exact
+   button — even if the menu had to shift left/right to stay on screen. */
 .inv-card__menu {
   position: absolute;
-  top: calc(100% + 6px);
+  top: calc(100% + 10px);
   right: 0;
-  min-width: 190px;
+  width: max-content;
+  max-width: calc(100vw - 20px);
   list-style: none;
   margin: 0;
-  padding: 6px;
-  background: var(--color-surface);
+  padding: 6px 10px;
+  background: #fff;
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-hover);
   z-index: 50;
-  animation: inv-card-menu-in 150ms ease;
+  transform-origin: top right;
+  animation: inv-card-menu-in 260ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* The tail — a rotated square, same fill/border as the menu body, so it
+   reads as one continuous shape growing out of the button. */
+.inv-card__menu::before {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background: #fff;
+  top: -7px;
+  left: var(--menu-arrow-left, calc(100% - 26px));
+  transform: translateX(-50%) rotate(45deg);
+  border-left: 1px solid var(--color-border);
+  border-top: 1px solid var(--color-border);
+  border-radius: 3px 0 0 0;
+}
+
+/* When there isn't room below, the menu flips to open upward — tail
+   flips too, now pointing down from the menu's bottom edge. */
+.inv-card__menu--arrow-bottom {
+  top: auto;
+  transform-origin: bottom right;
+}
+
+.inv-card__menu--arrow-bottom::before {
+  top: auto;
+  bottom: -7px;
+  border-left: none;
+  border-top: none;
+  border-right: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  border-radius: 0 0 3px 0;
 }
 
 @keyframes inv-card-menu-in {
-  from {
+  0% {
     opacity: 0;
-    transform: translateY(-6px);
+    transform: scale(0.55) translateY(-14px);
   }
-  to {
+  55% {
     opacity: 1;
-    transform: translateY(0);
+    transform: scale(1.035) translateY(5px);
+  }
+  80% {
+    transform: scale(0.99) translateY(1px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
   }
 }
 
@@ -272,7 +307,7 @@
   align-items: center;
   gap: 9px;
   text-align: left;
-  padding: 8px 10px;
+  padding: 9px 12px;
   border: none;
   background: transparent;
   border-radius: var(--radius-sm);
@@ -377,47 +412,6 @@
   border: 1px solid var(--color-border);
   border-radius: 4px;
   padding: 2px;
-}
-
-/* ===== Mobile — 3-dot menu / share menu become a bottom sheet ===== */
-@media (max-width: 639px) {
-  .inv-card__menu-backdrop {
-    display: block;
-    position: fixed;
-    inset: 0;
-    background: rgba(43, 42, 38, 0.32);
-    z-index: 19;
-  }
-
-  .inv-card__menu {
-    position: fixed;
-    top: auto;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    min-width: 0;
-    width: 100%;
-    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-    padding: 10px 10px calc(env(safe-area-inset-bottom, 0px) + 10px);
-    box-shadow: 0 -8px 28px rgba(30, 26, 20, 0.18);
-    animation: inv-card-sheet-in 150ms ease;
-  }
-
-  .inv-card__menu button {
-    padding: 12px 12px;
-    font-size: var(--font-size-sm);
-  }
-
-  @keyframes inv-card-sheet-in {
-    from {
-      opacity: 0;
-      transform: translateY(16px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
 }
 
 /* ===== Wider screens ===== */
