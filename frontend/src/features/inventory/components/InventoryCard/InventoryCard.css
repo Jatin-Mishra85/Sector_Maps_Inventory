@@ -168,8 +168,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
+  width: 20px;
+  height: 20px;
   border: none;
   background: transparent;
   color: var(--color-primary);
@@ -177,6 +177,7 @@
   cursor: pointer;
   transition: background-color 0.15s ease, transform 0.12s ease;
   -webkit-tap-highlight-color: transparent;
+  /* background: #000; */
 }
 
 .inv-card__share-btn:hover {
@@ -428,4 +429,14 @@
   .inv-card__pill {
     height: 34px;
   }
+}
+
+.inv-card__report-reasons {
+  display: flex;
+  flex-direction: column;
+}
+.inv-card__report-reasons button {
+  padding: 6px 12px 6px 40px;
+  font-size: 13px;
+  text-align: left;
 }
