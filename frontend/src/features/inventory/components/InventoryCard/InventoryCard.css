@@ -42,6 +42,7 @@
 
 /* ===== Thumbnail (left) — width fixed, height stretches to card, flush padding ===== */
 .inv-card__thumb {
+  position: relative;   /* ← YE LINE ADD KARO */
   flex-shrink: 0;
   width: 110px;
   height: auto;
@@ -220,7 +221,7 @@
 }
 
 .inv-card__dots-btn:active {
-  transform: scale(0.2);
+  transform: scale(0.9);
 }
 
 .inv-card__menu-backdrop {

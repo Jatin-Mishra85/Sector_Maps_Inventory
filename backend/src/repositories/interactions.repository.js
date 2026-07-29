@@ -39,13 +39,14 @@ async function getSavedInventoryIds(userId) {
 
 // ---- REPORT ----
 
-async function reportInventory(userId, inventoryId, reason) {
+async function reportInventory(userId, inventoryId, reason, details) {
     const pool = await getPool();
     await pool.request()
         .input('UserId', sql.Int, userId)
         .input('InventoryId', sql.Int, inventoryId)
         .input('Reason', sql.NVarChar(50), reason)
-        .query('INSERT INTO ReportedInventories (UserId, InventoryId, Reason) VALUES (@UserId, @InventoryId, @Reason)');
+        .input('Details', sql.NVarChar(500), details)
+        .query('INSERT INTO ReportedInventories (UserId, InventoryId, Reason, Details) VALUES (@UserId, @InventoryId, @Reason, @Details)');
 }
 
 module.exports = {

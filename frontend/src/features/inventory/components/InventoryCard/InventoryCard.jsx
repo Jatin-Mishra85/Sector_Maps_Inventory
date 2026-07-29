@@ -50,10 +50,12 @@ function InventoryCard({
   onPreview,
   onEdit,
   onDelete,
-  onAddPhoto, // NEW — placeholder click par photo-capture flow trigger karta hai
-  // NEW — selection mode, used by the "Grouping Inventories" page.
+  onAddPhoto,
+  isSaved = false,        // ← NAYA
+  onSaveToggle,            // ← NAYA
   selectable = false,
   isSelected = false,
+  onRequireLogin,   // ← NAYA
   onToggleSelect,
 }) {
   const { showToast } = useToast();
@@ -329,9 +331,8 @@ function InventoryCard({
 
   return (
     <article
-      className={`inv-card${selectable ? ' inv-card--selectable' : ''}${
-        isSelected ? ' inv-card--selected' : ''
-      }`}
+      className={`inv-card${selectable ? ' inv-card--selectable' : ''}${isSelected ? ' inv-card--selected' : ''
+        }`}
     >
       {selectable && (
         <label className="inv-card__select-checkbox" onClick={(e) => e.stopPropagation()}>
@@ -353,8 +354,8 @@ function InventoryCard({
             selectable
               ? `Toggle select ${middleLabel || topLabel || 'inventory'}`
               : showPhotoPlaceholder
-              ? `Add photo for ${middleLabel || topLabel || 'inventory'}`
-              : `Preview image of ${middleLabel || topLabel || 'inventory'}`
+                ? `Add photo for ${middleLabel || topLabel || 'inventory'}`
+                : `Preview image of ${middleLabel || topLabel || 'inventory'}`
           }
         >
           {!showPhotoPlaceholder ? (
@@ -366,7 +367,12 @@ function InventoryCard({
             />
           ) : (
             <div className="inv-card__thumb-fallback" aria-hidden="true" />
+
           )}
+
+
+
+
         </button>
 
         <div className="inv-card__content">
@@ -510,7 +516,13 @@ function InventoryCard({
                         onClick={(e) => e.stopPropagation()}
                         role="menu"
                       >
-                        <InventoryActionsSave inventoryId={id} onCloseMenu={() => setMenuOpen(false)} />
+                        <InventoryActionsSave
+                          inventoryId={id}
+                          isSaved={isSaved}
+                          onToggleSave={onSaveToggle}
+                          onCloseMenu={() => setMenuOpen(false)}
+                          onRequireLogin={onRequireLogin}
+                        />
                         <li>
                           <button type="button" onClick={handleDownload} disabled={!imageUrl} role="menuitem">
                             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
@@ -538,7 +550,11 @@ function InventoryCard({
                             Edit
                           </button>
                         </li>
-                        <InventoryActionsReport inventoryId={id} onCloseMenu={() => setMenuOpen(false)} />
+                    <InventoryActionsReport
+  inventoryId={id}
+  onCloseMenu={() => setMenuOpen(false)}
+  onRequireLogin={onRequireLogin}
+/>
                         <li>
                           <button
                             type="button"

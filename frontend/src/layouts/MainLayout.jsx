@@ -50,7 +50,7 @@ export default function MainLayout() {
             <NavLink to="/grouping" className={navLinkClass}>Grouping</NavLink>
 
             {user ? (
-              <NavLink to="/profile" className="main-layout__profile-chip">
+              <NavLink to="/profile" className="main-layout__profile-chip" aria-label={`Profile: ${user.name}`}>
                 {user.picture ? (
                   <img src={user.picture} alt="" referrerPolicy="no-referrer" className="main-layout__profile-avatar" />
                 ) : (
@@ -58,7 +58,6 @@ export default function MainLayout() {
                     {user.name?.charAt(0)}
                   </span>
                 )}
-                <span className="main-layout__profile-name">{user.name}</span>
               </NavLink>
             ) : (
               <button type="button" className="main-layout__login-btn" onClick={openLogin}>

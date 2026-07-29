@@ -22,7 +22,6 @@
   background: var(--color-border);
   border-radius: 4px;
 }
-
 .dev-chip {
   flex-shrink: 0;
   padding: 6px 12px;
@@ -57,4 +56,10 @@
     padding: var(--space-2) var(--space-4);
     font-size: var(--font-size-sm);
   }
+}
+
+.dev-chip--saved {
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }

@@ -33,13 +33,17 @@ async function getSavedIds(req, res) {
 
 async function reportInventory(req, res) {
     try {
-        await interactionsService.reportInventory(req.user.userId, req.body.inventoryId, req.body.reason);
+        await interactionsService.reportInventory(
+            req.user.userId,
+            req.body.inventoryId,
+            req.body.reason,
+            req.body.details
+        );
         res.status(200).json({ success: true });
     } catch (err) {
         res.status(err.statusCode || 500).json({ message: err.message });
     }
 }
-
 module.exports = {
     saveInventory,
     unsaveInventory,

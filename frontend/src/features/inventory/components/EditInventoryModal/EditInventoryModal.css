@@ -4,7 +4,9 @@
   position: fixed;
   inset: 0;
   z-index: var(--z-toast);
-  background: rgba(15, 16, 20, 0.5);
+  background: rgba(43, 42, 38, 0.55);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -24,56 +26,117 @@
   to { opacity: 1; }
 }
 
+/* ---------- Modal panel — glass card, gradient accent bar on top ---------- */
 .edit-modal {
+  position: relative;
   width: 100%;
   max-width: 480px;
   max-height: 90vh;
   overflow-y: auto;
   background: var(--color-surface);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   box-shadow: var(--shadow-hover);
-  padding: var(--space-5);
-  animation: edit-modal-slide-up 0.25s ease-out;
+  padding: var(--space-6) var(--space-5) var(--space-5);
+  animation: edit-modal-slide-up 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.edit-modal::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+}
+
+/* small grab-handle on mobile sheet, hidden once it becomes a centered card */
+.edit-modal::after {
+  content: '';
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 36px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--color-border);
 }
 
 @media (min-width: 640px) {
   .edit-modal {
     border-radius: var(--radius-lg);
   }
+  .edit-modal::after {
+    display: none;
+  }
 }
 
 @keyframes edit-modal-slide-up {
-  from { transform: translateY(24px); opacity: 0; }
+  from { transform: translateY(28px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
 }
 
+/* ---------- Header ---------- */
 .edit-modal__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-5);
+  padding-top: var(--space-1);
 }
 
 .edit-modal__title {
   font-family: var(--font-heading);
   font-size: var(--font-size-lg);
+  font-weight: 800;
+  color: var(--color-text);
+  letter-spacing: -0.01em;
   margin: 0;
 }
 
 .edit-modal__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
   border: none;
-  background: transparent;
-  font-size: 1.4rem;
+  background: var(--color-surface-hover);
+  font-size: 1.3rem;
   line-height: 1;
   color: var(--color-text-muted);
   cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
 }
 
+.edit-modal__close:hover {
+  background: rgba(189, 109, 88, 0.12);
+  color: var(--color-danger);
+  transform: rotate(90deg);
+}
+
+/* ---------- Form fields spacing ---------- */
+.edit-modal form > .field,
+.edit-modal form > .group-multiselect,
+.edit-modal form > .file-upload {
+  margin-bottom: var(--space-4);
+}
+
+/* ---------- Actions ---------- */
 .edit-modal__actions {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
   margin-top: var(--space-2);
+  position: sticky;
+  bottom: -1px;
+  padding-top: var(--space-3);
+  background: linear-gradient(to top, var(--color-surface) 70%, transparent);
 }
 
 @media (min-width: 480px) {
@@ -83,4 +146,34 @@
   .edit-modal__actions .btn {
     flex: 1;
   }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .edit-modal__overlay,
+  .edit-modal,
+  .edit-modal__close {
+    animation: none;
+    transition: none;
+  }
+  .edit-modal__close:hover {
+    transform: none;
+  }
+}
+
+
+
+
+.inv-card__saved-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #2196f3;
+  color: #fff;
+  border-radius: 50%;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.25);
 }

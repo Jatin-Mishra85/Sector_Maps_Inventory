@@ -17,6 +17,7 @@ const app = express();
 // ==============================
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
+  crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
 }));
 
 // ==============================
@@ -26,6 +27,7 @@ app.use(helmet({
 // ==============================
 const allowedOrigins = [
   'http://localhost:5173',
+  'https://localhost:5173', // local dev mein kabhi-kabhi Chrome http ko https samajh leta hai
   ...(process.env.FRONTEND_URL
     ? process.env.FRONTEND_URL.split(',').map((url) => url.trim())
     : []),

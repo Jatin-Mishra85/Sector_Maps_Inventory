@@ -1,7 +1,32 @@
+.admin-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding-bottom: var(--space-8);
+}
+
 .admin-page__title {
   text-align: center;
-  margin-bottom: var(--space-3);
+  margin-bottom: var(--space-5);
   font-family: var(--font-heading);
+  font-size: var(--font-size-2xl);
+  font-weight: 800;
+  color: var(--color-text);
+  letter-spacing: -0.01em;
+  position: relative;
+  padding-bottom: var(--space-3);
+}
+
+/* Signature underline flourish — a short gradient stroke under the title */
+.admin-page__title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 56px;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
 }
 
 .admin-page__gate-hint {
@@ -12,6 +37,7 @@
   margin: 0 auto var(--space-5);
 }
 
+/* ---------- Result view (after create) ---------- */
 .admin-page__result {
   display: flex;
   flex-direction: column;
@@ -19,6 +45,12 @@
   gap: var(--space-4);
   max-width: 420px;
   margin: 0 auto;
+  animation: result-in 0.35s ease;
+}
+
+@keyframes result-in {
+  from { opacity: 0; transform: scale(0.97) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 .admin-page__result-hint {
@@ -29,6 +61,9 @@
 
 .admin-page__card-wrap {
   width: 100%;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-hover);
 }
 
 .admin-page__result-actions {
@@ -36,6 +71,49 @@
   flex-direction: column;
   gap: var(--space-3);
   width: 100%;
+}
+
+.admin-page__finish-early {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--space-4);
+}
+
+/* ---------- Type select — glass pill dropdown ---------- */
+.admin-page__type-select {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+}
+
+.admin-page__type-select-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  font-weight: 600;
+  font-family: var(--font-heading);
+}
+
+.admin-page__type-select-input {
+  padding: 10px 16px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  min-width: 240px;
+  background: var(--color-surface);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  color: var(--color-text);
+  box-shadow: var(--shadow-soft);
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.admin-page__type-select-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px var(--color-primary-tint);
 }
 
 @media (min-width: 480px) {
@@ -47,32 +125,19 @@
   }
 }
 
-.admin-page__finish-early {
-  display: flex;
-  justify-content: center;
-  margin-top: var(--space-4);
+@media (max-width: 480px) {
+  .admin-page__type-select {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .admin-page__type-select-input {
+    width: 100%;
+    min-width: 0;
+  }
 }
 
-.admin-page__type-select {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  margin-bottom: var(--space-4);
-}
-
-.admin-page__type-select-label {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-muted);
-  font-weight: 500;
-}
-
-.admin-page__type-select-input {
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--color-border, #d0d5dd);
-  border-radius: var(--radius-md, 8px);
-  font-size: var(--font-size-sm);
-  min-width: 260px;
-  background: var(--color-surface, #fff);
-  color: var(--color-text, #111);
+@media (prefers-reduced-motion: reduce) {
+  .admin-page__result {
+    animation: none;
+  }
 }

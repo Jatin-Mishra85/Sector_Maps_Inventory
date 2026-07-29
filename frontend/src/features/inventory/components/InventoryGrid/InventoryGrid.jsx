@@ -16,7 +16,11 @@ import { inventoryService } from '../../services/inventoryService'; // TEMPORARY
 import { useToast } from '../../../../context/ToastContext'; // TEMPORARY — for delete toasts
 import { useGroups } from '../../../developer/hooks/useGroups'; // NEW — for Grouping multi-select dropdown
 import { useAdminAuth } from '../../../../context/AdminAuthContext'; // Ab sirf DELETE ke liye use hota hai
+import { useAuth } from '../../../../context/AuthContext';
+import LoginModal from '../../../../components/LoginModal/LoginModal';
 import AdminAccessModal from '../../../admin/components/AdminAccessModal/AdminAccessModal';
+
+
 
 export default function InventoryGrid({
   inventories,
@@ -26,11 +30,14 @@ export default function InventoryGrid({
   onLoadMore, // INFINITE SCROLL
   error,
   onRetry,
+   savedOnly,   // ← NAYA
 }) {
   // const { isBookmarked, toggleBookmark } = useBookmarks(); // TEMPORARILY DISABLED
   const { showToast } = useToast(); // TEMPORARY
   const { groups } = useGroups(); // NEW — passed to EditInventoryModal's Grouping dropdown
   const { isAdminAuthenticated } = useAdminAuth(); // Ab sirf Delete gate ke liye
+  const { user } = useAuth();
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [previewInventory, setPreviewInventory] = useState(null);
   const [editingInventory, setEditingInventory] = useState(null); // TEMPORARY
   const [photoUploadInventory, setPhotoUploadInventory] = useState(null); // NEW — camera/photo-add flow
@@ -43,7 +50,37 @@ export default function InventoryGrid({
   // As soon as it scrolls into view, load the next page (like Instagram
   // Reels). rootMargin gives it a head start so the next batch loads
   // slightly BEFORE the user hits the exact bottom, for a smooth feel.
+  const [savedIds, setSavedIds] = useState(new Set());
+
+useEffect(() => {
+  if (!user) {
+    setSavedIds(new Set());
+    return;
+  }
+  fetch('/api/v1/interactions/saved', { credentials: 'include' })
+    .then((r) => r.json())
+    .then((data) => setSavedIds(new Set(data.data || [])))
+    .catch(() => {});
+}, [user]);
+
+const handleSaveToggle = (inventoryId, nowSaved) => {
+  setSavedIds((prev) => {
+    const next = new Set(prev);
+    if (nowSaved) next.add(inventoryId);
+    else next.delete(inventoryId);
+    return next;
+  });
+};
   const sentinelRef = useRef(null);
+
+  const hasMoreRef = useRef(hasMore);
+  hasMoreRef.current = hasMore;
+  const loadingRef = useRef(loading);
+  loadingRef.current = loading;
+  const loadingMoreRef = useRef(loadingMore);
+  loadingMoreRef.current = loadingMore;
+  const savedOnlyRef = useRef(savedOnly);
+  savedOnlyRef.current = savedOnly;
 
   useEffect(() => {
     if (!onLoadMore) return undefined;
@@ -52,16 +89,27 @@ export default function InventoryGrid({
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && hasMore && !loading && !loadingMore) {
+        // savedOnly mode mein "hasMore" backend ki poori (unfiltered) list
+        // ke hisab se calculate hota hai, saved-filtered list ke hisab se
+        // nahi — isliye is mode mein auto-loadMore band rakhna zaroori hai,
+        // warna chhoti filtered list ki wajah se background mein saara
+        // "All" data load ho jaata hai bina scroll kiye.
+        if (
+          entries[0].isIntersecting &&
+          hasMoreRef.current &&
+          !loadingRef.current &&
+          !loadingMoreRef.current &&
+          !savedOnlyRef.current
+        ) {
           onLoadMore();
         }
       },
-      { rootMargin: '400px' }
+      { rootMargin: '100px' }
     );
 
     observer.observe(node);
     return () => observer.disconnect();
-  }, [onLoadMore, hasMore, loading, loadingMore]);
+  }, [onLoadMore]);
 
   if (error) {
     return <RetryState message={error.message} onRetry={onRetry} />;
@@ -90,9 +138,10 @@ export default function InventoryGrid({
   // reflects changes without waiting for a full refetch. Also filters out
   // anything just hard-deleted. Safe to remove once editing/deleting move
   // into the real Admin Panel with its own data flow.
-  const displayInventories = inventories
-    .filter((inv) => !deletedIds.has(inv.id))
-    .map((inv) => (localOverrides[inv.id] ? { ...inv, ...localOverrides[inv.id] } : inv));
+const displayInventories = inventories
+  .filter((inv) => !deletedIds.has(inv.id))
+  .filter((inv) => !savedOnly || savedIds.has(inv.id))
+  .map((inv) => (localOverrides[inv.id] ? { ...inv, ...localOverrides[inv.id] } : inv));
 
   const handleUpdated = (updatedInventory) => {
     setLocalOverrides((prev) => ({ ...prev, [updatedInventory.id]: updatedInventory }));
@@ -148,16 +197,17 @@ export default function InventoryGrid({
     <>
       <div className="inv-grid">
         {displayInventories.map((inv) => (
-          <InventoryCard
-            key={inv.id}
-            inventory={inv}
-            // isBookmarked={isBookmarked(inv.id)} // TEMPORARILY DISABLED
-            // onToggleBookmark={toggleBookmark} // TEMPORARILY DISABLED
-            onPreview={setPreviewInventory}
-            onEdit={handleEditRequest} // CHANGED — ab bina admin gate ke
-            onDelete={handleDeleteRequest} // Still gated behind admin auth
-            onAddPhoto={handleAddPhotoRequest} // CHANGED — ab bina admin gate ke
-          />
+<InventoryCard
+  key={inv.id}
+  inventory={inv}
+  isSaved={savedIds.has(inv.id)}
+  onSaveToggle={handleSaveToggle}
+  onRequireLogin={() => setLoginModalOpen(true)}
+  onPreview={setPreviewInventory}
+  onEdit={handleEditRequest}
+  onDelete={handleDeleteRequest}
+  onAddPhoto={handleAddPhotoRequest}
+/>
         ))}
       </div>
 
@@ -200,8 +250,13 @@ export default function InventoryGrid({
         <AdminAccessModal
           onSuccess={handleAdminAccessSuccess}
           onCancel={() => setPendingAdminAction(null)}
+          
         />
+        
       )}
+
+<LoginModal isOpen={loginModalOpen} onClose={() => setLoginModalOpen(false)} />
+
     </>
   );
 }

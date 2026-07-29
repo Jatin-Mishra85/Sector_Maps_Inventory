@@ -5,6 +5,16 @@
   width: 100%;
   background: var(--color-bg);
   overflow-x: hidden;
+
+  /* NEW — scoped signature palette: warm ivory bg, deep charcoal text, bronze accent */
+  --ml-bg-light: #faf7f0;
+  --ml-bg-light-2: #f0e9d8;
+  --ml-text-dark: #24211c;
+  --ml-text-muted: rgba(36, 33, 28, 0.62);
+  --ml-gold: #a9752b;
+  --ml-gold-bright: #c99539;
+  --ml-gold-soft: rgba(169, 117, 43, 0.22);
+  --ml-border: rgba(36, 33, 28, 0.1);
 }
 
 .main-layout__container {
@@ -109,10 +119,10 @@
   color: black;
   text-decoration: none;
   opacity: 1;
-  z-index: 99; 
+  z-index: 99;
   padding-bottom: 3px;
   white-space: nowrap;
-  transition: opacity 0.2s ease;
+  transition: opacity 0.2s ease, color 0.2s ease;
 }
 
 .main-layout__nav-link::after {
@@ -122,12 +132,14 @@
   bottom: 0;
   width: 0;
   height: 2px;
-  background: var(--color-accent);
-  transition: width 0.25s ease;
+  background: linear-gradient(90deg, var(--ml-gold), var(--ml-gold-bright));
+  box-shadow: 0 0 6px var(--ml-gold-soft);
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .main-layout__nav-link:hover {
   opacity: 1;
+  color: var(--ml-gold);
 }
 
 .main-layout__nav-link:hover::after {
@@ -150,6 +162,16 @@
   padding: 0;
   position: relative;
   -webkit-tap-highlight-color: transparent;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+}
+
+.main-layout__hamburger:hover {
+  background-color: rgba(0, 0, 0, 0.06);
+}
+
+.main-layout__hamburger:active {
+  background-color: rgba(0, 0, 0, 0.1);
 }
 
 .main-layout__hamburger span {
@@ -158,7 +180,11 @@
   height: 2px;
   border-radius: 2px;
   background: rgb(92, 92, 92);
-  transition: transform 0.25s ease, opacity 0.25s ease;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease, background-color 0.2s ease;
+}
+
+.main-layout__hamburger--open span {
+  background: var(--ml-gold);
 }
 
 .main-layout__hamburger--open span:nth-child(1) {
@@ -186,10 +212,13 @@
   gap: var(--space-1);
   overflow-y: auto;
   padding: calc(env(safe-area-inset-top, 0px) + 76px) var(--space-4) calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
-  background: var(--color-primary);
-  box-shadow: -10px 0 28px rgba(15, 23, 42, 0.22);
+  background:
+    radial-gradient(120% 100% at 100% 0%, rgba(169, 117, 43, 0.08), transparent 55%),
+    linear-gradient(165deg, var(--ml-bg-light) 0%, var(--ml-bg-light-2) 100%);
+  border-left: 1px solid var(--ml-border);
+  box-shadow: -14px 0 40px rgba(36, 33, 28, 0.14);
   transform: translateX(100%);
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 50; /* above overlay + page content, below header (100) */
 }
 
@@ -198,19 +227,24 @@
 }
 
 .main-layout__nav--mobile .main-layout__nav-link {
-  padding: var(--space-3) 0; /* Expanded touch zone size */
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--ml-border);
+  color: var(--ml-text-dark);
 }
 
 .main-layout__nav--mobile .main-layout__nav-link:last-child {
   border-bottom: none;
 }
 
+.main-layout__nav--mobile .main-layout__nav-link::after {
+  background: linear-gradient(90deg, var(--ml-gold), var(--ml-gold-bright));
+}
+
 /* Overlay behind mobile drawer — covers full screen, click to close */
 .main-layout__overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.4);
+  background: rgba(36, 33, 28, 0.35);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   z-index: 40; /* below drawer (50) and header (100), above page content */
@@ -289,15 +323,18 @@
   }
 }
 
-
-
 /* ===== Active nav link ===== */
 .main-layout__nav-link--active {
-  color: var(--color-accent);
+  color: var(--ml-gold);
 }
 
 .main-layout__nav-link--active::after {
   width: 100%;
+}
+
+.main-layout__nav--mobile .main-layout__nav-link--active {
+  color: var(--ml-gold);
+  font-weight: 700;
 }
 
 /* ===== Login button — pill style ===== */
@@ -331,33 +368,30 @@
 .main-layout__login-btn--mobile {
   width: 100%;
   margin-top: var(--space-2);
-  color: var(--color-on-primary);
-  border-color: rgba(255, 255, 255, 0.5);
+  color: var(--ml-gold);
+  border-color: var(--ml-gold-soft);
 }
 
 .main-layout__login-btn--mobile:hover {
-  background: rgba(255, 255, 255, 0.15);
-  color: var(--color-on-primary);
+  background: var(--ml-gold-soft);
+  color: var(--ml-text-dark);
   box-shadow: none;
 }
 
 /* ===== Profile chip — desktop ===== */
 .main-layout__profile-chip {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 5px 16px 5px 5px;
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.05);
+  justify-content: center;
+  padding: 3px;
+  border-radius: 50%;
+  background: transparent;
   text-decoration: none;
-  color: var(--color-on-primary);
-  font-weight: 600;
-  font-size: var(--font-size-sm);
   transition: background 0.2s ease, transform 0.15s ease;
 }
 
 .main-layout__profile-chip:hover {
-  background: rgba(0, 0, 0, 0.09);
+  background: rgba(0, 0, 0, 0.06);
   transform: translateY(-1px);
 }
 
@@ -379,17 +413,10 @@
   font-weight: 700;
 }
 
-.main-layout__profile-name {
-  max-width: 130px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
 /* ===== Mobile drawer refinements ===== */
 .main-layout__nav-divider {
   height: 1px;
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--ml-border);
   margin: var(--space-2) 0;
 }
 
@@ -400,7 +427,7 @@
   font: inherit;
   cursor: pointer;
   width: 100%;
-  color: #ff9b9b;
+  color: #c23b3b;
   font-weight: 600;
   font-size: var(--font-size-sm);
   padding: var(--space-3) 0;
@@ -408,27 +435,5 @@
 }
 
 .main-layout__nav--mobile .main-layout__nav-link--logout:hover {
-  color: #ff5c5c;
-}
-
-/* ===== Hamburger — professional animated version ===== */
-.main-layout__hamburger {
-  border-radius: 50%;
-  transition: background-color 0.2s ease;
-}
-
-.main-layout__hamburger:hover {
-  background-color: rgba(0, 0, 0, 0.06);
-}
-
-.main-layout__hamburger:active {
-  background-color: rgba(0, 0, 0, 0.1);
-}
-
-.main-layout__hamburger span {
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease, background-color 0.2s ease;
-}
-
-.main-layout__hamburger--open span {
-  background: var(--color-accent);
+  color: #a12c2c;
 }

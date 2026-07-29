@@ -14,10 +14,10 @@ function cookieOptions() {
 function mapUser(user) {
     if (!user) return null;
     return {
-        id: user.UserId,
-        email: user.Email,
-        name: user.Name,
-        picture: user.Picture,
+        id: user.id ?? user.UserId ?? user.userId,
+        email: user.email ?? user.Email,
+        name: user.name ?? user.Name,
+        picture: user.picture ?? user.Picture,
     };
 }
 

@@ -118,7 +118,7 @@ Ye bahut khatarnak silent-data-corruption bug hai, dobara mat aane dena.
 10. useDevelopers.js mein bhi field mapping missing thi (fix #9 ka wahi bug,
     developers list ke liye). Fix: `mapDeveloper(item)` function add kiya
     (`id: item.developerId, name: item.developerName`), taaki
-    DeveloperFilterChips.jsx ko sahi `dev.id`/`dev.name` milein. Ab
+    GroupFilterChips.jsx ko sahi `dev.id`/`dev.name` milein. Ab
     developer chips theek se dikh rahe hain.
 
 11. Type filter (funnel icon) — PEHLE fixed kiya gaya tha (dynamic options
