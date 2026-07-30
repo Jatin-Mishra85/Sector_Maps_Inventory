@@ -27,7 +27,7 @@ export function rotateImageToCanvas(img, rotationDeg) {
 // sourceCanvas: full-res (already rotated) offscreen canvas.
 // rect: { x, y, width, height } in sourceCanvas's own pixel coordinates.
 // Returns Promise<Blob> (JPEG).
-export async function getRectCroppedImage(sourceCanvas, rect, maxOutputDim = Infinity) {
+export async function getRectCroppedImage(sourceCanvas, rect, maxOutputDim = Infinity, quality = 0.8) {
   const cropW = Math.max(1, Math.round(rect.width));
   const cropH = Math.max(1, Math.round(rect.height));
 
@@ -42,15 +42,15 @@ export async function getRectCroppedImage(sourceCanvas, rect, maxOutputDim = Inf
 
   ctx.drawImage(
     sourceCanvas,
-    Math.round(rect.x), Math.round(rect.y), cropW, cropH, // source rect
-    0, 0, outW, outH                                       // dest rect
+    Math.round(rect.x), Math.round(rect.y), cropW, cropH,
+    0, 0, outW, outH
   );
 
   return new Promise((resolve, reject) => {
     outCanvas.toBlob(
       (blob) => (blob ? resolve(blob) : reject(new Error('toBlob failed'))),
       'image/jpeg',
-      1.0
+      quality   // ✅ ab configurable — 0.8 = 80% quality, kaafi zyada hai
     );
   });
 }
