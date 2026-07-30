@@ -4,14 +4,14 @@ import { parseApiError } from '../../../services/errorHandler';
 import { ALL_DEVELOPERS_ID, ALL_TYPES_ID } from '../../../constants/appConstants';
 import { ENV } from '../../../constants/env';
 
+
 export function resolveImageUrl(imageUrl) {
   if (!imageUrl) return null;
+  if (/^https?:\/\//i.test(imageUrl)) return imageUrl;   // ✅ Azure ka full URL hai — as-is use karo, chhedo mat
   const match = imageUrl.match(/\/uploads\/[^/?#]+/i);
   const path = match ? match[0] : imageUrl;
-  if (/^https?:\/\//i.test(path)) return path;
   return `${ENV.STATIC_BASE_URL}${path}`;
 }
-
 // FIX: Backend (inventory.controller.js -> mapInventoryRow) already sends
 // camelCase fields (id, name, actualDeveloperName, sectorName, cardId,
 // googleMapsUrl, groups). Pehle ye function unhe dobara PascalCase DB-column
