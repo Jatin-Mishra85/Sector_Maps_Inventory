@@ -273,10 +273,9 @@ export default function ImagePreview({ isOpen, images, onClose }) {
       // gesture's initial values) — this is what lets the formula absorb
       // the two-finger pan that naturally happens while pinching, instead
       // of only handling pure zoom.
-      let nextTranslate = zoomAround(anchorX, anchorY, scale, translate, nextScale);
-      nextTranslate = clampTranslate(meta, nextScale, rotation % 180 !== 0, nextTranslate);
+const nextTranslate = zoomAround(anchorX, anchorY, scale, translate, nextScale);
 
-      scheduleFlush({ scale: nextScale, translate: nextTranslate });
+scheduleFlush({ scale: nextScale, translate: nextTranslate });
     } else if (e.touches.length === 1 && dragStateRef.current && scale > 1 && gestureMetaRef.current) {
       e.preventDefault();
       const touch = e.touches[0];
@@ -286,25 +285,24 @@ export default function ImagePreview({ isOpen, images, onClose }) {
     }
   };
 
-  const handleTouchEnd = (e) => {
-    // Dropping from 2 fingers to 1 mid-pinch: don't start a drag using a
-    // stale startX/Y, just end the gesture cleanly. User can start a fresh
-    // drag on the next touchstart.
+const handleTouchEnd = (e) => {
     pinchStateRef.current = null;
     dragStateRef.current = null;
-    gestureMetaRef.current = null;
 
     if (e.touches.length === 0) {
       setIsInteracting(false);
-      // Requirement: once scale settles back at 1, translate must be (0,0),
-      // even if a pinch-out left it slightly off due to clamping.
       if (scale <= MIN_SCALE + 0.001) {
         setScale(MIN_SCALE);
         setTranslate({ x: 0, y: 0 });
+      } else if (gestureMetaRef.current) {
+        const clamped = clampTranslate(gestureMetaRef.current, scale, rotation % 180 !== 0, translate);
+        setTranslate(clamped);
       }
+      gestureMetaRef.current = null;
+    } else {
+      gestureMetaRef.current = null;
     }
   };
-
   if (!isOpen || !images.length) return null;
   const image = images[0];
   const isSideways = rotation % 180 !== 0;
