@@ -11,6 +11,7 @@ const ApiResponse = require('./utils/apiResponse.util');
 const HTTP_STATUS = require('./constants/httpStatusCodes.constant');
 
 const app = express();
+app.set('trust proxy', 1); // ← YE LINE ADD KARO
 
 // ==============================
 // GLOBAL MIDDLEWARE
