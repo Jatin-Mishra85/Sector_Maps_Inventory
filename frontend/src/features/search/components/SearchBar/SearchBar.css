@@ -4,18 +4,28 @@
   min-width: 0;
 }
 
-/* ===== Unified pill shell — search icon + input + mic all inside ONE border ===== */
-.search-bar__pill {
+/* ===== Row wrapper — pill and mic as separate flex siblings ===== */
+.search-bar__row {
   display: flex;
   align-items: center;
   gap: var(--space-2);
   width: 100%;
+}
+
+/* ===== Unified pill shell — search icon + input + clear all inside ONE border ===== */
+.search-bar__pill {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 1;
+  min-width: 0;
   height: 45px;
   padding: 0 var(--space-2) 0 var(--space-4);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 999px;
   box-shadow: var(--shadow-soft);
+  outline: none;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
   box-sizing: border-box;
 }
@@ -49,6 +59,7 @@
   height: 100%;
   border: none;
   box-shadow: none;
+  outline: none;
   background: transparent;
   padding: 0;
   margin: 0;
@@ -60,9 +71,31 @@
 .search-bar__input-wrap .field__input:focus {
   border: none;
   box-shadow: none;
+  outline: none;
 }
 
-/* ===== Mic button — attached inside the pill, not floating separately ===== */
+/* ===== Clear (✕) button — inside the pill, clears typed text ===== */
+.search-bar__clear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.search-bar__clear:hover {
+  background: var(--color-primary-tint);
+  color: var(--color-primary);
+}
+
+/* ===== Mic button — separate element, sits beside the pill ===== */
 .search-bar__mic {
   position: relative;
   display: flex;
@@ -73,9 +106,10 @@
   height: 38px;
   border: none;
   border-radius: 50%;
-  background: transparent;
+  background: var(--color-surface);
   color: var(--color-text-muted);
   cursor: pointer;
+  box-shadow: var(--shadow-soft);
   transition: background 0.2s ease, color 0.2s ease;
 }
 

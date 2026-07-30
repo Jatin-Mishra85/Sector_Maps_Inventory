@@ -184,3 +184,27 @@
     transform: none;
   }
 }
+
+/* ---------- Project block wrapper — row + its image upload together ---------- */
+.batch-form__project-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px dashed var(--color-border);
+}
+
+.batch-form__project-block:last-of-type {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.batch-form__project-image {
+  max-width: 320px;
+}
+
+@media (max-width: 640px) {
+  .batch-form__project-image {
+    max-width: 100%;
+  }
+}

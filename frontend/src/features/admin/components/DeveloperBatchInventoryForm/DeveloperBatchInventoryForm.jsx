@@ -1,18 +1,19 @@
 import { useEffect, useRef, useState } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import './DeveloperBatchInventoryForm.css';
 
 import Input from '../../../../components/common/Input/Input';
 import Button from '../../../../components/common/Button/Button';
+import FileUpload from '../../../../components/common/FileUpload/FileUpload';
 
 import { adminService } from '../../services/adminService';
 import { parseApiError } from '../../../../services/errorHandler';
 import { useToast } from '../../../../context/ToastContext';
 
-// Ek batch = ek Developer + ek Sector + us ke andar bulk Project rows (har Project ka apna Card No).
+// Ek batch = ek Developer + ek Sector + us ke andar bulk Project rows (har Project ka apna Card No + apni Image).
 // "Add More" ek bilkul naya batch add karta hai — apna alag Developer + Sector select karne ke liye.
-// Sirf Card No required hai — Developer/Sector/Project sab optional hain.
-const emptyProject = (cardId = '') => ({ name: '', cardId: cardId ? String(cardId) : '' });
+// Sirf Card No required hai — Developer/Sector/Project/Image sab optional hain.
+const emptyProject = (cardId = '') => ({ name: '', cardId: cardId ? String(cardId) : '', image: null });
 const emptyBatch = (cardId = '') => ({ developerName: '', sectorName: '', projects: [emptyProject(cardId)] });
 
 // User "21", "sector 21", "SECTOR21", "Sector-21" — kuch bhi likhe,
@@ -59,34 +60,50 @@ function ProjectRows({ control, register, batchIndex, isSubmitting, consumeNextC
 
   return (
     <div className="batch-form__projects" ref={rowsContainerRef}>
-      <label className="batch-form__projects-label">Project(s) &amp; Card No</label>
+      <label className="batch-form__projects-label">Project(s), Card No &amp; Image</label>
 
       {fields.map((field, index) => (
-        <div className="batch-form__project-row" key={field.id}>
-          <Input
-            placeholder="e.g. Project Name — Enter dabao naya row ke liye"
-            {...register(`batches.${batchIndex}.projects.${index}.name`)}
-            onKeyDown={(e) => handleKeyDown(e, index)}
-          />
-          <Input
-            type="number"
-            min="1"
-            step="1"
-            placeholder="Card No"
-            className="batch-form__card-id-input"
-            {...register(`batches.${batchIndex}.projects.${index}.cardId`)}
-            onKeyDown={(e) => handleKeyDown(e, index)}
-          />
-          {fields.length > 1 && (
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => remove(index)}
-              disabled={isSubmitting}
-            >
-              Remove
-            </Button>
-          )}
+        <div className="batch-form__project-block" key={field.id}>
+          <div className="batch-form__project-row">
+            <Input
+              placeholder="e.g. Project Name — Enter dabao naya row ke liye"
+              {...register(`batches.${batchIndex}.projects.${index}.name`)}
+              onKeyDown={(e) => handleKeyDown(e, index)}
+            />
+            <Input
+              type="number"
+              min="1"
+              step="1"
+              placeholder="Card No"
+              className="batch-form__card-id-input"
+              {...register(`batches.${batchIndex}.projects.${index}.cardId`)}
+              onKeyDown={(e) => handleKeyDown(e, index)}
+            />
+            {fields.length > 1 && (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => remove(index)}
+                disabled={isSubmitting}
+              >
+                Remove
+              </Button>
+            )}
+          </div>
+
+          <div className="batch-form__project-image">
+            <Controller
+              name={`batches.${batchIndex}.projects.${index}.image`}
+              control={control}
+              render={({ field: imageField }) => (
+                <FileUpload
+                  label="Project Image (optional)"
+                  value={imageField.value}
+                  onChange={imageField.onChange}
+                />
+              )}
+            />
+          </div>
         </div>
       ))}
 
@@ -197,6 +214,9 @@ export default function DeveloperBatchInventoryForm({ onSuccess }) {
     formData.append('sectorName', batch.sectorName || '');
     formData.append('name', project.name || ''); // Project
     formData.append('cardId', project.cardId || '');
+    if (project.image) {
+      formData.append('image', project.image);
+    }
 
     const response = await adminService.createInventory(formData);
 
@@ -206,6 +226,7 @@ export default function DeveloperBatchInventoryForm({ onSuccess }) {
       cardId: response?.cardId ?? (project.cardId ? Number(project.cardId) : null),
       actualDeveloperName: response?.actualDeveloperName ?? batch.developerName ?? '',
       sectorName: response?.sectorName ?? batch.sectorName ?? '-',
+      imageUrl: response?.imageUrl ?? null,
       latitude: response?.latitude ?? null,
       longitude: response?.longitude ?? null,
     };
@@ -223,13 +244,14 @@ export default function DeveloperBatchInventoryForm({ onSuccess }) {
         const name = (p?.name || '').trim();
         const cardId = (p?.cardId || '').trim();
 
-        // Poori tarah khaali row ko ignore karo (na Project naam, na Card No)
-        if (!name && !cardId) return;
+        // Poori tarah khaali row ko ignore karo (na Project naam, na Card No, na Image)
+        if (!name && !cardId && !p?.image) return;
 
         entries.push({
           batch: { developerName, sectorName },
           name,
           cardId,
+          image: p?.image || null,
         });
       });
     });

@@ -15,7 +15,9 @@ function SearchBar({ value, onChange, placeholder = 'Search by project, sector, 
   const trimmedValue = value.trim();
   const hasSuggestions = suggestions.length > 0;
   const showNotFound = searched && trimmedValue.length > 0 && !hasSuggestions;
-  const showDropdown = isFocused && trimmedValue.length > 0 && (hasSuggestions || showNotFound);
+
+  // Dropdown UI hidden as per requirement — underlying suggestion/search logic stays untouched
+  const showDropdown = false;
 
   const handleVoiceResult = useCallback(
     (transcript) => {
@@ -44,44 +46,74 @@ function SearchBar({ value, onChange, placeholder = 'Search by project, sector, 
     startListening();
   };
 
+  const handleClear = () => {
+    if (isListening) {
+      stopListening();
+    }
+    onChange('');
+  };
+
   const handleSuggestionClick = (name) => {
     onChange(name);
     setIsFocused(false);
   };
 
-  // Jab tak bol rahe hain, input ki value live interim transcript se
-  // dikhao — user ko lagega jaise wo khud type kar raha hai. Final result
-  // aate hi useVoiceSearch khud onChange(final) call kar deta hai.
   const displayValue = isListening ? interimTranscript : value;
+  const showClear = !isListening && trimmedValue.length > 0;
 
   return (
     <div className="search-bar" ref={wrapRef}>
-      <div className={classNames('search-bar__pill', isFocused && 'search-bar__pill--focused')}>
-        <svg
-          className="search-bar__search-icon"
-          viewBox="0 0 24 24"
-          width="18"
-          height="18"
-          fill="none"
-          aria-hidden="true"
-          focusable="false"
-        >
-          <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.8" />
-          <path d="M20 20l-3.2-3.2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-        </svg>
+      <div className="search-bar__row">
+        <div className={classNames('search-bar__pill', isFocused && 'search-bar__pill--focused')}>
+          <svg
+            className="search-bar__search-icon"
+            viewBox="0 0 24 24"
+            width="18"
+            height="18"
+            fill="none"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.8" />
+            <path d="M20 20l-3.2-3.2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+          </svg>
 
-        <Input
-          name="search"
-          value={displayValue}
-          onChange={(e) => onChange(e.target.value)}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setTimeout(() => setIsFocused(false), 150)}
-          placeholder={isListening ? 'Listening...' : placeholder}
-          aria-label="Search inventories"
-          className="search-bar__input-wrap"
-          autoComplete="off"
-          readOnly={isListening}
-        />
+          <Input
+            name="search"
+            value={displayValue}
+            onChange={(e) => onChange(e.target.value)}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setTimeout(() => setIsFocused(false), 150)}
+            placeholder={isListening ? 'Listening...' : placeholder}
+            aria-label="Search inventories"
+            className="search-bar__input-wrap"
+            autoComplete="off"
+            spellCheck="false"
+            autoCorrect="off"
+            autoCapitalize="off"
+            readOnly={isListening}
+          />
+
+          {showClear && (
+            <button
+              type="button"
+              onClick={handleClear}
+              onMouseDown={(e) => e.preventDefault()}
+              className="search-bar__clear"
+              aria-label="Clear search"
+              title="Clear search"
+            >
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" aria-hidden="true" focusable="false">
+                <path
+                  d="M6 6l12 12M18 6L6 18"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </button>
+          )}
+        </div>
 
         {isSupported && (
           <button

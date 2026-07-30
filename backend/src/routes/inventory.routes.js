@@ -12,8 +12,10 @@ router.get('/next-card-number', inventoryController.getNextCardNumber);
 
 router.get('/:id', inventoryController.getById);
 
-// Developer Batch (Add Inventory) — sirf text fields, koi file nahi.
-router.post('/', upload.none(), inventoryController.create);
+// Developer Batch (Add Inventory) — optional 'image' file field bhi bhej sakta hai ab.
+// upload.single('image') text fields ko bhi parse karta hai (req.body) aur
+// agar 'image' field mile to req.file mein daal deta hai; agar na mile, fine hai.
+router.post('/', upload.single('image'), inventoryController.create);
 
 // Edit Inventory (purana modal) — optional 'image' file field bhejta hai.
 // upload.single('image') text fields ko bhi parse karta hai (req.body) aur
