@@ -11,7 +11,7 @@ const searchInventories = asyncHandler(async (req, res) => {
   const limit = parseInt(req.query.limit, 10) || 20;
 
   const result = await searchService.searchInventories({ keyword, inventoryType, page, limit });
-  const mappedResult = { ...result, items: result.items.map(mapInventoryRow) };
+  const mappedResult = { ...result, items: result.items.map((row) => mapInventoryRow(row, req)) };
   return ApiResponse.success(res, HTTP_STATUS.OK, 'Search results fetched successfully', mappedResult);
 });
 
