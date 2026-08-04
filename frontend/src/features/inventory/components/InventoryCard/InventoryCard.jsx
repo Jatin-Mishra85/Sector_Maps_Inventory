@@ -317,14 +317,33 @@ function InventoryCard({
                 : `Preview image of ${middleLabel || topLabel || 'inventory'}`
           }
         >
-          {!showPhotoPlaceholder ? (
+
+
+========================Temprory disable ==============================
+          {/* {!showPhotoPlaceholder ? (
             <img
               src={placeholderThumbUrl}
               alt={middleLabel || topLabel || 'Inventory'}
               loading="lazy"
               onError={() => setImgError(true)}
             />
-          ) : (
+          ) : ( */}
+
+=============================================================================================================
+
+
+
+
+
+
+{!showPhotoPlaceholder ? (
+  <img
+    src={imageUrl}
+    alt={middleLabel || topLabel || 'Inventory'}
+    loading="lazy"
+    onError={() => setImgError(true)}
+  />
+) : (
             <div className="inv-card__thumb-fallback" aria-hidden="true" />
           )}
         </button>
