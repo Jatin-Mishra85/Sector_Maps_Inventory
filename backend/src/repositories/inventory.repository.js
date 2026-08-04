@@ -152,14 +152,14 @@ async function getAll({ page = 1, limit = 12, developerId } = {}) {
 
     const dataResult = await request.query(`
         SELECT * FROM (
-            SELECT i.*, d.DeveloperName, s.SectorName, p.ProjectName, img.ImagePath,
-                   ROW_NUMBER() OVER (ORDER BY i.DisplaySequence) AS RowNum
-            FROM Inventory i
-            LEFT JOIN Developers d ON d.DeveloperId = i.DeveloperId
-            LEFT JOIN Sectors s ON s.SectorId = i.SectorId
-            LEFT JOIN Projects p ON p.ProjectId = i.ProjectId
-            LEFT JOIN Images img ON img.ImageId = i.ImageId
-            ${whereClause}
+SELECT i.*, d.DeveloperName, s.SectorName, p.ProjectName, img.ImagePath,
+       ROW_NUMBER() OVER (ORDER BY i.DisplaySequence) AS RowNum
+FROM Inventory i
+LEFT JOIN Developers d ON d.DeveloperId = i.DeveloperId
+LEFT JOIN Sectors s ON s.SectorId = i.SectorId
+LEFT JOIN Projects p ON p.ProjectId = i.ProjectId
+LEFT JOIN Images img ON img.ImageId = i.ImageId
+${whereClause}
         ) AS sub
         WHERE RowNum > @Offset AND RowNum <= (@Offset + @Limit)
         ORDER BY RowNum
