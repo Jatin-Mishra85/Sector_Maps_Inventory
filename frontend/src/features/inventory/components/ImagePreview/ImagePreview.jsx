@@ -9,6 +9,9 @@ const MAX_SCALE = 8; // 50 was almost certainly a typo/leftover — 50x on a pho
 const DOUBLE_TAP_SCALE = 2.5;
 const DOUBLE_TAP_DELAY = 300; // ms
 const DOUBLE_TAP_MAX_DIST = 30; // px — two taps further apart than this are two separate single taps, not a double-tap
+const MOMENTUM_FRICTION = 0.92; // per-frame velocity decay — lower = stops faster
+const MOMENTUM_MIN_VELOCITY = 0.04; // px/ms — below this, don't bother with momentum at all
+const MOMENTUM_STOP_VELOCITY = 0.5; // px/frame — below this, momentum animation stops
 
 export default function ImagePreview({ isOpen, images, onClose }) {
   const containerRef = useRef(null);
@@ -28,7 +31,17 @@ export default function ImagePreview({ isOpen, images, onClose }) {
   const pendingTransformRef = useRef(null); // latest computed {scale, translate} waiting to be flushed on next frame
   const pushedHistoryRef = useRef(false);
 
-  const resetView = useCallback(() => {
+  // Tracks recent single-finger drag position/time to compute release velocity for momentum.
+  const velocityRef = useRef({ vx: 0, vy: 0, lastX: 0, lastY: 0, lastT: 0 });
+  const momentumRafRef = useRef(null); // separate rAF loop from `rafRef` (gesture flush loop)
+
+  // Live transform during an active gesture. Direct DOM writes go here so
+  // 60fps touchmove doesn't wait on a React re-render every frame — that
+  // render lag was the actual cause of the roughness. React state (scale/
+  // translate) is synced from this ref only at gesture END.
+  const liveTransformRef = useRef({ scale: 1, translate: { x: 0, y: 0 } });
+const resetView = useCallback(() => {
+    liveTransformRef.current = { scale: 1, translate: { x: 0, y: 0 } };
     setScale(1);
     setTranslate({ x: 0, y: 0 });
   }, []);
@@ -168,20 +181,58 @@ export default function ImagePreview({ isOpen, images, onClose }) {
   // scale/translate synchronously (cheap) but only commit to React state
   // once per animation frame, so React never re-renders faster than the
   // screen can draw.
-  const scheduleFlush = (next) => {
+const scheduleFlush = (next) => {
     pendingTransformRef.current = next;
     if (rafRef.current != null) return;
     rafRef.current = requestAnimationFrame(() => {
       rafRef.current = null;
       const pending = pendingTransformRef.current;
       if (!pending) return;
-      setScale(pending.scale);
-      setTranslate(pending.translate);
+      liveTransformRef.current = pending;
+      const img = imageRef.current;
+      if (img) {
+        img.style.transform = `translate3d(${pending.translate.x}px, ${pending.translate.y}px, 0) rotate(${rotation}deg) scale(${pending.scale})`;
+      }
     });
   };
+// Post-release inertia: decelerates the pan using the velocity captured at
+  // finger-lift, clamping to bounds each frame so it never overshoots past
+  // where a drag would've stopped anyway.
+  const startMomentum = (initialTranslate, vx, vy, scaleValue, rotated, meta) => {
+    let velX = vx * 16; // px/ms -> approx px/frame at 60fps
+    let velY = vy * 16;
+    let current = { ...initialTranslate };
 
-  useEffect(() => () => {
+    const step = () => {
+      velX *= MOMENTUM_FRICTION;
+      velY *= MOMENTUM_FRICTION;
+      current = { x: current.x + velX, y: current.y + velY };
+
+      const bounds = getBounds(meta, scaleValue, rotated);
+      if (current.x < bounds.minX) { current.x = bounds.minX; velX = 0; }
+      else if (current.x > bounds.maxX) { current.x = bounds.maxX; velX = 0; }
+      if (current.y < bounds.minY) { current.y = bounds.minY; velY = 0; }
+      else if (current.y > bounds.maxY) { current.y = bounds.maxY; velY = 0; }
+
+      liveTransformRef.current = { scale: scaleValue, translate: current };
+      const img = imageRef.current;
+      if (img) {
+        img.style.transform = `translate3d(${current.x}px, ${current.y}px, 0) rotate(${rotation}deg) scale(${scaleValue})`;
+      }
+
+      if (Math.abs(velX) < MOMENTUM_STOP_VELOCITY && Math.abs(velY) < MOMENTUM_STOP_VELOCITY) {
+        momentumRafRef.current = null;
+        setTranslate(current); // final sync to React state once settled
+        return;
+      }
+      momentumRafRef.current = requestAnimationFrame(step);
+    };
+
+    momentumRafRef.current = requestAnimationFrame(step);
+  };
+useEffect(() => () => {
     if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
+    if (momentumRafRef.current != null) cancelAnimationFrame(momentumRafRef.current);
   }, []);
 
   // ---------- Tap / double-tap ----------
@@ -200,7 +251,7 @@ export default function ImagePreview({ isOpen, images, onClose }) {
       nextTranslate = zoomAround(anchorX, anchorY, scale, translate, nextScale);
       nextTranslate = clampTranslate(meta, nextScale, rotation % 180 !== 0, nextTranslate);
     }
-
+liveTransformRef.current = { scale: nextScale, translate: nextTranslate };
     setIsInteracting(false); // allow the CSS transition to animate this snap
     setScale(nextScale);
     setTranslate(nextTranslate);
@@ -224,12 +275,25 @@ export default function ImagePreview({ isOpen, images, onClose }) {
   };
 
   const handleTouchStart = (e) => {
+    // Any new touch interrupts an in-flight momentum animation.
+    if (momentumRafRef.current != null) {
+      cancelAnimationFrame(momentumRafRef.current);
+      momentumRafRef.current = null;
+    }
+
     if (e.touches.length === 2) {
       // Starting (or resuming after a finger lift) a pinch: cancel any
       // in-flight single-finger drag and cache fresh geometry.
       dragStateRef.current = null;
+      const { scale: liveScale, translate: liveTranslate } = liveTransformRef.current;
+      if (liveScale > 1) {
+        gestureMetaRef.current = measureGesture();
+        dragStateRef.current = { startX: touch.clientX - liveTranslate.x, startY: touch.clientY - liveTranslate.y };
+        velocityRef.current = { vx: 0, vy: 0, lastX: touch.clientX, lastY: touch.clientY, lastT: performance.now() };
+        setIsInteracting(true);
+      }
       gestureMetaRef.current = measureGesture();
-      pinchStateRef.current = { initialDistance: getDistance(e.touches), initialScale: scale };
+      pinchStateRef.current = { initialDistance: getDistance(e.touches), initialScale: liveTransformRef.current.scale };
       setIsInteracting(true);
     } else if (e.touches.length === 1) {
       const touch = e.touches[0];
@@ -246,15 +310,16 @@ export default function ImagePreview({ isOpen, images, onClose }) {
       }
       lastTapRef.current = { time: now, x: touch.clientX, y: touch.clientY };
 
-      if (scale > 1) {
+const { scale: liveScale, translate: liveTranslate } = liveTransformRef.current;
+      if (liveScale > 1) {
         gestureMetaRef.current = measureGesture();
-        dragStateRef.current = { startX: touch.clientX - translate.x, startY: touch.clientY - translate.y };
+        dragStateRef.current = { startX: touch.clientX - liveTranslate.x, startY: touch.clientY - liveTranslate.y };
         setIsInteracting(true);
       }
     }
   };
 
-  const handleTouchMove = (e) => {
+ const handleTouchMove = (e) => {
     if (e.touches.length === 2 && pinchStateRef.current && gestureMetaRef.current) {
       e.preventDefault();
       const meta = gestureMetaRef.current;
@@ -269,39 +334,81 @@ export default function ImagePreview({ isOpen, images, onClose }) {
 
       const anchorX = midpoint.x - meta.stageCenterX;
       const anchorY = midpoint.y - meta.stageCenterY;
-      // Anchor against THIS render's current scale/translate (not the
-      // gesture's initial values) — this is what lets the formula absorb
-      // the two-finger pan that naturally happens while pinching, instead
-      // of only handling pure zoom.
-const nextTranslate = zoomAround(anchorX, anchorY, scale, translate, nextScale);
+      const { scale: curScale, translate: curTranslate } = liveTransformRef.current;
+      const nextTranslate = zoomAround(anchorX, anchorY, curScale, curTranslate, nextScale);
 
-scheduleFlush({ scale: nextScale, translate: nextTranslate });
-    } else if (e.touches.length === 1 && dragStateRef.current && scale > 1 && gestureMetaRef.current) {
+      scheduleFlush({ scale: nextScale, translate: nextTranslate });
+    } else if (e.touches.length === 1 && dragStateRef.current && gestureMetaRef.current) {
+      const curScale = liveTransformRef.current.scale;
+      if (curScale <= 1) return;
       e.preventDefault();
       const touch = e.touches[0];
       const raw = { x: touch.clientX - dragStateRef.current.startX, y: touch.clientY - dragStateRef.current.startY };
-      const nextTranslate = clampTranslate(gestureMetaRef.current, scale, rotation % 180 !== 0, raw);
-      scheduleFlush({ scale, translate: nextTranslate });
+      const nextTranslate = clampTranslate(gestureMetaRef.current, curScale, rotation % 180 !== 0, raw);
+      scheduleFlush({ scale: curScale, translate: nextTranslate });
+
+      const now = performance.now();
+      const dt = now - velocityRef.current.lastT;
+      if (dt > 0) {
+        velocityRef.current.vx = (touch.clientX - velocityRef.current.lastX) / dt;
+        velocityRef.current.vy = (touch.clientY - velocityRef.current.lastY) / dt;
+      }
+      velocityRef.current.lastX = touch.clientX;
+      velocityRef.current.lastY = touch.clientY;
+      velocityRef.current.lastT = now;
     }
   };
 
 const handleTouchEnd = (e) => {
-    pinchStateRef.current = null;
-    dragStateRef.current = null;
+    if (e.touches.length >= 2) {
+      // 3rd finger jaisi rare cases — fresh pinch start jaisa treat karo
+      pinchStateRef.current = { initialDistance: getDistance(e.touches), initialScale: liveTransformRef.current.scale };
+      gestureMetaRef.current = measureGesture();
+      dragStateRef.current = null;
+      return;
+    }
 
-    if (e.touches.length === 0) {
-      setIsInteracting(false);
-      if (scale <= MIN_SCALE + 0.001) {
-        setScale(MIN_SCALE);
-        setTranslate({ x: 0, y: 0 });
-      } else if (gestureMetaRef.current) {
-        const clamped = clampTranslate(gestureMetaRef.current, scale, rotation % 180 !== 0, translate);
+   if (e.touches.length === 1) {
+      pinchStateRef.current = null;
+      const touch = e.touches[0];
+      gestureMetaRef.current = measureGesture();
+      const { scale: curScale, translate: curTranslate } = liveTransformRef.current;
+      dragStateRef.current =
+        curScale > 1 ? { startX: touch.clientX - curTranslate.x, startY: touch.clientY - curTranslate.y } : null;
+      if (dragStateRef.current) {
+        velocityRef.current = { vx: 0, vy: 0, lastX: touch.clientX, lastY: touch.clientY, lastT: performance.now() };
+      }
+      return;
+    }
+    
+
+    // e.touches.length === 0 — gesture pura khatam
+   pinchStateRef.current = null;
+    const wasDragging = dragStateRef.current != null;
+    dragStateRef.current = null;
+    setIsInteracting(false);
+    const { scale: curScale, translate: curTranslate } = liveTransformRef.current;
+
+    if (curScale <= MIN_SCALE + 0.001) {
+      liveTransformRef.current = { scale: MIN_SCALE, translate: { x: 0, y: 0 } };
+      setScale(MIN_SCALE);
+      setTranslate({ x: 0, y: 0 });
+    } else {
+      const meta = gestureMetaRef.current || measureGesture();
+      const clamped = meta ? clampTranslate(meta, curScale, rotation % 180 !== 0, curTranslate) : curTranslate;
+      liveTransformRef.current = { scale: curScale, translate: clamped };
+      setScale(curScale);
+
+      const { vx, vy } = velocityRef.current;
+      const hasMomentum = wasDragging && meta && (Math.abs(vx) > MOMENTUM_MIN_VELOCITY || Math.abs(vy) > MOMENTUM_MIN_VELOCITY);
+      if (hasMomentum) {
+        startMomentum(clamped, vx, vy, curScale, rotation % 180 !== 0, meta);
+      } else {
         setTranslate(clamped);
       }
-      gestureMetaRef.current = null;
-    } else {
-      gestureMetaRef.current = null;
     }
+    gestureMetaRef.current = null;
+    velocityRef.current = { vx: 0, vy: 0, lastX: 0, lastY: 0, lastT: 0 };
   };
   if (!isOpen || !images.length) return null;
   const image = images[0];
