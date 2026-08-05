@@ -63,12 +63,13 @@ async function searchInventories({ keyword, inventoryType, offset, limit }) {
     // nahi karta, isliye ROW_NUMBER() window function se manual pagination.
     const dataResult = await dataRequest.query(`
         SELECT * FROM (
-            SELECT i.*, d.DeveloperName, s.SectorName, p.ProjectName,
+            SELECT i.*, d.DeveloperName, s.SectorName, p.ProjectName, img.ImagePath,
                    ROW_NUMBER() OVER (ORDER BY i.DisplaySequence) AS RowNum
             FROM Inventory i
             LEFT JOIN Developers d ON d.DeveloperId = i.DeveloperId
             LEFT JOIN Sectors s ON s.SectorId = i.SectorId
             LEFT JOIN Projects p ON p.ProjectId = i.ProjectId
+            LEFT JOIN Images img ON img.ImageId = i.ImageId
             ${whereClause}
         ) AS Results
         WHERE RowNum > @Offset AND RowNum <= (@Offset + @Limit)
