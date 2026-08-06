@@ -285,13 +285,6 @@ liveTransformRef.current = { scale: nextScale, translate: nextTranslate };
       // Starting (or resuming after a finger lift) a pinch: cancel any
       // in-flight single-finger drag and cache fresh geometry.
       dragStateRef.current = null;
-      const { scale: liveScale, translate: liveTranslate } = liveTransformRef.current;
-      if (liveScale > 1) {
-        gestureMetaRef.current = measureGesture();
-        dragStateRef.current = { startX: touch.clientX - liveTranslate.x, startY: touch.clientY - liveTranslate.y };
-        velocityRef.current = { vx: 0, vy: 0, lastX: touch.clientX, lastY: touch.clientY, lastT: performance.now() };
-        setIsInteracting(true);
-      }
       gestureMetaRef.current = measureGesture();
       pinchStateRef.current = { initialDistance: getDistance(e.touches), initialScale: liveTransformRef.current.scale };
       setIsInteracting(true);
