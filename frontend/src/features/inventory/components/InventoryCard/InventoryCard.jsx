@@ -221,30 +221,37 @@ function InventoryCard({
     if (result === 'unsupported') showToast('Sharing is not supported on this device.', 'info');
   };
 
-  const handleShareImage = async (e) => {
-    e.stopPropagation();
-    setShareMenuOpen(false);
-    if (!imageUrl) {
-      showToast('Is inventory ki koi image nahi hai.', 'error');
-      return;
-    }
-    try {
-      const response = await fetch(imageUrl);
-      const blob = await response.blob();
-      const file = new File([blob], `${topLabel || 'inventory'}.jpg`, {
-        type: blob.type || 'image/jpeg',
-      });
+const handleShareImage = async (e) => {
+  e.stopPropagation();
+  setShareMenuOpen(false);
+  alert('1. handler fired, imageUrl=' + imageUrl);
+  if (!imageUrl) {
+    showToast('Is inventory ki koi image nahi hai.', 'error');
+    return;
+  }
+  try {
+    const response = await fetch(imageUrl);
+    alert('2. fetch done, status=' + response.status);
+    const blob = await response.blob();
+    alert('3. blob size=' + blob.size + ' type=' + blob.type);
+    const file = new File([blob], `${topLabel || 'inventory'}.jpg`, {
+      type: blob.type || 'image/jpeg',
+    });
 
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file], title: middleLabel || topLabel });
-      } else {
-        await downloadFile(imageUrl, `${topLabel || 'inventory'}.jpg`);
-        showToast('Is device par image share nahi ho sakti — download kar di gayi.', 'info');
-      }
-    } catch {
-      showToast('Image share nahi ho payi. Dobara try karo.', 'error');
+    alert('4. canShare=' + (navigator.canShare && navigator.canShare({ files: [file] })));
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: middleLabel || topLabel });
+      alert('5. share() resolved');
+    } else {
+      await downloadFile(imageUrl, `${topLabel || 'inventory'}.jpg`);
+      showToast('Is device par image share nahi ho sakti — download kar di gayi.', 'info');
     }
-  };
+  } catch (err) {
+    alert('ERROR: ' + err.name + ' - ' + err.message);
+    showToast('Image share nahi ho payi. Dobara try karo.', 'error');
+  }
+};
 
   const handleSharePageLink = async (e) => {
     e.stopPropagation();
