@@ -2,14 +2,14 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import './ImagePreview.css';
 
 const MIN_SCALE = 1;
-const MAX_SCALE = 8; // 50 was almost certainly a typo/leftover — 50x on a phone
+const MAX_SCALE = 30; // 50 was almost certainly a typo/leftover — 50x on a phone
                       // screen is unusable and makes float precision errors
                       // (and therefore drift) much more visible. Raise it back
                       // if you really need it, the math below works at any value.
 const DOUBLE_TAP_SCALE = 2.5;
 const DOUBLE_TAP_DELAY = 300; // ms
 const DOUBLE_TAP_MAX_DIST = 30; // px — two taps further apart than this are two separate single taps, not a double-tap
-const MOMENTUM_FRICTION = 0.92; // per-frame velocity decay — lower = stops faster
+const MOMENTUM_FRICTION = 0.973; // per-frame velocity decay — lower = stops faster
 const MOMENTUM_MIN_VELOCITY = 0.04; // px/ms — below this, don't bother with momentum at all
 const MOMENTUM_STOP_VELOCITY = 0.5; // px/frame — below this, momentum animation stops
 
