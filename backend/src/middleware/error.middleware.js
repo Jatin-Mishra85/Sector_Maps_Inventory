@@ -11,15 +11,21 @@ const errorHandler = (err, req, res, next) => {
     ? err.message
     : MESSAGES.INTERNAL_ERROR;
 
+  // TEMP DEBUG — hamesha full error print karo, chahe production ho ya nahi
+  console.error('====== FULL ERROR (temp debug) ======');
+  console.error(err);
+  console.error('======================================');
+
   logger.error(message, {
     path: req.originalUrl,
     method: req.method,
-    stack: appConfig.isDevelopment ? err.stack : undefined,
+    stack: err.stack,
   });
 
   const errorPayload = {
     details: err.details || null,
-    ...(appConfig.isDevelopment && { stack: err.stack }),
+    stack: err.stack, // TEMP DEBUG
+    actualMessage: err.message, // TEMP DEBUG
   };
 
   return ApiResponse.error(res, statusCode, message, errorPayload);

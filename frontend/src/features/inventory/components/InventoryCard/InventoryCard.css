@@ -114,6 +114,33 @@
   flex: 1 1 auto;
 }
 
+.inv-card__photo-delete-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 2;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.inv-card__photo-delete-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.inv-card__title--empty {
+  color: var(--color-text-muted);
+  font-style: italic;
+  font-weight: 500;
+}
 .inv-card__header-actions {
   display: flex;
   align-items: center;
@@ -492,6 +519,8 @@
 .inv-card__title,
 .inv-card__description {
   cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .inv-card__field-edit {

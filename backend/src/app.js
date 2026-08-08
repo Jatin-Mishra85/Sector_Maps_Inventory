@@ -34,10 +34,17 @@ const allowedOrigins = [
     : []),
 ].filter(Boolean);
 
+// Local network se (phone/tablet testing ke liye) bhi allow karo — 192.168.x.x,
+// 10.x.x.x, 172.16-31.x.x pattern par kisi bhi port se, sirf jab production na ho.
+const isLanOrigin = (origin) =>
+  /^https?:\/\/(192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3})(:\d+)?$/.test(
+    origin
+  );
+
 app.use(cors({
   origin: (origin, callback) => {
     // allow requests with no origin (e.g. mobile apps, curl, health checks)
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (!origin || allowedOrigins.includes(origin) || isLanOrigin(origin)) {
       return callback(null, true);
     }
     return callback(new Error(`CORS blocked for origin: ${origin}`));

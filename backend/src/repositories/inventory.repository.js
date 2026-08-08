@@ -244,10 +244,13 @@ async function update(inventoryId, data) {
     const sectorId = await findOrCreateSector(data.sectorName);
     const projectId = await findOrCreateProject(data.projectName);
 
-    // Naya image aaya hai to naya Image row banao; warna jo pehle se laga hai wahi rehne do.
+      // Naya image aaya hai to naya Image row banao; agar delete request hai to
+    // ImageId null kar do; warna jo pehle se laga hai wahi rehne do.
     let imageId;
     if (data.imagePath) {
         imageId = await createImage(data.imagePath);
+    } else if (data.removeImage) {
+        imageId = null;
     } else {
         const existing = await pool.request()
             .input('InventoryId', sql.Int, inventoryId)

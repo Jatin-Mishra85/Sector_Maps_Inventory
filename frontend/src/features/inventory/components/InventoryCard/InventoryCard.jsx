@@ -84,7 +84,8 @@ function InventoryCard({
   const [editingField, setEditingField] = useState(null); // 'sectorName' | 'name' | null
   const [fieldDraft, setFieldDraft] = useState('');
   const [savingField, setSavingField] = useState(false);
-  const [localFieldOverrides, setLocalFieldOverrides] = useState({});
+  const [localImageRemoved, setLocalImageRemoved] = useState(false);
+  const [deletingPhoto, setDeletingPhoto] = useState(false);
   const instanceIdRef = useRef(null);
   if (!instanceIdRef.current) instanceIdRef.current = Symbol('inv-card-instance');
 
@@ -123,12 +124,16 @@ function InventoryCard({
   const displayedCardId = localCardId ?? cardId;
 
   const placeholderThumbUrl = useMemo(() => getPlaceholderUrl(id), [id]);
-
+const [localFieldOverrides, setLocalFieldOverrides] = useState({});
   // Agar parent se naya sectorName/name aaye (refetch ke baad), local override hata do.
-  useEffect(() => {
+ useEffect(() => {
     setLocalFieldOverrides({});
   }, [sectorName, name]);
 
+  // Agar parent se naya imageUrl aaye (refetch/naya upload ke baad), local remove-flag hata do.
+  useEffect(() => {
+    setLocalImageRemoved(false);
+  }, [imageUrl]);
   const displayedSectorName = localFieldOverrides.sectorName ?? sectorName ?? '';
   const displayedName = localFieldOverrides.name ?? name ?? '';
 
@@ -140,7 +145,7 @@ function InventoryCard({
   const locationQuery = [displayedName, displayedSectorName].filter(Boolean).join(', ');
   const hasLocation = Boolean(googleMapsUrl) || Boolean(locationQuery);
 
-  const showPhotoPlaceholder = !imageUrl || imgError;
+  const showPhotoPlaceholder = !imageUrl || imgError || localImageRemoved;
 
   const isCardIdChanged =
     cardIdDraft.trim() !== '' &&
@@ -451,8 +456,38 @@ const handleShareImage = async (e) => {
     }
   };
 
-  return (
-    <article
+  // --- Photo delete handler (temp feature — see INLINE_EDIT_ENABLED) ---
+  const handleDeletePhoto = async (e) => {
+    e.stopPropagation();
+    if (deletingPhoto || showPhotoPlaceholder) return;
+    if (!window.confirm('Photo delete karni hai?')) return;
+
+    setDeletingPhoto(true);
+    try {
+      const formData = new FormData();
+      formData.append('sectorName', displayedSectorName || '');
+      formData.append('name', displayedName || '');
+      formData.append('cardId', displayedCardId ?? '');
+      formData.append('groupNames', JSON.stringify((groups || []).map((g) => g.groupName)));
+      formData.append('price', price ?? '');
+      formData.append('areaSqFt', areaSqFt ?? '');
+      formData.append('unitType', unitType ?? '');
+      formData.append('status', status ?? '');
+      formData.append('description', description ?? '');
+      formData.append('removeImage', 'true');
+
+      await inventoryService.updateWithImage(id, formData);
+      setLocalImageRemoved(true);
+      showToast('Photo delete ho gayi.', 'success');
+    } catch (err) {
+      const msg = err?.response?.data?.message || 'Photo delete nahi ho payi. Dobara try karo.';
+      showToast(msg, 'error');
+    } finally {
+      setDeletingPhoto(false);
+    }
+  };
+
+  return (    <article
       className={`inv-card${selectable ? ' inv-card--selectable' : ''}${isSelected ? ' inv-card--selected' : ''
         }${editingField ? ' inv-card--field-editing' : ''}`}
     >
@@ -468,7 +503,20 @@ const handleShareImage = async (e) => {
       )}
 
       <div className="inv-card__body">
-        <div className="inv-card__thumb-wrap">
+    <div className="inv-card__thumb-wrap">
+          {INLINE_EDIT_ENABLED && !selectable && !showPhotoPlaceholder && (
+            <button
+              type="button"
+              className="inv-card__photo-delete-btn"
+              onClick={handleDeletePhoto}
+              disabled={deletingPhoto}
+              aria-label="Delete photo"
+            >
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" aria-hidden="true">
+                <path d="M6 6l12 12M18 6 6 18" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+              </svg>
+            </button>
+          )}
           <button
             type="button"
             className="inv-card__thumb"
@@ -614,12 +662,12 @@ const handleShareImage = async (e) => {
                 </button>
               </div>
             ) : (
-              <h3
-                className="inv-card__title"
-                title={topLabel}
+<h3
+                className={`inv-card__title${!topLabel ? ' inv-card__title--empty' : ''}`}
+                title={topLabel || 'Click to add sector'}
                 onClick={INLINE_EDIT_ENABLED ? startEditField('sectorName') : undefined}
               >
-                {topLabel}
+                {topLabel || (INLINE_EDIT_ENABLED ? '+ Add sector' : '')}
               </h3>
             )}
 

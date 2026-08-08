@@ -19,12 +19,13 @@ async function mapBody(req) {
         imagePath = await uploadToAzure(req.file.buffer, req.file.originalname, req.file.mimetype);
     }
 
-    return {
+     return {
         developerName: req.body.actualDeveloperName,
         sectorName: req.body.sectorName,
         projectName: req.body.name,
         displaySequence: req.body.cardId,
         imagePath, // ab ye poora Azure URL hai (ya undefined agar file nahi aayi)
+        removeImage: req.body.removeImage === 'true', // temp inline-edit "delete photo" feature
         groupNames,
         price: req.body.price,
         areaSqFt: req.body.areaSqFt,
