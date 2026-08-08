@@ -9,19 +9,28 @@ function getSearchWords(keyword) {
         .filter(Boolean);
 }
 
+// Word ko normalize karo — spaces hata do, taaki "district1" aur "district 1"
+// dono same treat hon. Column values ko bhi query mein REPLACE(..., ' ', '')
+// se normalize kiya jaata hai, taaki dono sides consistent rahein.
+function normalizeWord(word) {
+    return (word || '').replace(/\s+/g, '');
+}
+
 // Har word ke liye: (Developer OR Sector OR Project OR Group naam mein match ho)
 // — saare words ka AND. Isse "Sector 84 BPTP" jaisa combo bhi kaam karega,
 // chahe "Sector 84" Sector table mein ho aur "BPTP" alag se Developer table mein.
+// REPLACE(..., ' ', '') dono taraf lagaya hai taaki space ho ya na ho, match ho jaaye
+// (e.g. "district1" query "District 1" naam se match kare).
 function buildWordConditions(words, hasInventoryType) {
     const wordClauses = words.map((_, idx) => `
         (
-            d.DeveloperName LIKE @Word${idx}
-            OR s.SectorName LIKE @Word${idx}
-            OR p.ProjectName LIKE @Word${idx}
+            REPLACE(d.DeveloperName, ' ', '') LIKE @Word${idx}
+            OR REPLACE(s.SectorName, ' ', '') LIKE @Word${idx}
+            OR REPLACE(p.ProjectName, ' ', '') LIKE @Word${idx}
             OR EXISTS (
                 SELECT 1 FROM InventoryGroups ig
                 JOIN Groups g ON g.GroupId = ig.GroupId
-                WHERE ig.InventoryId = i.InventoryId AND g.GroupName LIKE @Word${idx}
+                WHERE ig.InventoryId = i.InventoryId AND REPLACE(g.GroupName, ' ', '') LIKE @Word${idx}
             )
         )
     `);
@@ -40,7 +49,7 @@ async function searchInventories({ keyword, inventoryType, offset, limit }) {
     const whereClause = buildWordConditions(words, Boolean(inventoryType));
 
     const countRequest = pool.request();
-    words.forEach((w, idx) => countRequest.input(`Word${idx}`, sql.NVarChar(255), `%${w}%`));
+    words.forEach((w, idx) => countRequest.input(`Word${idx}`, sql.NVarChar(255), `%${normalizeWord(w)}%`));
     if (inventoryType) countRequest.input('InventoryType', sql.NVarChar(255), inventoryType);
 
     const countResult = await countRequest.query(`
@@ -56,7 +65,7 @@ async function searchInventories({ keyword, inventoryType, offset, limit }) {
     const dataRequest = pool.request()
         .input('Offset', sql.Int, offset)
         .input('Limit', sql.Int, limit);
-    words.forEach((w, idx) => dataRequest.input(`Word${idx}`, sql.NVarChar(255), `%${w}%`));
+    words.forEach((w, idx) => dataRequest.input(`Word${idx}`, sql.NVarChar(255), `%${normalizeWord(w)}%`));
     if (inventoryType) dataRequest.input('InventoryType', sql.NVarChar(255), inventoryType);
 
     // NOTE: SQL Server 2008 R2 (compatibility level 100) OFFSET/FETCH support
@@ -90,10 +99,12 @@ async function suggestInventories({ keyword, limitPerCategory }) {
 
     // Ek hi Name column ke andar saare words match hone chahiye
     // (matlab "Sector 84" type ka partial multi-word naam bhi pakdega).
-    const wordClause = words.map((_, idx) => `Name LIKE @Word${idx}`).join(' AND ');
+    // REPLACE(Name, ' ', '') se Name column ke spaces bhi hata diye jaate hain,
+    // taaki "district1" query "District 1" naam se bhi match ho jaaye.
+    const wordClause = words.map((_, idx) => `REPLACE(Name, ' ', '') LIKE @Word${idx}`).join(' AND ');
 
     const exactRequest = pool.request().input('Limit', sql.Int, limitPerCategory * 4);
-    words.forEach((w, idx) => exactRequest.input(`Word${idx}`, sql.NVarChar(255), `%${w}%`));
+    words.forEach((w, idx) => exactRequest.input(`Word${idx}`, sql.NVarChar(255), `%${normalizeWord(w)}%`));
 
     const exactResult = await exactRequest.query(`
         ;WITH Combined AS (
