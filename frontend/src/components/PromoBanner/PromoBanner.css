@@ -1,0 +1,184 @@
+.promo-bar {
+  position: sticky;
+  top: 0;
+  z-index: 999;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #06233b;
+  padding: 14px 16px;
+  cursor: pointer;
+  color: #fff;
+}
+
+/* ---- top row: brand + app badges ---- */
+.promo-bar__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.promo-bar__brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.promo-bar__logo {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 8px;
+}
+
+.promo-bar__brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+  min-width: 0;
+}
+
+.promo-bar__name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.promo-bar__tagline {
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.7);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.promo-bar__badges {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.promo-bar__badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  text-decoration: none;
+  transition: background 0.2s ease;
+}
+
+.promo-bar__badge:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.promo-bar__badge-icon {
+  width: 15px;
+  height: 15px;
+  color: #fff;
+}
+
+/* ---- bottom row: info pills, horizontal scroll ---- */
+.promo-bar__info-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+
+.promo-bar__info-row::-webkit-scrollbar {
+  display: none;
+}
+
+.promo-bar__info-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  padding: 8px 12px;
+}
+
+.promo-bar__info-icon {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  color: #ff8c00;
+}
+
+.promo-bar__info-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.promo-bar__info-small {
+  font-size: 8px;
+  color: rgba(255, 255, 255, 0.65);
+  white-space: nowrap;
+}
+
+.promo-bar__info-big {
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+}
+
+/* ---- tablet/desktop: go back to single row ---- */
+@media (min-width: 641px) {
+  .promo-bar {
+    flex-direction: row;
+    align-items: center;
+    padding: 10px 20px;
+    gap: 0;
+    overflow-x: auto;
+  }
+
+  .promo-bar__top {
+    gap: 24px;
+  }
+
+  .promo-bar__name {
+    font-size: 17px;
+  }
+
+  .promo-bar__tagline {
+    font-size: 11px;
+  }
+
+  .promo-bar__info-row {
+    gap: 24px;
+    margin-left: 8px;
+  }
+
+  .promo-bar__info-pill {
+    background: none;
+    border-radius: 0;
+    padding: 0;
+  }
+
+  .promo-bar__badges {
+    margin-left: auto;
+  }
+
+  .promo-bar__badge {
+    width: 36px;
+    height: 36px;
+  }
+}
