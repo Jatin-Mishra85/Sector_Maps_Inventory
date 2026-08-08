@@ -4,6 +4,7 @@ import { downloadFile } from '../../../../utils/download';
 import { shareContent } from '../../../../utils/share';
 import { useToast } from '../../../../context/ToastContext';
 import { InventoryActionsSave, InventoryActionsReport } from '../../../../components/InventoryActions/InventoryActions';
+import { inventoryService } from '../../services/inventoryService';
 
 const PLACEHOLDER_IMAGES = Array.from(
   { length: 10 },
@@ -61,6 +62,12 @@ function InventoryCard({
   const shareMenuRef = useRef(null);
   const shareBtnRef = useRef(null);
 
+  // --- Card No (cardId) inline edit state — Grouping page only (selectable mode) ---
+  const [isEditingCardId, setIsEditingCardId] = useState(false);
+  const [cardIdDraft, setCardIdDraft] = useState('');
+  const [savingCardId, setSavingCardId] = useState(false);
+  const [localCardId, setLocalCardId] = useState(null);
+
   const {
     id,
     name,
@@ -70,7 +77,21 @@ function InventoryCard({
     googleMapsUrl,
     city,
     updatedAt,
+    cardId,
+    price,
+    areaSqFt,
+    unitType,
+    status,
+    description,
+    groups,
   } = inventory;
+
+  // Agar parent se naya cardId aaye (refetch ke baad), local override hata do.
+  useEffect(() => {
+    setLocalCardId(null);
+  }, [cardId]);
+
+  const displayedCardId = localCardId ?? cardId;
 
   const placeholderThumbUrl = useMemo(() => getPlaceholderUrl(id), [id]);
 
@@ -85,6 +106,11 @@ function InventoryCard({
   const hasLocation = Boolean(googleMapsUrl) || Boolean(locationQuery);
 
   const showPhotoPlaceholder = !imageUrl || imgError;
+
+  const isCardIdChanged =
+    cardIdDraft.trim() !== '' &&
+    !Number.isNaN(Number(cardIdDraft)) &&
+    Number(cardIdDraft) !== Number(displayedCardId);
 
   useEffect(() => {
     if (!menuOpen && !shareMenuOpen) return undefined;
@@ -295,6 +321,52 @@ const handleShareImage = async (e) => {
     onPreview(inventory);
   };
 
+  // --- Card No inline edit handlers ---
+
+  const handleStartEditCardId = (e) => {
+    e.stopPropagation();
+    setCardIdDraft(String(displayedCardId ?? ''));
+    setIsEditingCardId(true);
+  };
+
+  const handleCancelEditCardId = (e) => {
+    e.stopPropagation();
+    setIsEditingCardId(false);
+    setCardIdDraft('');
+  };
+
+  const handleSaveCardId = async (e) => {
+    e.stopPropagation();
+    if (!isCardIdChanged || savingCardId) return;
+
+    setSavingCardId(true);
+    try {
+      // Backend update() poora record replace karta hai (partial update nahi),
+      // isliye current data bhi wapas bhejna zaroori hai — sirf cardId change hoke.
+      const formData = new FormData();
+      formData.append('actualDeveloperName', actualDeveloperName || '');
+      formData.append('sectorName', sectorName || '');
+      formData.append('name', name || '');
+      formData.append('cardId', cardIdDraft.trim());
+      formData.append('groupNames', JSON.stringify((groups || []).map((g) => g.groupName)));
+      formData.append('price', price ?? '');
+      formData.append('areaSqFt', areaSqFt ?? '');
+      formData.append('unitType', unitType ?? '');
+      formData.append('status', status ?? '');
+      formData.append('description', description ?? '');
+
+      const updated = await inventoryService.updateWithImage(id, formData);
+      setLocalCardId(updated?.cardId ?? Number(cardIdDraft.trim()));
+      setIsEditingCardId(false);
+      showToast('Card No update ho gaya.', 'success');
+    } catch (err) {
+      const msg = err?.response?.data?.message || 'Card No update nahi ho paya. Dobara try karo.';
+      showToast(msg, 'error');
+    } finally {
+      setSavingCardId(false);
+    }
+  };
+
   return (
     <article
       className={`inv-card${selectable ? ' inv-card--selectable' : ''}${isSelected ? ' inv-card--selected' : ''
@@ -312,29 +384,30 @@ const handleShareImage = async (e) => {
       )}
 
       <div className="inv-card__body">
-        <button
-          type="button"
-          className="inv-card__thumb"
-          onClick={handlePreviewClick}
-          aria-label={
-            selectable
-              ? `Toggle select ${middleLabel || topLabel || 'inventory'}`
-              : showPhotoPlaceholder
-                ? `Add photo for ${middleLabel || topLabel || 'inventory'}`
-                : `Preview image of ${middleLabel || topLabel || 'inventory'}`
-          }
-        >
+        <div className="inv-card__thumb-wrap">
+          <button
+            type="button"
+            className="inv-card__thumb"
+            onClick={handlePreviewClick}
+            aria-label={
+              selectable
+                ? `Toggle select ${middleLabel || topLabel || 'inventory'}`
+                : showPhotoPlaceholder
+                  ? `Add photo for ${middleLabel || topLabel || 'inventory'}`
+                  : `Preview image of ${middleLabel || topLabel || 'inventory'}`
+            }
+          >
 
 
 {/* ========================Temprory disable ============================== */}
-          {/* {!showPhotoPlaceholder ? (
-            <img
-              src={placeholderThumbUrl}
-              alt={middleLabel || topLabel || 'Inventory'}
-              loading="lazy"
-              onError={() => setImgError(true)}
-            />
-          ) : ( */}
+            {/* {!showPhotoPlaceholder ? (
+              <img
+                src={placeholderThumbUrl}
+                alt={middleLabel || topLabel || 'Inventory'}
+                loading="lazy"
+                onError={() => setImgError(true)}
+              />
+            ) : ( */}
 
 {/* ============================================================================================================= */}
 
@@ -351,10 +424,87 @@ const handleShareImage = async (e) => {
     onError={() => setImgError(true)}
   />
 ) : (
-            <div className="inv-card__thumb-fallback" aria-hidden="true" />
-          )}
-        </button>
+              <div className="inv-card__thumb-fallback" aria-hidden="true" />
+            )}
+          </button>
 
+
+        </div>
+        
+          {selectable && (
+            <>
+              <div className="inv-card__cardid-tag" onClick={(e) => e.stopPropagation()}>
+                {isEditingCardId ? (
+                  <input
+                    type="number"
+                    className="inv-card__cardid-input"
+                    value={cardIdDraft}
+                    onChange={(e) => setCardIdDraft(e.target.value)}
+                    autoFocus
+                    disabled={savingCardId}
+                  />
+                ) : (
+                  <span>#{displayedCardId ?? '—'}</span>
+                )}
+              </div>
+
+              <div className="inv-card__cardid-actions" onClick={(e) => e.stopPropagation()}>
+                {!isEditingCardId ? (
+                  <button
+                    type="button"
+                    className="inv-card__cardid-edit-btn"
+                    onClick={handleStartEditCardId}
+                    aria-label="Edit card number"
+                  >
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" aria-hidden="true">
+                      <path
+                        d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17v3Z"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      className="inv-card__cardid-cancel-btn"
+                      onClick={handleCancelEditCardId}
+                      aria-label="Cancel card number edit"
+                      disabled={savingCardId}
+                    >
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" aria-hidden="true">
+                        <path
+                          d="M6 6l12 12M18 6 6 18"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      className="inv-card__cardid-save-btn"
+                      onClick={handleSaveCardId}
+                      disabled={!isCardIdChanged || savingCardId}
+                      aria-label="Save card number"
+                    >
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" aria-hidden="true">
+                        <path
+                          d="M5 13l4 4L19 7"
+                          stroke="currentColor"
+                          strokeWidth="2.2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </button>
+                  </>
+                )}
+              </div>
+            </>
+          )}
         <div className="inv-card__content">
           <div className="inv-card__header">
             {topLabel ? (
