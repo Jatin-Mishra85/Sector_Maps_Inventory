@@ -464,6 +464,21 @@ const handleShareImage = async (e) => {
                 </div>
 
                 <div className="inv-card__menu-wrap" ref={menuRef}>
+                <button
+  type="button"
+  className="inv-card__edit-btn"
+  onClick={handleEditClick}
+  aria-label={`Edit ${middleLabel || topLabel || 'inventory'}`}
+>
+  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" aria-hidden="true">
+    <path
+      d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17v3Z"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinejoin="round"
+    />
+  </svg>
+</button>
                   <button
                     type="button"
                     ref={dotsBtnRef}
@@ -514,19 +529,7 @@ const handleShareImage = async (e) => {
                             Download image
                           </button>
                         </li>
-                        <li>
-                          <button type="button" onClick={handleEditClick} role="menuitem">
-                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
-                              <path
-                                d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17v3Z"
-                                stroke="currentColor"
-                                strokeWidth="1.8"
-                                strokeLinejoin="round"
-                              />
-                            </svg>
-                            Edit
-                          </button>
-                        </li>
+
                         <InventoryActionsReport
                           inventoryId={id}
                           onCloseMenu={() => setMenuOpen(false)}

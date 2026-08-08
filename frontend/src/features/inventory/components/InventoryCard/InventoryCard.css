@@ -117,7 +117,8 @@
 .inv-card__header-actions {
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: flex-end;
+  gap: 4px;
   flex-shrink: 0;
 }
 
@@ -188,10 +189,40 @@
 
 /* ===== 3-dot menu button ===== */
 .inv-card__menu-wrap {
+  display: flex;
   position: relative;
   flex-shrink: 0;
 }
+/* ===== Standalone EDIT button ===== */
+.inv-card__edit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--color-primary);
+  border-radius: 999px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color 0.15s ease, transform 0.12s ease;
+  -webkit-tap-highlight-color: transparent;
+}
 
+.inv-card__edit-btn:hover {
+  background: var(--color-primary-tint);
+}
+
+.inv-card__edit-btn:active {
+  transform: scale(0.9);
+}
+
+.inv-card__edit-btn svg {
+  width: 15px;
+  height: 15px;
+}
 .inv-card__dots-btn {
   display: flex;
   justify-content: center;
