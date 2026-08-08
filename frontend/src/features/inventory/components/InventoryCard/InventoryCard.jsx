@@ -35,6 +35,19 @@ function formatUpdatedAgo(dateInput) {
   return `Updated ${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
 }
 
+
+// ================================== just write false to remove eddit feature ===========================================
+// TEMP FEATURE: cards ke Sector/Project Name par click-to-edit.
+// Sirf data-filling phase ke liye — band karna ho to bas ye flag false kar do.
+const INLINE_EDIT_ENABLED = true;
+
+// Ek time par sirf EK card edit mode mein rahe — jab koi card edit start
+// kare, baaki saare instances ko yahan se signal milta hai apna edit band karne ka.
+const inlineEditListeners = new Set();
+function broadcastEditStart(instanceId) {
+  inlineEditListeners.forEach((fn) => fn(instanceId));
+}
+
 function InventoryCard({
   inventory,
   onPreview,
@@ -67,15 +80,31 @@ function InventoryCard({
   const [cardIdDraft, setCardIdDraft] = useState('');
   const [savingCardId, setSavingCardId] = useState(false);
   const [localCardId, setLocalCardId] = useState(null);
+  // --- Sector / Project Name inline edit state (temp feature — see INLINE_EDIT_ENABLED) ---
+  const [editingField, setEditingField] = useState(null); // 'sectorName' | 'name' | null
+  const [fieldDraft, setFieldDraft] = useState('');
+  const [savingField, setSavingField] = useState(false);
+  const [localFieldOverrides, setLocalFieldOverrides] = useState({});
+  const instanceIdRef = useRef(null);
+  if (!instanceIdRef.current) instanceIdRef.current = Symbol('inv-card-instance');
+
+  useEffect(() => {
+    const handler = (activeId) => {
+      if (activeId !== instanceIdRef.current) {
+        setEditingField(null);
+        setFieldDraft('');
+      }
+    };
+    inlineEditListeners.add(handler);
+    return () => inlineEditListeners.delete(handler);
+  }, []);
 
   const {
     id,
     name,
-    actualDeveloperName,
     sectorName,
     imageUrl,
     googleMapsUrl,
-    city,
     updatedAt,
     cardId,
     price,
@@ -95,14 +124,20 @@ function InventoryCard({
 
   const placeholderThumbUrl = useMemo(() => getPlaceholderUrl(id), [id]);
 
-  const topLabel = sectorName || name || '';
+  // Agar parent se naya sectorName/name aaye (refetch ke baad), local override hata do.
+  useEffect(() => {
+    setLocalFieldOverrides({});
+  }, [sectorName, name]);
 
-  const middleParts = [actualDeveloperName, name].filter(Boolean);
-  const middleLabel = city || (middleParts.length ? middleParts.join(', ') : sectorName || '');
+  const displayedSectorName = localFieldOverrides.sectorName ?? sectorName ?? '';
+  const displayedName = localFieldOverrides.name ?? name ?? '';
+
+  const topLabel = displayedSectorName;
+  const middleLabel = displayedName;
 
   const updatedLabel = formatUpdatedAgo(updatedAt);
 
-  const locationQuery = [name, actualDeveloperName, sectorName].filter(Boolean).join(', ');
+  const locationQuery = [displayedName, displayedSectorName].filter(Boolean).join(', ');
   const hasLocation = Boolean(googleMapsUrl) || Boolean(locationQuery);
 
   const showPhotoPlaceholder = !imageUrl || imgError;
@@ -296,12 +331,6 @@ const handleShareImage = async (e) => {
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
-  const handleEditClick = (e) => {
-    e.stopPropagation();
-    setMenuOpen(false);
-    onEdit?.(inventory);
-  };
-
   const handleDeleteClick = (e) => {
     e.stopPropagation();
     setMenuOpen(false);
@@ -343,10 +372,9 @@ const handleShareImage = async (e) => {
     try {
       // Backend update() poora record replace karta hai (partial update nahi),
       // isliye current data bhi wapas bhejna zaroori hai — sirf cardId change hoke.
-      const formData = new FormData();
-      formData.append('actualDeveloperName', actualDeveloperName || '');
-      formData.append('sectorName', sectorName || '');
-      formData.append('name', name || '');
+       const formData = new FormData();
+      formData.append('sectorName', displayedSectorName || '');
+      formData.append('name', displayedName || '');
       formData.append('cardId', cardIdDraft.trim());
       formData.append('groupNames', JSON.stringify((groups || []).map((g) => g.groupName)));
       formData.append('price', price ?? '');
@@ -367,10 +395,66 @@ const handleShareImage = async (e) => {
     }
   };
 
+  // --- Sector / Project Name inline edit handlers (temp feature) ---
+  const startEditField = (field) => (e) => {
+    e.stopPropagation();
+    if (!INLINE_EDIT_ENABLED) return;
+    broadcastEditStart(instanceIdRef.current);
+    setEditingField(field);
+    setFieldDraft(field === 'sectorName' ? displayedSectorName : displayedName);
+  };
+
+  const cancelEditField = (e) => {
+    e.stopPropagation();
+    setEditingField(null);
+    setFieldDraft('');
+  };
+
+  const isFieldChanged =
+    editingField != null &&
+    fieldDraft.trim() !== (editingField === 'sectorName' ? displayedSectorName : displayedName).trim();
+
+  const handleSaveField = async (e) => {
+    e.stopPropagation();
+    if (!editingField || !isFieldChanged || savingField) return;
+
+    const nextSectorName = editingField === 'sectorName' ? fieldDraft.trim() : displayedSectorName;
+    const nextName = editingField === 'name' ? fieldDraft.trim() : displayedName;
+
+    setSavingField(true);
+    try {
+      const formData = new FormData();
+      formData.append('sectorName', nextSectorName || '');
+      formData.append('name', nextName || '');
+      formData.append('cardId', displayedCardId ?? '');
+      formData.append('groupNames', JSON.stringify((groups || []).map((g) => g.groupName)));
+      formData.append('price', price ?? '');
+      formData.append('areaSqFt', areaSqFt ?? '');
+      formData.append('unitType', unitType ?? '');
+      formData.append('status', status ?? '');
+      formData.append('description', description ?? '');
+
+      const updated = await inventoryService.updateWithImage(id, formData);
+      setLocalFieldOverrides((prev) => ({
+        ...prev,
+        sectorName: updated?.sectorName ?? nextSectorName,
+        name: updated?.name ?? nextName,
+      }));
+      setEditingField(null);
+      setFieldDraft('');
+      showToast('Update ho gaya.', 'success');
+    } catch (err) {
+      const msg = err?.response?.data?.message || 'Update nahi ho paya. Dobara try karo.';
+      showToast(msg, 'error');
+    } finally {
+      setSavingField(false);
+    }
+  };
+
   return (
     <article
       className={`inv-card${selectable ? ' inv-card--selectable' : ''}${isSelected ? ' inv-card--selected' : ''
-        }`}
+        }${editingField ? ' inv-card--field-editing' : ''}`}
     >
       {selectable && (
         <label className="inv-card__select-checkbox" onClick={(e) => e.stopPropagation()}>
@@ -507,12 +591,36 @@ const handleShareImage = async (e) => {
           )}
         <div className="inv-card__content">
           <div className="inv-card__header">
-            {topLabel ? (
-              <h3 className="inv-card__title" title={topLabel}>
+            {INLINE_EDIT_ENABLED && editingField === 'sectorName' ? (
+              <div className="inv-card__field-edit" onClick={(e) => e.stopPropagation()}>
+                <input
+                  type="text"
+                  className="inv-card__field-input"
+                  value={fieldDraft}
+                  onChange={(e) => setFieldDraft(e.target.value)}
+                  autoFocus
+                  disabled={savingField}
+                  placeholder="Sector"
+                />
+                <button type="button" className="inv-card__field-cancel-btn" onClick={cancelEditField} disabled={savingField} aria-label="Cancel sector edit">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" aria-hidden="true">
+                    <path d="M6 6l12 12M18 6 6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  </svg>
+                </button>
+                <button type="button" className="inv-card__field-save-btn" onClick={handleSaveField} disabled={!isFieldChanged || savingField} aria-label="Save sector">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" aria-hidden="true">
+                    <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </button>
+              </div>
+            ) : (
+              <h3
+                className="inv-card__title"
+                title={topLabel}
+                onClick={INLINE_EDIT_ENABLED ? startEditField('sectorName') : undefined}
+              >
                 {topLabel}
               </h3>
-            ) : (
-              <span />
             )}
 
             {!selectable && (
@@ -614,21 +722,6 @@ const handleShareImage = async (e) => {
                 </div>
 
                 <div className="inv-card__menu-wrap" ref={menuRef}>
-                <button
-  type="button"
-  className="inv-card__edit-btn"
-  onClick={handleEditClick}
-  aria-label={`Edit ${middleLabel || topLabel || 'inventory'}`}
->
-  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" aria-hidden="true">
-    <path
-      d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17v3Z"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinejoin="round"
-    />
-  </svg>
-</button>
                   <button
                     type="button"
                     ref={dotsBtnRef}
@@ -712,11 +805,37 @@ const handleShareImage = async (e) => {
             )}
           </div>
 
-          {middleLabel ? (
-            <p className="inv-card__description" title={middleLabel}>
+          {INLINE_EDIT_ENABLED && editingField === 'name' ? (
+            <div className="inv-card__field-edit" onClick={(e) => e.stopPropagation()}>
+              <input
+                type="text"
+                className="inv-card__field-input"
+                value={fieldDraft}
+                onChange={(e) => setFieldDraft(e.target.value)}
+                autoFocus
+                disabled={savingField}
+                placeholder="Project name"
+              />
+              <button type="button" className="inv-card__field-cancel-btn" onClick={cancelEditField} disabled={savingField} aria-label="Cancel project name edit">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" aria-hidden="true">
+                  <path d="M6 6l12 12M18 6 6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+              </button>
+              <button type="button" className="inv-card__field-save-btn" onClick={handleSaveField} disabled={!isFieldChanged || savingField} aria-label="Save project name">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" aria-hidden="true">
+                  <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+            </div>
+          ) : (
+            <p
+              className="inv-card__description"
+              title={middleLabel}
+              onClick={INLINE_EDIT_ENABLED ? startEditField('name') : undefined}
+            >
               {middleLabel}
             </p>
-          ) : null}
+          )}
 
           {updatedLabel && (
             <p className="inv-card__updated">

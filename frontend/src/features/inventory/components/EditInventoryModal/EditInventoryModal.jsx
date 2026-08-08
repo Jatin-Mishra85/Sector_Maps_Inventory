@@ -21,7 +21,6 @@ export default function EditInventoryModal({ inventory, isOpen, onClose, onUpdat
     defaultValues: {
       name: '',
       sector: '',
-      actualDeveloperName: '',
       groups: [],
       cardId: '', // Card ID / Roll No — internal only, not shown on the card. Decimal allowed (e.g. 5.6).
       description: '',
@@ -34,7 +33,6 @@ export default function EditInventoryModal({ inventory, isOpen, onClose, onUpdat
       reset({
         name: inventory.name || '',
         sector: inventory.sectorName || '',
-        actualDeveloperName: inventory.actualDeveloperName || '',
         groups: Array.isArray(inventory.groups) ? inventory.groups.map((g) => g.groupName) : [],
         cardId: inventory.cardId != null ? String(inventory.cardId) : '',
         description: inventory.description || '',
@@ -51,7 +49,6 @@ export default function EditInventoryModal({ inventory, isOpen, onClose, onUpdat
       const formData = new FormData();
       formData.append('name', data.name || '');
       formData.append('sectorName', data.sector || '');
-      formData.append('actualDeveloperName', data.actualDeveloperName || '');
       formData.append('groupNames', JSON.stringify(data.groups || [])); // Grouping
       formData.append('cardId', data.cardId || ''); // Card ID — compulsory, decimal allowed
       formData.append('description', data.description || '');
@@ -65,7 +62,7 @@ export default function EditInventoryModal({ inventory, isOpen, onClose, onUpdat
         ...inventory,
         name: response?.name ?? data.name ?? inventory.name,
         sectorName: response?.sectorName ?? data.sector ?? inventory.sectorName,
-        actualDeveloperName: response?.actualDeveloperName ?? data.actualDeveloperName ?? inventory.actualDeveloperName,
+        
         groups: response?.groups ?? inventory.groups,
         cardId: response?.cardId ?? inventory.cardId,
         description: response?.description ?? data.description ?? inventory.description,
@@ -99,8 +96,6 @@ export default function EditInventoryModal({ inventory, isOpen, onClose, onUpdat
           <Input label="Project" {...register('name')} />
 
           <Input label="Sector" {...register('sector')} />
-
-          <Input label="Developer" {...register('actualDeveloperName')} />
 
           <Controller
             name="groups"

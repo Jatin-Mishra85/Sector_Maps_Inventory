@@ -97,7 +97,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-2);
+  gap: var(--space-1);
   min-width: 0;
 }
 
@@ -192,36 +192,6 @@
   display: flex;
   position: relative;
   flex-shrink: 0;
-}
-/* ===== Standalone EDIT button ===== */
-.inv-card__edit-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: var(--color-primary);
-  border-radius: 999px;
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: background-color 0.15s ease, transform 0.12s ease;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.inv-card__edit-btn:hover {
-  background: var(--color-primary-tint);
-}
-
-.inv-card__edit-btn:active {
-  transform: scale(0.9);
-}
-
-.inv-card__edit-btn svg {
-  width: 15px;
-  height: 15px;
 }
 .inv-card__dots-btn {
   display: flex;
@@ -510,6 +480,54 @@
   z-index: 2;
   display: flex;
   gap: 6px;
+}
+
+
+.inv-card--field-editing {
+  height: auto;
+  overflow: visible;
+  z-index: 5;
+}
+
+.inv-card__title,
+.inv-card__description {
+  cursor: pointer;
+}
+
+.inv-card__field-edit {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.inv-card__field-input {
+  flex: 1 1 100%;
+  min-width: 0;
+  font: inherit;
+  padding: 2px 6px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.inv-card__field-cancel-btn,
+.inv-card__field-save-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 50%;
+  background: #f2f2f2;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.inv-card__field-save-btn:disabled,
+.inv-card__field-cancel-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .inv-card__cardid-edit-btn,
