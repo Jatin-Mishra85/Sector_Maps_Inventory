@@ -43,141 +43,77 @@ export default function PromoBanner() {
       tabIndex={0}
     >
       <div className="promo-bar__top">
-        <div className="promo-bar__scroll-track">
-          <div className="promo-bar__section promo-bar__section--brand">
-            <div className="promo-bar__brand">
-              <img
-                src={COMPANY_LOGO_PATH}
-                alt="The Builder Bazar logo"
-                className="promo-bar__logo"
-              />
-              <div className="promo-bar__brand-text">
-                <span className="promo-bar__name">The Builder Bazar</span>
-                <span className="promo-bar__tagline">
-                  Fresh Builder Floor Listings
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="promo-bar__divider" aria-hidden="true" />
-
-          <div className="promo-bar__section promo-bar__section--info">
-            <div className="promo-bar__info-pill">
-              <FaBuilding className="promo-bar__info-icon" />
-              <span className="promo-bar__info-text">
-                <span className="promo-bar__info-small">Direct</span>
-                <span className="promo-bar__info-big">Builder Number</span>
+        <div className="promo-bar__section promo-bar__section--brand">
+          <div className="promo-bar__brand">
+            <img
+              src={COMPANY_LOGO_PATH}
+              alt="The Builder Bazar logo"
+              className="promo-bar__logo"
+            />
+            <div className="promo-bar__brand-text">
+              <span className="promo-bar__name">The Builder Bazar</span>
+              <span className="promo-bar__tagline">
+                Fresh Builder Floor Listings
               </span>
-            </div>
-          </div>
-
-          <div className="promo-bar__divider" aria-hidden="true" />
-
-          <div className="promo-bar__section promo-bar__section--info">
-            <div className="promo-bar__info-pill">
-              <FaMapMarkerAlt className="promo-bar__info-icon" />
-              <span className="promo-bar__info-text">
-                <span className="promo-bar__info-small">Direct</span>
-                <span className="promo-bar__info-big">Plot Number</span>
-              </span>
-            </div>
-          </div>
-
-          <div className="promo-bar__divider" aria-hidden="true" />
-
-          <div className="promo-bar__section promo-bar__section--download">
-            <div className="promo-bar__badges">
-              <a
-                href={ANDROID_APP_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="promo-bar__badge"
-                onClick={stop}
-                aria-label="Get it on Google Play"
-              >
-                <FaGooglePlay className="promo-bar__badge-icon" />
-              </a>
-              <a
-                href={IOS_APP_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="promo-bar__badge"
-                onClick={stop}
-                aria-label="Download on the App Store"
-              >
-                <FaApple className="promo-bar__badge-icon" />
-              </a>
             </div>
           </div>
         </div>
 
-        <div className="promo-bar__scroll-gap" aria-hidden="true" />
+        <div className="promo-bar__divider" aria-hidden="true" />
 
-        <div className="promo-bar__scroll-track" aria-hidden="true">
-          <div className="promo-bar__section promo-bar__section--brand">
-            <div className="promo-bar__brand">
-              <img
-                src={COMPANY_LOGO_PATH}
-                alt="The Builder Bazar logo"
-                className="promo-bar__logo"
-              />
-              <div className="promo-bar__brand-text">
-                <span className="promo-bar__name">The Builder Bazar</span>
-                <span className="promo-bar__tagline">
-                  Fresh Builder Floor Listings
-                </span>
-              </div>
-            </div>
+        <div className="promo-bar__section promo-bar__section--info">
+          <div className="promo-bar__info-pill">
+            <FaBuilding className="promo-bar__info-icon" />
+            <span className="promo-bar__info-text">
+              <span className="promo-bar__info-small">Direct</span>
+              <span className="promo-bar__info-big">Builder Number</span>
+            </span>
           </div>
+        </div>
 
-          <div className="promo-bar__divider" aria-hidden="true" />
+        <div className="promo-bar__divider" aria-hidden="true" />
 
-          <div className="promo-bar__section promo-bar__section--info">
-            <div className="promo-bar__info-pill">
-              <FaBuilding className="promo-bar__info-icon" />
-              <span className="promo-bar__info-text">
-                <span className="promo-bar__info-small">Direct</span>
-                <span className="promo-bar__info-big">Builder Number</span>
-              </span>
-            </div>
+        <div className="promo-bar__section promo-bar__section--info">
+          <div className="promo-bar__info-pill">
+            <FaMapMarkerAlt className="promo-bar__info-icon" />
+            <span className="promo-bar__info-text">
+              <span className="promo-bar__info-small">Direct</span>
+              <span className="promo-bar__info-big">Plot Number</span>
+            </span>
           </div>
+        </div>
 
-          <div className="promo-bar__divider" aria-hidden="true" />
+        <div className="promo-bar__divider" aria-hidden="true" />
 
-          <div className="promo-bar__section promo-bar__section--info">
-            <div className="promo-bar__info-pill">
-              <FaMapMarkerAlt className="promo-bar__info-icon" />
-              <span className="promo-bar__info-text">
-                <span className="promo-bar__info-small">Direct</span>
-                <span className="promo-bar__info-big">Plot Number</span>
-              </span>
-            </div>
-          </div>
-
-          <div className="promo-bar__divider" aria-hidden="true" />
-
-          <div className="promo-bar__section promo-bar__section--download">
+        <div className="promo-bar__section promo-bar__section--download" style={{border:"none"}}>
+          <div className="promo-bar__download">
+            <span className="promo-bar__download-title">Download App</span>
             <div className="promo-bar__badges">
               <a
                 href={ANDROID_APP_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="promo-bar__badge"
+                className="promo-bar__download-button promo-bar__download-button--android"
                 onClick={stop}
                 aria-label="Get it on Google Play"
               >
-                <FaGooglePlay className="promo-bar__badge-icon" />
+                <FaGooglePlay className="promo-bar__download-button-icon" />
+                <span className="promo-bar__download-button-text">
+                  <strong>Google Play</strong>
+                </span>
               </a>
               <a
                 href={IOS_APP_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="promo-bar__badge"
+                className="promo-bar__download-button promo-bar__download-button--apple"
                 onClick={stop}
                 aria-label="Download on the App Store"
               >
-                <FaApple className="promo-bar__badge-icon" />
+                <FaApple className="promo-bar__download-button-icon" />
+                <span className="promo-bar__download-button-text">
+                  <strong>App Store</strong>
+                </span>
               </a>
             </div>
           </div>
