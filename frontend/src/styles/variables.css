@@ -24,6 +24,7 @@
   /* ===== Typography ===== */
   --font-heading: 'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif;
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-plain: "Montserrat", sans-serif;
 
   --font-size-xxs: clamp(0.6rem, 0.58rem + 0.08vw, 0.65rem);
   --font-size-micro: clamp(0.5rem, 0.48rem + 0.08vw, 0.55rem);

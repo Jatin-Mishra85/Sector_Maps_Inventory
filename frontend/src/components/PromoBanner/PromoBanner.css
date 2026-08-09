@@ -10,7 +10,7 @@
 background: linear-gradient(135deg, #1b263b 0%, #0d1b2a 100%);
 
 
-  padding: 12px 14px;
+  padding: 12px 10px;
   cursor: pointer;
   color: #fff;
 }
@@ -18,7 +18,7 @@ background: linear-gradient(135deg, #1b263b 0%, #0d1b2a 100%);
 .promo-bar__top {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   width: 100%;
   min-width: 0;
   overflow-x: auto;
@@ -33,7 +33,7 @@ background: linear-gradient(135deg, #1b263b 0%, #0d1b2a 100%);
 .promo-bar__scroll-track {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 10px;
 }
 
 .promo-bar__scr     oll-gap {
@@ -71,16 +71,15 @@ background: linear-gradient(135deg, #1b263b 0%, #0d1b2a 100%);
 .promo-bar__brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 4px;
   min-width: 0;
 }
 
 .promo-bar__logo {
-  width: 42px;
-  height: 42px;
-  object-fit: contain;
+  width: 38px;
+  height: 38px;
+  object-fit: cover;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.08);
   padding: 8px;
 }
 
@@ -92,8 +91,9 @@ background: linear-gradient(135deg, #1b263b 0%, #0d1b2a 100%);
 }
 
 .promo-bar__name {
-  font-size: 15px;
-  font-weight: 700;
+  font-size: var(--font-size-xxs);
+  font-family: var(--font-plain);
+  font-weight: 400;
   color: #fff;
   white-space: nowrap;
   overflow: hidden;
@@ -101,7 +101,8 @@ background: linear-gradient(135deg, #1b263b 0%, #0d1b2a 100%);
 }
 
 .promo-bar__tagline {
-  font-size: 11px;
+  font-size: var(--font-size-nano);
+  /* font-family: var(--font-heading); */
   color: rgba(255, 255, 255, 0.75);
   white-space: nowrap;
   overflow: hidden;
@@ -126,7 +127,7 @@ background: linear-gradient(135deg, #1b263b 0%, #0d1b2a 100%);
 .promo-bar__badges {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
   flex-shrink: 0;
 }
 
@@ -134,10 +135,10 @@ background: linear-gradient(135deg, #1b263b 0%, #0d1b2a 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.12);
+  width: 26px;
+  height: 24px;
+  background: #000;
+  border-radius: 10%;
   text-decoration: none;
   transition: background 0.2s ease;
 }
@@ -147,24 +148,22 @@ background: linear-gradient(135deg, #1b263b 0%, #0d1b2a 100%);
 }
 
 .promo-bar__badge-icon {
-  width: 15px;
-  height: 15px;
+  width: 10px;
+  height: 10px;
   color: #fff;
 }
 
 .promo-bar__info-pill {
   display: flex;
   align-items: center;
-  gap: 8px;
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 999px;
-  padding: 8px 12px;
+  gap: 5px;
+  padding: 4px 8px;
 }
 
 .promo-bar__info-icon {
   flex-shrink: 0;
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   color: #ff8c00;
 }
 
@@ -175,14 +174,15 @@ background: linear-gradient(135deg, #1b263b 0%, #0d1b2a 100%);
 }
 
 .promo-bar__info-small {
-  font-size: 8px;
+  font-size: var(--font-size-micro);
   color: rgba(255, 255, 255, 0.65);
   white-space: nowrap;
 }
 
 .promo-bar__info-big {
-  font-size: 11px;
-  font-weight: 600;
+  font-size: var(--font-size-xxs);
+  font-family: var(--font-plain);
+  font-weight: 400;
   color: #fff;
   white-space: nowrap;
 }
@@ -193,7 +193,7 @@ background: linear-gradient(135deg, #1b263b 0%, #0d1b2a 100%);
   }
 
   .promo-bar__top {
-    gap: 10px;
+    gap: 4px;
   }
 
   .promo-bar__divider {
@@ -207,7 +207,7 @@ background: linear-gradient(135deg, #1b263b 0%, #0d1b2a 100%);
 
 @media (max-width: 640px) {
   .promo-bar {
-    padding: 10px 10px;
+    padding: 10px 4px;
   }
 
   .promo-bar__top {
@@ -219,7 +219,7 @@ background: linear-gradient(135deg, #1b263b 0%, #0d1b2a 100%);
   }
 
   .promo-bar__brand {
-    gap: 10px;
+    gap: 2px;
   }
 
   .promo-bar__brand-text {
