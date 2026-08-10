@@ -10,6 +10,7 @@
   import { useInventories } from '../../inventory/hooks/useInventories';
   import { groupService } from '../services/groupService';
   import { useToast } from '../../../context/ToastContext';
+  import ManageGroupsModal from '../components/ManageGroupsModal/ManageGroupsModal';
 
   // NOTE: Admin-code gate REMOVED from this page on purpose — Grouping tab
   // ab bina admin code ke khulta hai. Only Delete still requires the code
@@ -33,6 +34,7 @@
 
     const [filterMode, setFilterMode] = useState('all');
     const [selectedGroupFilter, setSelectedGroupFilter] = useState(null);
+    const [showManageGroups, setShowManageGroups] = useState(false);
 
     const {
       inventories,
@@ -204,6 +206,13 @@ const canSave =
               {mode.label}
             </button>
           ))}
+          <button
+            type="button"
+            className="grouping-page__filter-tab grouping-page__filter-tab--delete"
+            onClick={() => setShowManageGroups(true)}
+          >
+            Delete
+          </button>
         </div>
 
         {filterMode === 'grouped' && groups.length > 0 && (
@@ -315,6 +324,17 @@ const canSave =
             {isRemoving ? 'Removing...' : 'Remove'}
           </button>
         </footer>
+
+        {showManageGroups && (
+          <ManageGroupsModal
+            groups={groups}
+            onClose={() => setShowManageGroups(false)}
+            onChanged={() => {
+              refetchGroups();
+              refetchInventories();
+            }}
+          />
+        )}
       </div>
     );
   }

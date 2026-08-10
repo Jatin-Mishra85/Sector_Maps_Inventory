@@ -72,10 +72,13 @@
     color: var(--color-text);
   }
 
-  .grouping-page__filter-tab--active {
-    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-hover));
-    color: var(--color-on-primary);
-    box-shadow: var(--shadow-soft);
+  .grouping-page__filter-tab--delete {
+    color: var(--color-danger);
+  }
+
+  .grouping-page__filter-tab--delete:hover {
+    background: rgba(189, 109, 88, 0.1);
+    color: var(--color-danger);
   }
 
   .grouping-page__filter-tab:focus-visible,

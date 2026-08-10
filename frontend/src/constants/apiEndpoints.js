@@ -2,6 +2,7 @@ export const ALL_TYPES_ID = 'ALL_TYPES';
 export const API_ENDPOINTS = {
   GROUP: {
     BASE: '/groups',
+    BY_ID: (id) => `/groups/${id}`,
     ADD_INVENTORIES: '/groups/add-inventories',
     REMOVE_INVENTORIES: '/groups/remove-inventories',
   },

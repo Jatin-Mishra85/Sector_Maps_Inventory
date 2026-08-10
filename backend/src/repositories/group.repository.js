@@ -74,10 +74,28 @@ async function update(groupId, groupName) {
 
 async function remove(groupId) {
     const pool = await getPool();
-    const result = await pool.request()
-        .input('GroupId', sql.Int, groupId)
-        .query('DELETE FROM Groups WHERE GroupId = @GroupId');
-    return result.rowsAffected[0] > 0;
+    const transaction = new sql.Transaction(pool);
+
+    try {
+        await transaction.begin();
+
+        // Pehle junction table (InventoryGroups) se saare related rows hatao,
+        // warna FK_InventoryGroups_Group constraint delete ko block karega.
+        await new sql.Request(transaction)
+            .input('GroupId', sql.Int, groupId)
+            .query('DELETE FROM InventoryGroups WHERE GroupId = @GroupId');
+
+        // Ab Groups table se group delete karo.
+        const result = await new sql.Request(transaction)
+            .input('GroupId', sql.Int, groupId)
+            .query('DELETE FROM Groups WHERE GroupId = @GroupId');
+
+        await transaction.commit();
+        return result.rowsAffected[0] > 0;
+    } catch (err) {
+        await transaction.rollback();
+        throw err;
+    }
 }
 
 async function addInventoriesToGroup(groupId, inventoryIds) {

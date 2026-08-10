@@ -7,4 +7,8 @@ export const groupService = {
     apiClient.post(API_ENDPOINTS.GROUP.ADD_INVENTORIES, { groupName, inventoryIds }),
   removeInventories: (groupName, inventoryIds) =>
     apiClient.post(API_ENDPOINTS.GROUP.REMOVE_INVENTORIES, { groupName, inventoryIds }),
+
+  deleteGroup: (groupId) => apiClient.delete(API_ENDPOINTS.GROUP.BY_ID(groupId)),
+  renameGroup: (groupId, newName) =>
+    apiClient.put(API_ENDPOINTS.GROUP.BY_ID(groupId), { groupName: newName }),
 };
