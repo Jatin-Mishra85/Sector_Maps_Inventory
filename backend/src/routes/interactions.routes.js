@@ -4,10 +4,12 @@ const router = express.Router();
 const interactionsController = require('../controllers/interactions.controller');
 const { requireAuth } = require('../middleware/auth.middleware');
 
-// Sabhi routes login zaroori hain — bina login save/unsave/report nahi kar sakte
+// Save/unsave/saved list ke liye login zaroori hai.
 router.post('/save', requireAuth, interactionsController.saveInventory);
 router.delete('/unsave/:inventoryId', requireAuth, interactionsController.unsaveInventory);
 router.get('/saved', requireAuth, interactionsController.getSavedIds);
-router.post('/report', requireAuth, interactionsController.reportInventory);
+
+// Report ke liye login zaroori nahi — bina login bhi report kiya ja sakta hai.
+router.post('/report', interactionsController.reportInventory);
 
 module.exports = router;

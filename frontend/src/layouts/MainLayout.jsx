@@ -4,6 +4,7 @@ import './MainLayout.css';
 import { useSiteGate } from '../hooks/useSiteGate';
 import { useAuth } from '../context/AuthContext';
 import LoginModal from '../components/LoginModal/LoginModal';
+import companyLogo from '../assets/logo/company-logo.png'; 
 
 export default function MainLayout() {
   const { isUnlocked } = useSiteGate();
@@ -25,7 +26,7 @@ export default function MainLayout() {
     setLoginOpen(true);
   };
 
-  const logoSrc = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAMAAABF0y+mAAAAbFBMVEURc74Jcb0AbrwDdsB+sdptq9iexeT3+v2bwuIHcL1joNLY5/P////r9PtcnNEpfsOItNzm8flnptXe7PaNu+A5iMc/jcno8/rB2e1IkczL3u8tgcTY4/G31Oqoy+YpgsVKls4AbLsAabre5vPVOeCxAAAAyklEQVR4AcXNRQLCMBQE0MZb/qTuLve/IzUc1kw8L+L8O4xz9tOEVA77cU1oY1zv22XmXAjWgvwvFoQRTKwMEhmw9+9SAEmWFwDCt49ZRqa0UV5ZW5q6eUUvj0jRhqSSJPvAViUH0icmXW82NH1Jb8iGtAZWLIA6Dd5QEshuaAmkvGfzKhh3rFe09agNXt7lKToxtDsOooScnnDSSOfsxLlHyl/RnYcDm2/IM9oxmz5xy4bb+Io8XNo1ZZaV27ioDR8672HsGDf7U64VVBK7Duk2pAAAAABJRU5ErkJggg==";
+ 
 
   const navLinkClass = ({ isActive }) =>
     `main-layout__nav-link ${isActive ? 'main-layout__nav-link--active' : ''}`;
@@ -36,7 +37,7 @@ export default function MainLayout() {
         <div className="main-layout__container">
           <NavLink to="/" className="main-layout__brand" onClick={closeMenu}>
             <span className="main-layout__logo">
-              <img src={logoSrc} alt="The Builder Bazar Logo" width="28" height="28" />
+              <img src={companyLogo} alt="The Builder Bazar Logo" width="28" height="28" />
             </span>
             <span className="main-layout__brand-text">
               <span className="main-layout__brand-name">The Builder Bazar</span>

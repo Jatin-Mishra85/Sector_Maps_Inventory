@@ -3,6 +3,8 @@ const interactionsService = require('../services/interactions.service');
 
 // NOTE: requireAuth middleware se req.user.userId already set hoga
 // (login ke time JWT mein { userId, email } save kiya gaya tha).
+// reportInventory par ab requireAuth nahi lagi (route file dekho),
+// isliye us function mein req.user hona guaranteed nahi — safe access use karo.
 
 async function saveInventory(req, res) {
     try {
@@ -33,8 +35,10 @@ async function getSavedIds(req, res) {
 
 async function reportInventory(req, res) {
     try {
+        // Login ho to userId bhejo, na ho to null — crash nahi hoga.
+        const userId = req.user?.userId || null;
         await interactionsService.reportInventory(
-            req.user.userId,
+            userId,
             req.body.inventoryId,
             req.body.reason,
             req.body.details
@@ -44,6 +48,7 @@ async function reportInventory(req, res) {
         res.status(err.statusCode || 500).json({ message: err.message });
     }
 }
+
 module.exports = {
     saveInventory,
     unsaveInventory,

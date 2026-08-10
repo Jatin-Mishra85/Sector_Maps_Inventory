@@ -1,6 +1,6 @@
 ﻿.promo-bar {
-  position: sticky;
-  top: 0;
+  position: relative;
+  /* top: 0; */
   z-index: 999;
   width: 100%;
   display: flex;
@@ -216,6 +216,86 @@
   font-weight: 400;
   color: #fff;
   white-space: nowrap;
+}
+
+/* ===== Desktop: keep brand + info grouped together on the left, push
+   download app to the right — avoids a huge dead gap in the middle ===== */
+@media (min-width: 841px) {
+  .promo-bar__top {
+    max-width: 1200px;
+    margin: 0 auto;
+    gap: 28px;
+  }
+
+  .promo-bar__section {
+    border-right: none;
+  }
+
+  .promo-bar__section--download {
+    margin-left: auto;
+  }
+
+  .promo-bar__divider {
+    width: 2px;
+  }
+
+  /* Real topbar proportions — mobile's nano/pico sizes look cramped
+     and amateurish when stretched across a desktop viewport */
+  .promo-bar {
+    padding: 14px 24px;
+  }
+
+  .promo-bar__logo {
+    width: 30px;
+    height: 30px;
+  }
+
+  .promo-bar__name {
+    font-size: 15px;
+  }
+
+  .promo-bar__tagline {
+    font-size: 12px;
+  }
+
+  .promo-bar__divider {
+    height: 32px;
+  }
+
+  .promo-bar__info-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .promo-bar__info-small {
+    font-size: 11px;
+  }
+
+  .promo-bar__info-big {
+    font-size: 14px;
+  }
+
+  .promo-bar__download-title {
+    font-size: 11px;
+  }
+
+  .promo-bar__download-button {
+    padding: 8px 14px;
+    gap: 8px;
+  }
+
+  .promo-bar__download-button-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .promo-bar__download-button-text {
+    font-size: 13px;
+  }
+
+  .promo-bar__download-button-text strong {
+    font-size: 13px;
+  }
 }
 
 @media (max-width: 840px) {

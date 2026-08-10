@@ -54,8 +54,7 @@ export function InventoryActionsSave({ inventoryId, isSaved, onToggleSave, onClo
   );
 }
 
-export function InventoryActionsReport({ inventoryId, onCloseMenu, onRequireLogin }) {
-  const { user } = useAuth();
+export function InventoryActionsReport({ inventoryId, onCloseMenu }) {
   const [showReasons, setShowReasons] = useState(false);
   const [selectedReason, setSelectedReason] = useState(null);
   const [details, setDetails] = useState('');
@@ -65,11 +64,6 @@ export function InventoryActionsReport({ inventoryId, onCloseMenu, onRequireLogi
 
   const handleReportClick = (e) => {
     e.stopPropagation();
-    if (!user) {
-      onCloseMenu?.();
-      onRequireLogin?.();
-      return;
-    }
     setShowReasons(true);
   };
 
