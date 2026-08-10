@@ -1,253 +1,297 @@
-﻿.promo-bar {
-  position: relative;
-  /* top: 0; */
-  z-index: 999;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  overflow: hidden;
-  /* background: #06233b; */
-  background: linear-gradient(135deg, #1b263b 0%, #0d1b2a 100%);
+﻿/* ==========================================================================
+   PromoBanner — premium glass/glow aesthetic, mobile-first,
+   seamless infinite marquee (right to left)
+   ========================================================================== */
 
-  padding: 12px 10px;
+.promo-bar {
+  --promo-bg-1: #0b1120;
+  --promo-bg-2: #131b3a;
+  --promo-bg-3: #1e2a5e;
+  --promo-text: #f8fafc;
+  --promo-muted: #93a3c4;
+  --promo-accent: #ffd166;   /* warm gold */
+  --promo-accent-2: #5eead4; /* teal glow */
+  --promo-pill-bg: rgba(255, 255, 255, 0.08);
+  --promo-pill-border: rgba(255, 255, 255, 0.16);
+  --promo-badge-bg: linear-gradient(135deg, rgba(255,255,255,0.16), rgba(255,255,255,0.05));
+
+  --promo-speed: 12s; /* marquee duration, tune per your content width */
+
+  position: relative;
+  width: 100%;
+  background:
+    radial-gradient(120% 220% at 0% 0%, rgba(94, 234, 212, 0.10), transparent 55%),
+    radial-gradient(120% 220% at 100% 100%, rgba(255, 209, 102, 0.10), transparent 55%),
+    linear-gradient(90deg, var(--promo-bg-1), var(--promo-bg-3), var(--promo-bg-2));
+  background-size: 100% 100%, 100% 100%, 220% 220%;
+  animation: promo-bg-drift 14s ease-in-out infinite;
+  color: var(--promo-text);
   cursor: pointer;
-  color: #fff;
+  overflow: hidden;
+  user-select: none;
+  box-shadow:
+    inset 0 -1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 209, 102, 0.25);
 }
 
+@keyframes promo-bg-drift {
+  0%   { background-position: 0% 0%, 0% 0%, 0% 50%; }
+  50%  { background-position: 0% 0%, 0% 0%, 100% 50%; }
+  100% { background-position: 0% 0%, 0% 0%, 0% 50%; }
+}
+
+.promo-bar:focus-visible {
+  outline: 2px solid var(--promo-accent);
+  outline-offset: -2px;
+}
+
+/* Clipping viewport for the marquee */
 .promo-bar__top {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  padding: 9px 0;
+}
+
+/* Decorative diagonal shine that sweeps across the whole bar periodically */
+.promo-bar__shine {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.16) 45%,
+    rgba(255, 255, 255, 0.28) 50%,
+    rgba(255, 255, 255, 0.16) 55%,
+    transparent 70%
+  );
+  transform: translateX(-120%);
+  animation: promo-shine-sweep 5.5s ease-in-out infinite;
+  animation-delay: 1.2s;
+}
+
+@keyframes promo-shine-sweep {
+  0%   { transform: translateX(-130%); }
+  35%  { transform: translateX(130%); }
+  100% { transform: translateX(130%); }
+}
+
+/* The moving strip: holds 2 identical tracks side by side and slides left.
+   width: max-content so it's exactly as wide as its content (2x one track). */
+.promo-bar__marquee {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: max-content;
+  animation: promo-marquee var(--promo-speed) linear infinite;
+  will-change: transform;
+}
+
+/* Pause on hover — driven by React state (.is-paused class), NOT a plain
+   CSS :hover selector. See PromoBanner.jsx for why: :hover can get stuck
+   "true" after the banner opens a new tab and the user switches back
+   without moving the mouse, leaving the marquee frozen. */
+.promo-bar__marquee.is-paused {
+  animation-play-state: paused;
+}
+
+@keyframes promo-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    /* Exactly half the total width = width of ONE track, so track #2
+       lands precisely where track #1 started -> no visible seam/glitch */
+    transform: translateX(-50%);
+  }
+}
+
+.promo-bar__track {
   display: flex;
   align-items: center;
-  gap: 16px;
-  width: 100%;
-  min-width: 0;
+  flex-shrink: 0;
+  gap: 14px;
+  padding: 0 14px;
+}
+
+.promo-bar__divider {
+  width: 1px;
+  align-self: stretch;
+  min-height: 22px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(255, 255, 255, 0.28) 25%,
+    rgba(255, 255, 255, 0.28) 75%,
+    transparent
+  );
+  flex-shrink: 0;
 }
 
 .promo-bar__section {
   display: flex;
   align-items: center;
-  gap: 4px;
-  flex: 0 0 auto;
-  border-right: 2px solid white;
-  min-width: 0;
-}
-
-.promo-bar__section--brand {
-  flex: 0 0 auto;
-}
-
-.promo-bar__section--info {
-  flex: 0 0 auto;
-}
-
-.promo-bar__section--download {
-  flex: 0 0 auto;
-  justify-content: flex-end;
-  align-items: flex-start;
-}
-
-.promo-bar__divider {
-  flex: 0 0 1px;
-  width: 1px;
-  height: 46px;
-  background: rgba(255, 255, 255, 0.18);
-}
-
-.promo-bar__download {
-  display: flex;
-  flex-direction: column;
-  gap: 0px;
-  justify-content: center;
-  align-items: center;
-  padding: 2px 8px;
-}
-
-.promo-bar__download-title {
-  font-size: var(--font-size-nano);
-  font-family: var(--font-plain);
-  font-weight: 400;
-  text-transform: capitalize;
-  letter-spacing: 0.12em;
-  color: rgba(255, 255, 255, 0.92);
-}
-
-.promo-bar__download-button {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding: 6px 5px;
-  background: rgba(0, 0, 0, 0.18);
-  border-radius: 14px;
-  color: #fff;
-  text-decoration: none;
-  min-width: fit-content;
-  transition:
-    background 0.2s ease,
-    transform 0.2s ease;
-}
-
-.promo-bar__download-button:hover {
-  background: rgba(0, 0, 0, 0.28);
-  transform: translateY(-1px);
-}
-
-.promo-bar__download-button-icon {
-  width: 6px;
-  height: 6px;
-  /* background: #00; */
-  color: #fff;
   flex-shrink: 0;
 }
 
-.promo-bar__download-button-text {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.05;
-  font-size: 10px;
-  color: #fff;
-}
-
-.promo-bar__download-button-text strong {
-  font-size: var(--font-size-pico);
-  font-weight: 400;
-}
-
+/* Brand */
 .promo-bar__brand {
   display: flex;
   align-items: center;
-  gap: 4px;
-  min-width: 0;
-  padding-right: 8px;
-  /* border-right: 2px solid white; */
+  justify-content: center;
+  gap: 2px;
 }
 
 .promo-bar__logo {
-  width: 20px;
-  height: 20px;
-  /* background: #000; */
-  object-fit: cover;
-  border-radius: 10px;
+  width: 36xpx;
+  height: 36px;
+  object-fit: contain;
+  flex-shrink: 0;
+  border-radius: 7px;
   padding: 2px;
+
 }
 
 .promo-bar__brand-text {
   display: flex;
   flex-direction: column;
-  line-height: 1.1;
-  min-width: 0;
+  line-height: 1.15;
+  white-space: nowrap;
 }
 
 .promo-bar__name {
-  font-size: var(--font-size-nano);
-  font-family: var(--font-plain);
-  font-weight: 400;
-  color: #fff;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  background: linear-gradient(90deg, #ffffff, var(--promo-accent) 60%, #ffffff);
+  background-size: 220% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: promo-text-shimmer 6s linear infinite;
+}
+
+@keyframes promo-text-shimmer {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 220% 50%; }
 }
 
 .promo-bar__tagline {
-  font-size: var(--font-size-pico);
-  /* font-family: var(--font-heading); */
-  color: rgba(255, 255, 255);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--promo-muted);
+  letter-spacing: 0.01em;
 }
 
+/* Info pills (Builder Number / Plot Number) — glassmorphism */
+.promo-bar__info-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--promo-pill-bg);
+  border: 1px solid var(--promo-pill-border);
+  border-radius: 999px;
+  padding: 5px 11px 5px 8px;
+  white-space: nowrap;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 2px 8px rgba(0, 0, 0, 0.18);
+}
+
+.promo-bar__info-icon {
+  font-size: 12px;
+  color: var(--promo-accent-2);
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 4px rgba(94, 234, 212, 0.65));
+  animation: promo-icon-pulse 2.6s ease-in-out infinite;
+}
+
+@keyframes promo-icon-pulse {
+  0%, 100% { opacity: 0.85; transform: scale(1); }
+  50%      { opacity: 1; transform: scale(1.12); }
+}
+
+.promo-bar__info-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.promo-bar__info-small {
+  font-size: 8px;
+  color: var(--promo-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+.promo-bar__info-big {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--promo-text);
+}
+
+/* App download badges */
 .promo-bar__badges {
   display: flex;
-  align-items: flex-start;
-  gap: 2px;
-  flex-shrink: 0;
+  align-items: center;
+  gap: 8px;
 }
 
 .promo-bar__badge {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 16px;
-  height: 16px;
-  background: #000;
-  border-radius: 10%;
-  text-decoration: none;
-  transition: background 0.2s ease;
+  width: 27px;
+  height: 27px;
+  border-radius: 8px;
+  background: var(--promo-badge-bg);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: var(--promo-text);
+  flex-shrink: 0;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    0 2px 8px rgba(0, 0, 0, 0.22);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .promo-bar__badge:hover {
-  background: rgba(255, 255, 255, 0.18);
+  transform: translateY(-1px) scale(1.06);
+  border-color: rgba(255, 209, 102, 0.6);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 4px 14px rgba(255, 209, 102, 0.3);
 }
 
 .promo-bar__badge-icon {
-  width: 8px;
-  height: 8px;
-  color: #fff;
+  font-size: 13px;
 }
 
-.promo-bar__info-pill {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding: 4px 6px;
-}
-
-.promo-bar__info-icon {
-  flex-shrink: 0;
-  width: 10px;
-  height: 10px;
-  color: #fff;
-}
-
-.promo-bar__info-text {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.15;
-}
-
-.promo-bar__info-small {
-  font-size: var(--font-size-nano);
-  color: rgba(255, 255, 255, 0.65);
-  white-space: nowrap;
-}
-
-.promo-bar__info-big {
-  font-size: var(--font-size-micro);
-  font-family: var(--font-plain);
-  font-weight: 400;
-  color: #fff;
-  white-space: nowrap;
-}
-
-/* ===== Desktop: keep brand + info grouped together on the left, push
-   download app to the right — avoids a huge dead gap in the middle ===== */
-@media (min-width: 841px) {
-  .promo-bar__top {
-    max-width: 1200px;
-    margin: 0 auto;
-    gap: 28px;
-  }
-
-  .promo-bar__section {
-    border-right: none;
-  }
-
-  .promo-bar__section--download {
-    margin-left: auto;
-  }
-
-  .promo-bar__divider {
-    width: 2px;
-  }
-
-  /* Real topbar proportions — mobile's nano/pico sizes look cramped
-     and amateurish when stretched across a desktop viewport */
+/* ==========================================================================
+   Larger screens — scale up size/spacing/speed once there's more room
+   ========================================================================== */
+@media (min-width: 768px) {
   .promo-bar {
-    padding: 14px 24px;
+    --promo-speed: 26s;
+  }
+
+  .promo-bar__top {
+    padding: 11px 0;
+  }
+
+  .promo-bar__track {
+    gap: 24px;
+    padding: 0 24px;
   }
 
   .promo-bar__logo {
-    width: 30px;
-    height: 30px;
+    width: 34px;
+    height: 34px;
   }
 
   .promo-bar__name {
@@ -255,89 +299,40 @@
   }
 
   .promo-bar__tagline {
-    font-size: 12px;
+    font-size: 11.5px;
   }
 
-  .promo-bar__divider {
-    height: 32px;
-  }
-
-  .promo-bar__info-icon {
-    width: 16px;
-    height: 16px;
+  .promo-bar__info-pill {
+    padding: 7px 14px 7px 10px;
   }
 
   .promo-bar__info-small {
-    font-size: 11px;
+    font-size: 9px;
   }
 
   .promo-bar__info-big {
-    font-size: 14px;
-  }
-
-  .promo-bar__download-title {
-    font-size: 11px;
-  }
-
-  .promo-bar__download-button {
-    padding: 8px 14px;
-    gap: 8px;
-  }
-
-  .promo-bar__download-button-icon {
-    width: 16px;
-    height: 16px;
-  }
-
-  .promo-bar__download-button-text {
     font-size: 13px;
   }
 
-  .promo-bar__download-button-text strong {
-    font-size: 13px;
+  .promo-bar__badge {
+    width: 32px;
+    height: 32px;
+  }
+
+  .promo-bar__badge-icon {
+    font-size: 16px;
   }
 }
 
-@media (max-width: 840px) {
-  .promo-bar {
-    padding: 12px 12px;
-  }
-
-  .promo-bar__top {
-    gap: 4px;
-  }
-
-  .promo-bar__divider {
-    display: none;
-  }
-
-  .promo-bar__section--download {
-    align-items: flex-end;
-  }
-}
-
-@media (max-width: 640px) {
-  .promo-bar {
-    padding: 10px 4px;
-  }
-
-  .promo-bar__top {
-    gap: 4px;
-  }
-
-  .promo-bar__section {
-    min-width: 0;
-  }
-
-  .promo-bar__brand {
-    gap: 2px;
-  }
-
-  .promo-bar__brand-text {
-    gap: 2px;
-  }
-
-  .promo-bar__download {
-    align-items: flex-start;
+/* ==========================================================================
+   Accessibility — respect reduced motion preference
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .promo-bar,
+  .promo-bar__marquee,
+  .promo-bar__shine,
+  .promo-bar__name,
+  .promo-bar__info-icon {
+    animation: none;
   }
 }
