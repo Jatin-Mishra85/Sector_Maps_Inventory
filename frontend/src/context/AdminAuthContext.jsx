@@ -1,16 +1,38 @@
-import { createContext, useCallback, useContext, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { adminService } from '../features/admin/services/adminService';
+import { ENV } from '../constants/env';
 
 const AdminAuthContext = createContext(undefined);
 
-// Session-only admin access. Deliberately NOT persisted anywhere (no
-// localStorage/sessionStorage) — plain React state, so a page refresh,
-// tab close, or browser restart wipes it automatically. This is not a
-// login system; it's a temporary gate for Add/Edit Inventory only.
+// Admin access ab ek real backend cookie (admin_access, 7 din valid) se
+// backed hai — is context ka kaam bas is cookie ki current state ko React
+// state me reflect karna hai (cookie httpOnly hai, JS seedha padh nahi sakta).
 export function AdminAuthProvider({ children }) {
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
+  const [checkingStatus, setCheckingStatus] = useState(true);
   const [isVerifying, setIsVerifying] = useState(false);
   const [error, setError] = useState(null);
+
+  // Page load / refresh par backend se poochho ki cookie abhi bhi valid hai ya nahi.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`${ENV.API_BASE_URL}/admin/status`, {
+          credentials: 'include',
+        });
+        const data = await res.json();
+        if (!cancelled) setIsAdminAuthenticated(!!data?.data?.unlocked);
+      } catch (err) {
+        if (!cancelled) setIsAdminAuthenticated(false);
+      } finally {
+        if (!cancelled) setCheckingStatus(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const verifyCode = useCallback(async (code) => {
     setIsVerifying(true);
@@ -28,13 +50,18 @@ export function AdminAuthProvider({ children }) {
     }
   }, []);
 
-  // Not required by current rules (refresh already clears access), but
-  // exposed for completeness in case a manual "lock" UI is ever needed.
   const lockAdmin = useCallback(() => {
     setIsAdminAuthenticated(false);
   }, []);
 
-  const value = { isAdminAuthenticated, isVerifying, error, verifyCode, lockAdmin };
+  const value = {
+    isAdminAuthenticated,
+    checkingStatus,
+    isVerifying,
+    error,
+    verifyCode,
+    lockAdmin,
+  };
 
   return <AdminAuthContext.Provider value={value}>{children}</AdminAuthContext.Provider>;
 }

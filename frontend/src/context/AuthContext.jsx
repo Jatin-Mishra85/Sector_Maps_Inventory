@@ -15,7 +15,7 @@ export function AuthProvider({ children }) {
             const data = await res.json();
             setUser(data?.data || null);
         } catch (err) {
-            console.error('❌ Failed to fetch current user:', err);
+            console.error('Failed to fetch current user:', err);
             setUser(null);
         } finally {
             setLoading(false);
@@ -40,6 +40,36 @@ export function AuthProvider({ children }) {
         return data;
     };
 
+    // Naya — email/password login.
+    const login = async (email, password) => {
+        const res = await fetch(`${ENV.API_BASE_URL}/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ email, password }),
+        });
+        const data = await res.json();
+        if (data.success) {
+            setUser(data.data);
+        }
+        return data;
+    };
+
+    // Naya — email/password signup.
+    const signup = async (email, password, name) => {
+        const res = await fetch(`${ENV.API_BASE_URL}/auth/signup`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ email, password, name }),
+        });
+        const data = await res.json();
+        if (data.success) {
+            setUser(data.data);
+        }
+        return data;
+    };
+
     const logout = async () => {
         try {
             await fetch(`${ENV.API_BASE_URL}/auth/logout`, {
@@ -47,14 +77,14 @@ export function AuthProvider({ children }) {
                 credentials: 'include',
             });
         } catch (err) {
-            console.error('❌ Logout error:', err);
+            console.error('Logout error:', err);
         } finally {
             setUser(null);
         }
     };
 
     return (
-        <AuthContext.Provider value={{ user, loading, loginWithGoogle, logout }}>
+        <AuthContext.Provider value={{ user, loading, loginWithGoogle, login, signup, logout }}>
             {children}
         </AuthContext.Provider>
     );

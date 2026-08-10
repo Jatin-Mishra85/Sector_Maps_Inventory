@@ -39,7 +39,7 @@ function formatUpdatedAgo(dateInput) {
 // ================================== just write false to remove eddit feature ===========================================
 // TEMP FEATURE: cards ke Sector/Project Name par click-to-edit.
 // Sirf data-filling phase ke liye — band karna ho to bas ye flag false kar do.
-const INLINE_EDIT_ENABLED = true;
+const INLINE_EDIT_ENABLED = false;
 
 // Ek time par sirf EK card edit mode mein rahe — jab koi card edit start
 // kare, baaki saare instances ko yahan se signal milta hai apna edit band karne ka.

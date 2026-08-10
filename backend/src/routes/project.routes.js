@@ -1,13 +1,14 @@
 // backend/routes/project.routes.js
-// Mount in app.js: app.use('/api/projects', require('./routes/project.routes'));
 const express = require('express');
 const router = express.Router();
 const projectController = require('../controllers/project.controller');
+const { requireAdmin } = require('../middleware/auth.middleware');
 
 router.get('/', projectController.getAll);
 router.get('/:id', projectController.getById);
-router.post('/', projectController.create);
-router.put('/:id', projectController.update);
-router.delete('/:id', projectController.remove);
+
+router.post('/', requireAdmin, projectController.create);
+router.put('/:id', requireAdmin, projectController.update);
+router.delete('/:id', requireAdmin, projectController.remove);
 
 module.exports = router;

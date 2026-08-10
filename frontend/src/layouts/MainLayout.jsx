@@ -3,11 +3,14 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import './MainLayout.css';
 import { useSiteGate } from '../hooks/useSiteGate';
 import { useAuth } from '../context/AuthContext';
+import { useAdminAuth } from '../context/AdminAuthContext';
 import LoginModal from '../components/LoginModal/LoginModal';
+
 
 export default function MainLayout() {
   const { isUnlocked } = useSiteGate();
   const { user, logout } = useAuth();
+  const { isAdminAuthenticated } = useAdminAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
   const navigate = useNavigate();
@@ -46,8 +49,12 @@ export default function MainLayout() {
 
           <nav className="main-layout__nav main-layout__nav--desktop">
             <NavLink to="/" end className={navLinkClass}>Home</NavLink>
-            <NavLink to="/admin" className={navLinkClass}>Add Inventory</NavLink>
-            <NavLink to="/grouping" className={navLinkClass}>Grouping</NavLink>
+            {isAdminAuthenticated && (
+              <>
+                <NavLink to="/admin" className={navLinkClass}>Add Inventory</NavLink>
+                <NavLink to="/grouping" className={navLinkClass}>Grouping</NavLink>
+              </>
+            )}
 
             {user ? (
               <NavLink to="/profile" className="main-layout__profile-chip" aria-label={`Profile: ${user.name}`}>
@@ -86,8 +93,12 @@ export default function MainLayout() {
         className={`main-layout__nav main-layout__nav--mobile ${menuOpen ? 'main-layout__nav--mobile-open' : ''}`}
       >
         <NavLink to="/" end className={navLinkClass} onClick={closeMenu}>Home</NavLink>
-        <NavLink to="/admin" className={navLinkClass} onClick={closeMenu}>Add Inventory</NavLink>
-        <NavLink to="/grouping" className={navLinkClass} onClick={closeMenu}>Grouping</NavLink>
+        {isAdminAuthenticated && (
+          <>
+            <NavLink to="/admin" className={navLinkClass} onClick={closeMenu}>Add Inventory</NavLink>
+            <NavLink to="/grouping" className={navLinkClass} onClick={closeMenu}>Grouping</NavLink>
+          </>
+        )}
 
         <div className="main-layout__nav-divider" />
 
