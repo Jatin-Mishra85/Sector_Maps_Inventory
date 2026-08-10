@@ -119,8 +119,8 @@
 }
 
 .promo-bar__logo {
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
   /* background: #000; */
   object-fit: cover;
   border-radius: 10px;
@@ -186,14 +186,14 @@
   display: flex;
   align-items: center;
   gap: 5px;
-  padding: 4px 8px;
+  padding: 4px 6px;
 }
 
 .promo-bar__info-icon {
   flex-shrink: 0;
-  width: 12px;
+  width: 10px;
   height: 12px;
-  color: #ff8c00;
+  color: #fff;
 }
 
 .promo-bar__info-text {
@@ -240,7 +240,7 @@
   }
 
   .promo-bar__top {
-    gap: 5px;
+    gap: 4px;
   }
 
   .promo-bar__section {
