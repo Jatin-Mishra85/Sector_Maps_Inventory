@@ -57,6 +57,8 @@
   flex-direction: column;
   gap: 0px;
   justify-content: center;
+  align-items: center;
+  padding: 2px 8px;
 }
 
 .promo-bar__download-title {
@@ -119,8 +121,8 @@
 }
 
 .promo-bar__logo {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   /* background: #000; */
   object-fit: cover;
   border-radius: 10px;
@@ -192,7 +194,7 @@
 .promo-bar__info-icon {
   flex-shrink: 0;
   width: 10px;
-  height: 12px;
+  height: 10px;
   color: #fff;
 }
 
