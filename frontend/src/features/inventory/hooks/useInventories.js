@@ -55,7 +55,7 @@ export function useInventories({ developerId, type, searchTerm, limit = 12 }) {
           response = await inventoryService.search(params);
         } else {
           const params = { page: pageToFetch, limit };
-          if (developerId && developerId !== ALL_DEVELOPERS_ID) params.developerId = developerId;
+          if (developerId !== undefined && developerId !== null && developerId !== '' && developerId !== ALL_DEVELOPERS_ID) params.developerId = developerId;
           response = await inventoryService.getAll(params);
         }
 

@@ -144,10 +144,15 @@ async function getAll({ page = 1, limit = 12, developerId } = {}) {
         .input('Offset', sql.Int, offset)
         .input('Limit', sql.Int, limit);
 
+    // NOTE: chips par jo "developerId" aata hai, wo actually Groups table ka
+    // GroupId hai (chip list useGroups se banti hai) — isliye filter Inventory.DeveloperId
+    // pe nahi, InventoryGroups join se GroupId pe lagana hai.
+    let groupJoin = '';
     let whereClause = '';
-    if (developerId) {
-        request.input('DeveloperId', sql.Int, developerId);
-        whereClause = 'WHERE i.DeveloperId = @DeveloperId';
+    if (developerId !== undefined && developerId !== null) {
+        request.input('GroupId', sql.Int, developerId);
+        groupJoin = 'INNER JOIN InventoryGroups ig ON ig.InventoryId = i.InventoryId';
+        whereClause = 'WHERE ig.GroupId = @GroupId';
     }
 
     const dataResult = await request.query(`
@@ -159,6 +164,7 @@ LEFT JOIN Developers d ON d.DeveloperId = i.DeveloperId
 LEFT JOIN Sectors s ON s.SectorId = i.SectorId
 LEFT JOIN Projects p ON p.ProjectId = i.ProjectId
 LEFT JOIN Images img ON img.ImageId = i.ImageId
+${groupJoin}
 ${whereClause}
         ) AS sub
         WHERE RowNum > @Offset AND RowNum <= (@Offset + @Limit)
@@ -166,9 +172,10 @@ ${whereClause}
     `);
 
     const countRequest = pool.request();
-    if (developerId) countRequest.input('DeveloperId', sql.Int, developerId);
+    if (developerId !== undefined && developerId !== null) countRequest.input('GroupId', sql.Int, developerId);
     const countResult = await countRequest.query(`
         SELECT COUNT(*) AS Total FROM Inventory i
+        ${groupJoin}
         ${whereClause}
     `);
 

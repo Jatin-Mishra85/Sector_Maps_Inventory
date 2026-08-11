@@ -1,4 +1,4 @@
-  import { useMemo, useState } from 'react';
+  import { useMemo, useState, useEffect } from 'react';
   import './GroupingInventoriesPage.css';
   import SearchBar from '../../search/components/SearchBar/SearchBar';
   import { useSearch } from '../../search/hooks/useSearch';
@@ -35,6 +35,11 @@
     const [filterMode, setFilterMode] = useState('all');
     const [selectedGroupFilter, setSelectedGroupFilter] = useState(null);
     const [showManageGroups, setShowManageGroups] = useState(false);
+
+
+    useEffect(() => {
+      setSelectedIds(new Set());
+    }, [debouncedTerm, filterMode]);
 
     const {
       inventories,
