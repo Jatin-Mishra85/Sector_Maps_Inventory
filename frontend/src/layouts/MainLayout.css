@@ -72,13 +72,7 @@
   flex-shrink: 0;
   border-radius: var(--radius-md);
   color: var(--ml-blue);
-  background:blue;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease;
-}
-
-.main-layout__brand:hover .main-layout__logo {
-  transform: scale(1.06) rotate(-3deg);
-  background: radial-gradient(circle at 30% 20%, rgba(47, 111, 237, 0.25), transparent 70%);
+  background: blue;
 }
 
 .main-layout__logo img {
