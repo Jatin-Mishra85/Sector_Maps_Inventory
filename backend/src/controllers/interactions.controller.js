@@ -49,9 +49,19 @@ async function reportInventory(req, res) {
     }
 }
 
+async function getAllReports(req, res) {
+    try {
+        const reports = await interactionsService.getAllReports();
+        res.status(200).json({ success: true, data: reports });
+    } catch (err) {
+        res.status(err.statusCode || 500).json({ message: err.message });
+    }
+}
+
 module.exports = {
     saveInventory,
     unsaveInventory,
     getSavedIds,
     reportInventory,
+    getAllReports,
 };

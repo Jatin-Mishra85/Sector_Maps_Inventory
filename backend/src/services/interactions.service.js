@@ -30,6 +30,8 @@ async function getSavedInventoryIds(userId) {
     return interactionsRepository.getSavedInventoryIds(userId);
 }
 
+const emailService = require('./email.service');
+
 async function reportInventory(userId, inventoryId, reason, details) {
     const id = parseInt(inventoryId, 10);
     if (!Number.isInteger(id)) {
@@ -54,12 +56,6 @@ async function reportInventory(userId, inventoryId, reason, details) {
         throw err;
     }
     await interactionsRepository.reportInventory(userId, id, reason, trimmedDetails);
-    const emailService = require('./email.service');
-
-async function reportInventory(userId, inventoryId, reason, details) {
-    // ...existing validation same rahegi...
-
-    await interactionsRepository.reportInventory(userId, id, reason, trimmedDetails);
 
     // Email fire-and-forget — isko await nahi kiya to email delay ki wajah se
     // user ka response slow na ho. Fail hua to bhi report to save ho chuka hai.
@@ -70,6 +66,9 @@ async function reportInventory(userId, inventoryId, reason, details) {
         reportedByUserId: userId,
     });
 }
+
+async function getAllReports() {
+    return interactionsRepository.getAllReports();
 }
 
 module.exports = {
@@ -77,4 +76,5 @@ module.exports = {
     unsaveInventory,
     getSavedInventoryIds,
     reportInventory,
+    getAllReports,
 };

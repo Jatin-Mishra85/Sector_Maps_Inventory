@@ -49,9 +49,21 @@ async function reportInventory(userId, inventoryId, reason, details) {
         .query('INSERT INTO ReportedInventories (UserId, InventoryId, Reason, Details) VALUES (@UserId, @InventoryId, @Reason, @Details)');
 }
 
+async function getAllReports() {
+    const pool = await getPool();
+    const result = await pool.request().query(`
+        SELECT r.ReportId, r.ReportedAt, r.Reason, r.Details, u.Name AS UserName, u.Email AS UserEmail
+        FROM ReportedInventories r
+        LEFT JOIN Users u ON u.UserId = r.UserId
+        ORDER BY r.ReportedAt DESC
+    `);
+    return result.recordset;
+}
+
 module.exports = {
     saveInventory,
     unsaveInventory,
     getSavedInventoryIds,
     reportInventory,
+    getAllReports,
 };

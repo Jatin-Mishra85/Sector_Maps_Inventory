@@ -25,4 +25,7 @@ export const API_ENDPOINTS = {
     INVENTORIES: '/search/inventories',
     SUGGEST: '/search/suggest',
   },
+  INTERACTIONS: {
+    REPORTS: '/interactions/reports',
+  },
 };

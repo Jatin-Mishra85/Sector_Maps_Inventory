@@ -54,6 +54,7 @@ export default function MainLayout() {
               <>
                 <NavLink to="/admin" className={navLinkClass}>Add Inventory</NavLink>
                 <NavLink to="/grouping" className={navLinkClass}>Grouping</NavLink>
+                <NavLink to="/reports" className={navLinkClass}>Reports</NavLink>
               </>
             )}
 
@@ -98,6 +99,7 @@ export default function MainLayout() {
           <>
             <NavLink to="/admin" className={navLinkClass} onClick={closeMenu}>Add Inventory</NavLink>
             <NavLink to="/grouping" className={navLinkClass} onClick={closeMenu}>Grouping</NavLink>
+            <NavLink to="/reports" className={navLinkClass} onClick={closeMenu}>Reports</NavLink>
           </>
         )}
 
