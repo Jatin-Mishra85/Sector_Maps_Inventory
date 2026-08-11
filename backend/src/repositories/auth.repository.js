@@ -8,6 +8,15 @@ async function findByGoogleId(googleId) {
     return result.recordset[0] || null;
 }
 
+// Naya -- email/password login ke liye lookup.
+async function findByEmail(email) {
+    const pool = await getPool();
+    const result = await pool.request()
+        .input('Email', sql.NVarChar(255), email)
+        .query('SELECT * FROM Users WHERE Email = @Email');
+    return result.recordset[0] || null;
+}
+
 async function findById(userId) {
     const pool = await getPool();
     const result = await pool.request()
@@ -31,4 +40,32 @@ async function createUser({ googleId, email, name, picture }) {
     return result.recordset[0];
 }
 
-module.exports = { findByGoogleId, findById, createUser };
+// Naya -- email/password wale user banane ke liye. GoogleId NULL rahega.
+async function createUserWithPassword({ email, name, passwordHash }) {
+    const pool = await getPool();
+    const result = await pool.request()
+        .input('Email', sql.NVarChar(255), email)
+        .input('Name', sql.NVarChar(255), name)
+        .input('PasswordHash', sql.NVarChar(255), passwordHash)
+        .query(`
+            INSERT INTO Users (Email, Name, PasswordHash)
+            OUTPUT INSERTED.*
+            VALUES (@Email, @Name, @PasswordHash)
+        `);
+    return result.recordset[0];
+}
+async function isAdmin(userId) {
+    const pool = await getPool();
+    const result = await pool.request()
+        .input('UserId', sql.Int, userId)
+        .query('SELECT IsAdmin FROM Users WHERE UserId = @UserId');
+    return !!result.recordset[0]?.IsAdmin;
+}
+
+module.exports = {
+    findByGoogleId,
+    findByEmail,
+    findById,
+    createUser,
+    createUserWithPassword,
+};

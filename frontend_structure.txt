@@ -1,0 +1,218 @@
+Folder PATH listing
+Volume serial number is 000001FD C6F6:FD02
+C:\USERS\HP\DESKTOP\SECTOR_MAPS_INVENTORY\FRONTEND\SRC
+|   main.jsx
+|   
++---app
+|       App.jsx
+|       AppProviders.jsx
+|       
++---assets
+|   |   promo-banner-house.png
+|   |   
+|   \---logo
+|           company-logo.png
+|           
++---components
+|   +---common
+|   |   +---Button
+|   |   |       Button.css
+|   |   |       Button.jsx
+|   |   |       
+|   |   +---EmptyState
+|   |   |       EmptyState.css
+|   |   |       EmptyState.jsx
+|   |   |       
+|   |   +---ErrorBoundary
+|   |   |       ErrorBoundary.css
+|   |   |       ErrorBoundary.jsx
+|   |   |       
+|   |   +---FileUpload
+|   |   |       FileUpload.css
+|   |   |       FileUpload.jsx
+|   |   |       
+|   |   +---GroupMultiSelect
+|   |   |       GroupMultiSelect.css
+|   |   |       GroupMultiSelect.jsx
+|   |   |       
+|   |   +---ImageCropModal
+|   |   |       ImageCropModal.css
+|   |   |       ImageCropModal.jsx
+|   |   |       
+|   |   +---Input
+|   |   |       Input.css
+|   |   |       Input.jsx
+|   |   |       
+|   |   +---Loader
+|   |   |       Loader.css
+|   |   |       
+|   |   +---RetryState
+|   |   |       RetryState.css
+|   |   |       RetryState.jsx
+|   |   |       
+|   |   +---Select
+|   |   |       Select.css
+|   |   |       
+|   |   +---TextArea
+|   |   |       TextArea.css
+|   |   |       TextArea.jsx
+|   |   |       
+|   |   \---Toast
+|   |           Toast.css
+|   |           Toast.jsx
+|   |           ToastContainer.jsx
+|   |           
+|   +---GoogleLoginButton
+|   |       GoogleLoginButton.jsx
+|   |       
+|   +---InventoryActions
+|   |       InventoryActions.jsx
+|   |       
+|   +---LoginModal
+|   |       LoginModal.css
+|   |       LoginModal.jsx
+|   |       
+|   \---PromoBanner
+|           PromoBanner.css
+|           PromoBanner.jsx
+|           
++---constants
+|       apiEndpoints.js
+|       appConstants.js
+|       env.js
+|       
++---context
+|       AdminAuthContext.jsx
+|       AuthContext.jsx
+|       ToastContext.jsx
+|       
++---features
+|   +---admin
+|   |   +---components
+|   |   |   +---AdminAccessModal
+|   |   |   |       AdminAccessModal.css
+|   |   |   |       AdminAccessModal.jsx
+|   |   |   |       
+|   |   |   \---DeveloperBatchInventoryForm
+|   |   |           DeveloperBatchInventoryForm.css
+|   |   |           DeveloperBatchInventoryForm.jsx
+|   |   |           
+|   |   +---pages
+|   |   |       AdminInventoryFormPage.css
+|   |   |       AdminInventoryFormPage.jsx
+|   |   |       
+|   |   \---services
+|   |           adminService.js
+|   |           
+|   +---auth
+|   |   \---services
+|   +---developer
+|   |   +---components
+|   |   |   +---GroupFilterChips
+|   |   |   |       GroupFilterChips.css
+|   |   |   |       GroupFilterChips.jsx
+|   |   |   |       
+|   |   |   +---GroupTypeInput
+|   |   |   |       GroupTypeInput.css
+|   |   |   |       GroupTypeInput.jsx
+|   |   |   |       
+|   |   |   \---ManageGroupsModal
+|   |   |           ManageGroupsModal.css
+|   |   |           ManageGroupsModal.jsx
+|   |   |           
+|   |   +---hooks
+|   |   |       useGroups.js
+|   |   |       
+|   |   +---pages
+|   |   |       GroupingInventoriesPage.css
+|   |   |       GroupingInventoriesPage.jsx
+|   |   |       
+|   |   \---services
+|   |           groupService.js
+|   |           
+|   +---inventory
+|   |   +---components
+|   |   |   +---EditInventoryModal
+|   |   |   |       EditInventoryModal.css
+|   |   |   |       EditInventoryModal.jsx
+|   |   |   |       
+|   |   |   +---ImagePreview
+|   |   |   |       ImagePreview.css
+|   |   |   |       ImagePreview.jsx
+|   |   |   |       
+|   |   |   +---InventoryCard
+|   |   |   |       InventoryCard.css
+|   |   |   |       InventoryCard.jsx
+|   |   |   |       
+|   |   |   +---InventoryCardSkeleton
+|   |   |   |       InventoryCardSkeleton.css
+|   |   |   |       InventoryCardSkeleton.jsx
+|   |   |   |       
+|   |   |   +---InventoryGrid
+|   |   |   |       InventoryGrid.css
+|   |   |   |       InventoryGrid.jsx
+|   |   |   |       
+|   |   |   +---InventoryPhotoUploadModal
+|   |   |   |       InventoryPhotoUploadModal.jsx
+|   |   |   |       
+|   |   |   +---InventoryTypeBadge
+|   |   |   |       InventoryTypeBadge.css
+|   |   |   |       
+|   |   |   +---RecentSection
+|   |   |   |       RecentSection.css
+|   |   |   |       
+|   |   |   \---TypeFilterButton
+|   |   |           TypeFilterButton.css
+|   |   |           
+|   |   +---hooks
+|   |   |       useBookmarks.js
+|   |   |       useInventories.js
+|   |   |       
+|   |   \---services
+|   |           inventoryService.js
+|   |           
+|   \---search
+|       +---components
+|       |   \---SearchBar
+|       |           SearchBar.css
+|       |           SearchBar.jsx
+|       |           
+|       +---hooks
+|       |       useSearch.js
+|       |       useSuggestions.js
+|       |       useVoiceSearch.js
+|       |       
+|       \---services
++---hooks
+|       useDebounce.js
+|       useSiteGate.js
+|       
++---layouts
+|       MainLayout.css
+|       MainLayout.jsx
+|       
++---pages
+|       HomePage.css
+|       HomePage.jsx
+|       NotFoundPage.css
+|       NotFoundPage.jsx
+|       ProfilePage.css
+|       ProfilePage.jsx
+|       
++---routes
+|       AppRoutes.jsx
+|       
++---services
+|       apiClient.js
+|       errorHandler.js
+|       
++---styles
+|       global.css
+|       variables.css
+|       
+\---utils
+        classNames.js
+        cropImage.js
+        download.js
+        share.js
+        

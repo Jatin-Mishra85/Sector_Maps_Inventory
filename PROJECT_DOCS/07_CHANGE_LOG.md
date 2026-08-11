@@ -1,0 +1,13 @@
+Summary: This document is a placeholder for future change log entries.
+
+## [Date]
+### Changed
+- ...
+### Why
+- ...
+
+## [Date]
+### Changed
+- ...
+### Why
+- ...

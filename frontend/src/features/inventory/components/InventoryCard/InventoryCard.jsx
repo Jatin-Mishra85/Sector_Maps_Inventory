@@ -36,10 +36,8 @@ function formatUpdatedAgo(dateInput) {
 }
 
 
-// ================================== just write false to remove eddit feature ===========================================
-// TEMP FEATURE: cards ke Sector/Project Name par click-to-edit.
-// Sirf data-filling phase ke liye — band karna ho to bas ye flag false kar do.
-const INLINE_EDIT_ENABLED = true;
+// Sector/Project Name par click-to-edit aur photo-delete — ab canManage
+// (DB Users.IsAdmin) prop se control hota hai, koi fixed flag nahi.
 
 // Ek time par sirf EK card edit mode mein rahe — jab koi card edit start
 // kare, baaki saare instances ko yahan se signal milta hai apna edit band karne ka.
@@ -60,6 +58,7 @@ function InventoryCard({
   isSelected = false,
   onRequireLogin,
   onToggleSelect,
+  canManage = false,
 }) {
   const { showToast } = useToast();
   const [imgError, setImgError] = useState(false);
@@ -349,7 +348,7 @@ const handleShareImage = async (e) => {
       return;
     }
     if (showPhotoPlaceholder) {
-      onAddPhoto?.(inventory);
+      if (canManage) onAddPhoto?.(inventory);
       return;
     }
     onPreview(inventory);
@@ -403,7 +402,7 @@ const handleShareImage = async (e) => {
   // --- Sector / Project Name inline edit handlers (temp feature) ---
   const startEditField = (field) => (e) => {
     e.stopPropagation();
-    if (!INLINE_EDIT_ENABLED) return;
+    if (!canManage) return;
     broadcastEditStart(instanceIdRef.current);
     setEditingField(field);
     setFieldDraft(field === 'sectorName' ? displayedSectorName : displayedName);
@@ -504,7 +503,7 @@ const handleShareImage = async (e) => {
 
       <div className="inv-card__body">
     <div className="inv-card__thumb-wrap">
-          {INLINE_EDIT_ENABLED && !selectable && !showPhotoPlaceholder && (
+          {canManage && !selectable && !showPhotoPlaceholder && (
             <button
               type="button"
               className="inv-card__photo-delete-btn"
@@ -525,7 +524,7 @@ const handleShareImage = async (e) => {
               selectable
                 ? `Toggle select ${middleLabel || topLabel || 'inventory'}`
                 : showPhotoPlaceholder
-                  ? `Add photo for ${middleLabel || topLabel || 'inventory'}`
+                  ? (canManage ? `Add photo for ${middleLabel || topLabel || 'inventory'}` : (middleLabel || topLabel || 'Inventory'))
                   : `Preview image of ${middleLabel || topLabel || 'inventory'}`
             }
           >
@@ -639,7 +638,7 @@ const handleShareImage = async (e) => {
           )}
         <div className="inv-card__content">
           <div className="inv-card__header">
-            {INLINE_EDIT_ENABLED && editingField === 'sectorName' ? (
+            {canManage && editingField === 'sectorName' ? (
               <div className="inv-card__field-edit" onClick={(e) => e.stopPropagation()}>
                 <input
                   type="text"
@@ -665,9 +664,9 @@ const handleShareImage = async (e) => {
 <h3
                 className={`inv-card__title${!topLabel ? ' inv-card__title--empty' : ''}`}
                 title={topLabel || 'Click to add sector'}
-                onClick={INLINE_EDIT_ENABLED ? startEditField('sectorName') : undefined}
+                onClick={canManage ? startEditField('sectorName') : undefined}
               >
-                {topLabel || (INLINE_EDIT_ENABLED ? '+ Add sector' : '')}
+                {topLabel || (canManage ? '+ Add sector' : '')}
               </h3>
             )}
 
@@ -826,25 +825,27 @@ const handleShareImage = async (e) => {
                           onCloseMenu={() => setMenuOpen(false)}
                           onRequireLogin={onRequireLogin}
                         />
-                        <li>
-                          <button
-                            type="button"
-                            className="inv-card__menu-danger"
-                            onClick={handleDeleteClick}
-                            role="menuitem"
-                          >
-                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
-                              <path
-                                d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m2 0-.8 12a2 2 0 0 1-2 1.9H9.8a2 2 0 0 1-2-1.9L7 7h10ZM10 11v6M14 11v6"
-                                stroke="currentColor"
-                                strokeWidth="1.8"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                            </svg>
-                            Delete
-                          </button>
-                        </li>
+                        {canManage && (
+                          <li>
+                            <button
+                              type="button"
+                              className="inv-card__menu-danger"
+                              onClick={handleDeleteClick}
+                              role="menuitem"
+                            >
+                              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
+                                <path
+                                  d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m2 0-.8 12a2 2 0 0 1-2 1.9H9.8a2 2 0 0 1-2-1.9L7 7h10ZM10 11v6M14 11v6"
+                                  stroke="currentColor"
+                                  strokeWidth="1.8"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              </svg>
+                              Delete
+                            </button>
+                          </li>
+                        )}
                       </ul>
                     </>
                   )}
@@ -853,7 +854,7 @@ const handleShareImage = async (e) => {
             )}
           </div>
 
-          {INLINE_EDIT_ENABLED && editingField === 'name' ? (
+          {canManage && editingField === 'name' ? (
             <div className="inv-card__field-edit" onClick={(e) => e.stopPropagation()}>
               <input
                 type="text"
@@ -879,7 +880,7 @@ const handleShareImage = async (e) => {
             <p
               className="inv-card__description"
               title={middleLabel}
-              onClick={INLINE_EDIT_ENABLED ? startEditField('name') : undefined}
+              onClick={canManage ? startEditField('name') : undefined}
             >
               {middleLabel}
             </p>

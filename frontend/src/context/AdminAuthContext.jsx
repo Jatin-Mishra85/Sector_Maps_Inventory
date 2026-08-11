@@ -1,40 +1,18 @@
-import { createContext, useCallback, useContext, useState } from 'react';
-import { adminService } from '../features/admin/services/adminService';
+import { createContext, useContext } from 'react';
+import { useAuth } from './AuthContext';
 
+// Admin access ab seedha DB ke Users.IsAdmin column se aata hai (manually
+// SSMS se set kiya jata hai) — koi secret code / cookie nahi. AuthContext
+// ke user object me hi isAdmin flag hota hai (backend /auth/me se aata hai).
 const AdminAuthContext = createContext(undefined);
 
-// Session-only admin access. Deliberately NOT persisted anywhere (no
-// localStorage/sessionStorage) — plain React state, so a page refresh,
-// tab close, or browser restart wipes it automatically. This is not a
-// login system; it's a temporary gate for Add/Edit Inventory only.
 export function AdminAuthProvider({ children }) {
-  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [error, setError] = useState(null);
+  const { user, loading } = useAuth();
 
-  const verifyCode = useCallback(async (code) => {
-    setIsVerifying(true);
-    setError(null);
-    try {
-      await adminService.verifyCode(code);
-      setIsAdminAuthenticated(true);
-      return true;
-    } catch (err) {
-      setIsAdminAuthenticated(false);
-      setError(err?.message || 'Invalid admin code. Please try again.');
-      return false;
-    } finally {
-      setIsVerifying(false);
-    }
-  }, []);
-
-  // Not required by current rules (refresh already clears access), but
-  // exposed for completeness in case a manual "lock" UI is ever needed.
-  const lockAdmin = useCallback(() => {
-    setIsAdminAuthenticated(false);
-  }, []);
-
-  const value = { isAdminAuthenticated, isVerifying, error, verifyCode, lockAdmin };
+  const value = {
+    isAdminAuthenticated: !!user?.isAdmin,
+    checkingStatus: loading,
+  };
 
   return <AdminAuthContext.Provider value={value}>{children}</AdminAuthContext.Provider>;
 }

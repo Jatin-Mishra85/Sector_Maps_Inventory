@@ -15,6 +15,8 @@ async function attachUser(req, res, next) {
     }
 }
 
+// Koi bhi logged-in user (normal ya special) -- sirf login hona check karta hai.
+// Use karo un actions ke liye jo har logged-in user kar sake, jaise save/bookmark.
 function requireAuth(req, res, next) {
     if (!req.user) {
         return res.status(401).json({ success: false, message: 'Please log in to continue.' });
@@ -22,4 +24,16 @@ function requireAuth(req, res, next) {
     next();
 }
 
-module.exports = { attachUser, requireAuth };
+// Sirf DB me IsAdmin=1 wale users -- manually SSMS se set karna hota hai.
+// Add/edit/delete jaise write actions ke liye use karo.
+function requireAdmin(req, res, next) {
+    if (!req.user) {
+        return res.status(401).json({ success: false, message: 'Please log in to continue.' });
+    }
+    if (!req.user.isAdmin) {
+        return res.status(403).json({ success: false, message: 'You do not have permission to do this.' });
+    }
+    next();
+}
+
+module.exports = { attachUser, requireAuth, requireAdmin };
