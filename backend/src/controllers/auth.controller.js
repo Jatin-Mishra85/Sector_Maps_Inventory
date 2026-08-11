@@ -3,10 +3,11 @@ const authService = require('../services/auth.service');
 const COOKIE_NAME = 'auth_token';
 
 function cookieOptions() {
+    const isProd = process.env.NODE_ENV === 'production';
     return {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        secure: isProd, // sameSite:'none' ko browser tabhi allow karta hai jab secure:true ho
+        sameSite: isProd ? 'none' : 'lax', // cross-domain (vercel + onrender) ke liye zaroori
         maxAge: 30 * 24 * 60 * 60 * 1000,
     };
 }
