@@ -1,104 +1,368 @@
+/* =========================================================
+   LoginModal — Premium Real Estate Design System
+   ========================================================= */
+
+:root {
+  /* Real-estate palette */
+  --lm-navy: #0f172a;
+  --lm-navy-mid: #1e293b;
+  --lm-charcoal: #334155;
+  --lm-warm-white: #faf9f7;
+  --lm-off-white: #f8fafc;
+  --lm-soft-grey: #e2e8f0;
+  --lm-muted: #64748b;
+  --lm-elegant-blue: #1e3a5f;
+  --lm-accent-gold: #b8976a;
+  --lm-accent-gold-soft: #d4b896;
+  --lm-success: #0f766e;
+  --lm-error: #b91c1c;
+
+  /* Surfaces & depth */
+  --lm-surface: #ffffff;
+  --lm-surface-elevated: #ffffff;
+  --lm-border: rgba(15, 23, 42, 0.08);
+  --lm-border-strong: rgba(15, 23, 42, 0.14);
+
+  /* Shadows (layered, soft) */
+  --lm-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --lm-shadow-md: 0 4px 12px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.04);
+  --lm-shadow-lg: 0 12px 28px rgba(15, 23, 42, 0.1), 0 4px 10px rgba(15, 23, 42, 0.06);
+  --lm-shadow-xl: 0 24px 48px rgba(15, 23, 42, 0.14), 0 8px 16px rgba(15, 23, 42, 0.08);
+  --lm-shadow-focus: 0 0 0 3px rgba(184, 151, 106, 0.25);
+
+  /* Radius & motion */
+  --lm-radius-sm: 6px;
+  --lm-radius-md: 10px;
+  --lm-radius-lg: 16px;
+  --lm-radius-xl: 20px;
+  --lm-transition-fast: 180ms cubic-bezier(0.22, 1, 0.36, 1);
+  --lm-transition-normal: 280ms cubic-bezier(0.22, 1, 0.36, 1);
+  --lm-transition-slow: 420ms cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Spacing scale */
+  --lm-space-1: 4px;
+  --lm-space-2: 8px;
+  --lm-space-3: 12px;
+  --lm-space-4: 16px;
+  --lm-space-5: 20px;
+  --lm-space-6: 24px;
+  --lm-space-8: 32px;
+}
+
+/* ---------- Overlay ---------- */
 .login-modal__overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.55);
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
+  z-index: 200;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 200;
-  padding: var(--space-4);
+  padding: var(--lm-space-4);
+  background: rgba(15, 23, 42, 0.52);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: lm-overlay-in var(--lm-transition-slow) ease-out both;
 }
 
+@keyframes lm-overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ---------- Card (3D depth) ---------- */
 .login-modal__card {
   position: relative;
   display: flex;
   width: 100%;
-  max-width: 720px;
-  min-height: 380px;
-  background: #fff;
-  border-radius: var(--radius-lg, 12px);
+  max-width: 780px;
+  min-height: 440px;
+  background: var(--lm-surface);
+  border-radius: var(--lm-radius-xl);
   overflow: hidden;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--lm-shadow-xl);
+  border: 1px solid var(--lm-border);
+  transform-origin: center center;
+  animation: lm-card-enter var(--lm-transition-slow) cubic-bezier(0.22, 1, 0.36, 1) both;
+  /* subtle 3D feel */
+  transform-style: preserve-3d;
 }
 
+@keyframes lm-card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Soft inner highlight for depth */
+.login-modal__card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  z-index: 1;
+}
+
+/* ---------- Close button ---------- */
 .login-modal__close {
   position: absolute;
-  top: 12px;
+  top: 14px;
   right: 16px;
-  background: none;
-  border: none;
-  font-size: 24px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  background: rgba(15, 23, 42, 0.04);
+  border: 1px solid transparent;
+  border-radius: 50%;
+  font-size: 20px;
   line-height: 1;
+  color: var(--lm-muted);
   cursor: pointer;
-  color: #666;
-  z-index: 2;
+  transition:
+    background var(--lm-transition-fast),
+    color var(--lm-transition-fast),
+    border-color var(--lm-transition-fast),
+    transform var(--lm-transition-fast),
+    box-shadow var(--lm-transition-fast);
 }
 
 .login-modal__close:hover {
-  color: #000;
+  background: rgba(15, 23, 42, 0.08);
+  color: var(--lm-navy);
+  border-color: var(--lm-border);
+  transform: scale(1.05);
+  box-shadow: var(--lm-shadow-sm);
 }
 
-/* Left panel — brand / welcome */
+.login-modal__close:active {
+  transform: scale(0.96);
+}
+
+.login-modal__close:focus-visible {
+  outline: none;
+  box-shadow: var(--lm-shadow-focus);
+}
+
+/* ---------- Left panel (brand) ---------- */
 .login-modal__left {
   display: none;
   flex-direction: column;
   justify-content: center;
-  width: 42%;
-  padding: var(--space-6);
-  background: linear-gradient(135deg, var(--color-primary) 0%, #1e293b 100%);
+  position: relative;
+  width: 40%;
+  padding: var(--lm-space-8) var(--lm-space-6);
+  background: linear-gradient(155deg, var(--lm-navy) 0%, var(--lm-elegant-blue) 55%, var(--lm-navy-mid) 100%);
   color: #fff;
+  overflow: hidden;
+}
+
+/* Subtle architectural depth layers */
+.login-modal__left::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 20%, rgba(184, 151, 106, 0.12) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 50% at 90% 80%, rgba(255, 255, 255, 0.04) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.login-modal__left::after {
+  content: '';
+  position: absolute;
+  bottom: -20%;
+  right: -15%;
+  width: 70%;
+  height: 70%;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 24px;
+  transform: rotate(-12deg);
+  pointer-events: none;
 }
 
 .login-modal__welcome {
-  font-size: 24px;
-  font-weight: 800;
-  margin: 0 0 var(--space-3);
+  position: relative;
+  z-index: 1;
+  margin: 0 0 var(--lm-space-3);
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  color: #fff;
 }
 
 .login-modal__subtext {
-  font-size: var(--font-size-sm);
-  opacity: 0.85;
-  line-height: 1.5;
+  position: relative;
+  z-index: 1;
   margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.78);
+  max-width: 240px;
 }
 
-/* Right panel — login form */
+/* Gold accent line under welcome */
+.login-modal__welcome::after {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 2px;
+  margin-top: var(--lm-space-4);
+  background: linear-gradient(90deg, var(--lm-accent-gold), transparent);
+  border-radius: 1px;
+}
+
+/* ---------- Right panel (form) ---------- */
 .login-modal__right {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  align-items: center;
+  align-items: stretch;
   width: 100%;
-  padding: var(--space-6);
-  text-align: center;
+  padding: var(--lm-space-8) var(--lm-space-6);
+  background: var(--lm-warm-white);
+  text-align: left;
 }
 
-.login-modal__title {
-  font-size: 20px;
-  font-weight: 800;
-  margin: 0 0 var(--space-2);
-  letter-spacing: 1px;
+/* ---------- Tabs ---------- */
+.login-modal__tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: var(--lm-space-6);
+  padding: 4px;
+  background: rgba(15, 23, 42, 0.04);
+  border-radius: var(--lm-radius-md);
+  border: 1px solid var(--lm-border);
+}
+
+.login-modal__tab {
+  flex: 1;
+  position: relative;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--lm-muted);
+  background: transparent;
+  border: none;
+  border-radius: var(--lm-radius-sm);
+  cursor: pointer;
+  transition:
+    color var(--lm-transition-fast),
+    background var(--lm-transition-fast),
+    box-shadow var(--lm-transition-fast),
+    transform var(--lm-transition-fast);
+}
+
+.login-modal__tab:hover {
+  color: var(--lm-charcoal);
+}
+
+.login-modal__tab--active {
+  color: var(--lm-navy);
+  background: var(--lm-surface);
+  font-weight: 600;
+  box-shadow: var(--lm-shadow-sm);
+}
+
+.login-modal__tab:focus-visible {
+  outline: none;
+  box-shadow: var(--lm-shadow-focus);
+}
+
+/* ---------- Form ---------- */
+.login-modal__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--lm-space-4);
+}
+
+.login-modal__error {
+  margin: 0;
+  padding: 10px 12px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--lm-error);
+  background: rgba(185, 28, 28, 0.06);
+  border: 1px solid rgba(185, 28, 28, 0.15);
+  border-radius: var(--lm-radius-sm);
+  animation: lm-error-in var(--lm-transition-normal) ease-out both;
+}
+
+@keyframes lm-error-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---------- Divider ---------- */
+.login-modal__divider {
+  display: flex;
+  align-items: center;
+  gap: var(--lm-space-3);
+  margin: var(--lm-space-5) 0;
+  color: var(--lm-muted);
+  font-size: 12px;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
-.login-modal__hint {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-muted, #666);
-  margin: 0 0 var(--space-5);
+.login-modal__divider::before,
+.login-modal__divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--lm-soft-grey), transparent);
 }
 
+/* ---------- Google wrap ---------- */
 .login-modal__google-wrap {
   display: flex;
   justify-content: center;
 }
 
+/* ---------- Desktop layout ---------- */
 @media (min-width: 640px) {
   .login-modal__left {
     display: flex;
   }
+
   .login-modal__right {
-    width: 58%;
+    width: 60%;
+    padding: var(--lm-space-8) var(--lm-space-8);
+  }
+}
+
+/* ---------- Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .login-modal__overlay,
+  .login-modal__card,
+  .login-modal__error {
+    animation: none;
+  }
+
+  .login-modal__close,
+  .login-modal__tab {
+    transition: none;
   }
 }

@@ -18,6 +18,7 @@ function mapUser(user) {
         email: user.email ?? user.Email,
         name: user.name ?? user.Name,
         picture: user.picture ?? user.Picture,
+        isAdmin: !!(user.isAdmin ?? user.IsAdmin),
     };
 }
 

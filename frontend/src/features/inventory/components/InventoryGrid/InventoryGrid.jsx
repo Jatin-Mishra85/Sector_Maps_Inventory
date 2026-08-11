@@ -13,7 +13,6 @@ import { useGroups } from '../../../developer/hooks/useGroups'; // NEW — for G
 import { useAdminAuth } from '../../../../context/AdminAuthContext';
 import { useAuth } from '../../../../context/AuthContext';
 import LoginModal from '../../../../components/LoginModal/LoginModal';
-import AdminAccessModal from '../../../admin/components/AdminAccessModal/AdminAccessModal';
 
 // NEW — resolves relative /uploads/xxx.jpg paths from the API into full URLs.
 // Uses VITE_API_BASE_URL so it automatically points to localhost:8080 in dev
@@ -31,7 +30,7 @@ export default function InventoryGrid({
 }) {
   const { showToast } = useToast(); // TEMPORARY
   const { groups } = useGroups(); // NEW — passed to EditInventoryModal's Grouping dropdown
-  const { isAdminAuthenticated } = useAdminAuth(); // Ab sirf Delete gate ke liye
+  const { isAdminAuthenticated } = useAdminAuth(); // DB Users.IsAdmin se aata hai
   const { user } = useAuth();
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [previewInventory, setPreviewInventory] = useState(null);
@@ -39,7 +38,6 @@ export default function InventoryGrid({
   const [photoUploadInventory, setPhotoUploadInventory] = useState(null); // NEW — camera/photo-add flow
   const [localOverrides, setLocalOverrides] = useState({}); // TEMPORARY — id -> patched fields
   const [deletedIds, setDeletedIds] = useState(new Set()); // TEMPORARY — ids removed from view immediately
-  const [pendingAdminAction, setPendingAdminAction] = useState(null);
 
   const [savedIds, setSavedIds] = useState(new Set());
 
@@ -146,28 +144,18 @@ export default function InventoryGrid({
   };
 
   const handleEditRequest = (inventory) => {
+    if (!isAdminAuthenticated) return;
     setEditingInventory(inventory);
   };
 
   const handleDeleteRequest = (inventory) => {
-    if (isAdminAuthenticated) {
-      handleDelete(inventory);
-    } else {
-      setPendingAdminAction({ type: 'delete', inventory });
-    }
+    if (!isAdminAuthenticated) return;
+    handleDelete(inventory);
   };
 
   const handleAddPhotoRequest = (inventory) => {
+    if (!isAdminAuthenticated) return;
     setPhotoUploadInventory(inventory);
-  };
-
-  const handleAdminAccessSuccess = () => {
-    if (!pendingAdminAction) return;
-    const { type, inventory } = pendingAdminAction;
-    if (type === 'delete') {
-      handleDelete(inventory);
-    }
-    setPendingAdminAction(null);
   };
 
   return (
@@ -184,6 +172,7 @@ export default function InventoryGrid({
             onEdit={handleEditRequest}
             onDelete={handleDeleteRequest}
             onAddPhoto={handleAddPhotoRequest}
+            canManage={isAdminAuthenticated}
           />
         ))}
       </div>
@@ -220,12 +209,7 @@ export default function InventoryGrid({
         />
       )}
 
-      {pendingAdminAction && (
-        <AdminAccessModal
-          onSuccess={handleAdminAccessSuccess}
-          onCancel={() => setPendingAdminAction(null)}
-        />
-      )}
+      
 
       <LoginModal isOpen={loginModalOpen} onClose={() => setLoginModalOpen(false)} />
     </>

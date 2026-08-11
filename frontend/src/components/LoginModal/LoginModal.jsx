@@ -80,41 +80,33 @@ export default function LoginModal({ isOpen, onClose }) {
         <div className="login-modal__left">
           <h2 className="login-modal__welcome">Welcome Back</h2>
           <p className="login-modal__subtext">
-            Sign in to save favorites and submit reports.
+            Sign in to save favorites and submit property reports with confidence.
           </p>
         </div>
 
         <div className="login-modal__right">
-          <div className="login-modal__tabs" style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+          <div className="login-modal__tabs" role="tablist">
             <button
               type="button"
+              role="tab"
+              aria-selected={mode === 'login'}
+              className={`login-modal__tab${mode === 'login' ? ' login-modal__tab--active' : ''}`}
               onClick={() => switchMode('login')}
-              style={{
-                flex: 1,
-                padding: '8px 0',
-                fontWeight: mode === 'login' ? 600 : 400,
-                borderBottom: mode === 'login' ? '2px solid currentColor' : '2px solid transparent',
-                background: 'none',
-              }}
             >
               Login
             </button>
             <button
               type="button"
+              role="tab"
+              aria-selected={mode === 'signup'}
+              className={`login-modal__tab${mode === 'signup' ? ' login-modal__tab--active' : ''}`}
               onClick={() => switchMode('signup')}
-              style={{
-                flex: 1,
-                padding: '8px 0',
-                fontWeight: mode === 'signup' ? 600 : 400,
-                borderBottom: mode === 'signup' ? '2px solid currentColor' : '2px solid transparent',
-                background: 'none',
-              }}
             >
               Sign Up
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} noValidate>
+          <form className="login-modal__form" onSubmit={handleSubmit} noValidate>
             {mode === 'signup' && (
               <Input label="Name" value={name} onChange={(e) => setName(e.target.value)} />
             )}
@@ -134,7 +126,7 @@ export default function LoginModal({ isOpen, onClose }) {
             />
 
             {error && (
-              <p className="login-modal__error" style={{ color: '#d33', fontSize: 13, marginTop: 4 }}>
+              <p className="login-modal__error" role="alert">
                 {error}
               </p>
             )}
@@ -149,9 +141,7 @@ export default function LoginModal({ isOpen, onClose }) {
             </Button>
           </form>
 
-          <div style={{ textAlign: 'center', margin: '16px 0', opacity: 0.6, fontSize: 13 }}>
-            or
-          </div>
+          <div className="login-modal__divider">or</div>
 
           <div className="login-modal__google-wrap">
             <GoogleLoginButton onSuccess={handleClose} />

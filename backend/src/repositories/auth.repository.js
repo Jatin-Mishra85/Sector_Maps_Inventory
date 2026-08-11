@@ -54,6 +54,13 @@ async function createUserWithPassword({ email, name, passwordHash }) {
         `);
     return result.recordset[0];
 }
+async function isAdmin(userId) {
+    const pool = await getPool();
+    const result = await pool.request()
+        .input('UserId', sql.Int, userId)
+        .query('SELECT IsAdmin FROM Users WHERE UserId = @UserId');
+    return !!result.recordset[0]?.IsAdmin;
+}
 
 module.exports = {
     findByGoogleId,

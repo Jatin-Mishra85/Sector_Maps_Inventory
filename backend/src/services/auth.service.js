@@ -98,6 +98,7 @@ async function getUserById(userId) {
         email: user.Email,
         name: user.Name,
         picture: user.Picture,
+        isAdmin: !!user.IsAdmin,
     };
 }
 
