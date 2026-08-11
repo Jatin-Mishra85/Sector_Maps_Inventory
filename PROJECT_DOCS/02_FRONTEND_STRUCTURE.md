@@ -1,102 +1,90 @@
-Summary: This document describes the frontend folder structure, feature modules, state management, and routing.
-
-# Frontend Structure
+# FRONTEND ARCHITECTURE
 
 ## Major folders and purpose
 
 - `src/app`
-  - `App.jsx`: top-level app component. Wraps providers and routes.
-  - `AppProviders.jsx`: wraps app with `HashRouter`, `ToastProvider`, `AdminAuthProvider`, and `ErrorBoundary`.
+  - `AppProviders.jsx` wraps the app with `HashRouter`, `ToastProvider`, `AuthProvider`, and `AdminAuthProvider`.
 
 - `src/routes`
-  - `AppRoutes.jsx`: defines app route structure with React Router.
+  - `AppRoutes.jsx` defines the route tree used by `MainLayout`.
 
 - `src/pages`
   - `HomePage.jsx`: main inventory browsing page.
-  - `AdminInventoryFormPage.jsx`: UI for adding inventory via batch form.
+  - `AdminInventoryFormPage.jsx`: inventory add page.
   - `GroupingInventoriesPage.jsx`: inventory grouping management page.
-  - `ProfilePage.jsx`: user profile and logout.
-  - `NotFoundPage.jsx`: fallback page.
+  - `ProfilePage.jsx`: user profile/logout page.
+  - `NotFoundPage.jsx`: catch-all fallback page.
 
 - `src/components`
-  - Shared UI components such as `LoginModal`, `PromoBanner`, `InventoryActions`, common buttons, inputs, file upload, toast, loader, error boundary, etc.
+  - Shared components such as `LoginModal`, `InventoryActions`, `Button`, `Toast`, `EmptyState`, and `RetryState`.
 
 - `src/features`
-  - `admin`: admin-related pages and components for adding inventory, admin access code verification.
-  - `developer`: grouping-related pages, components, hooks, and services.
-  - `inventory`: inventory display, grid, card, edit modal, upload modal, hooks, and service.
-  - `search`: search bar, voice search hook, suggestions, and search hook.
+  - `admin`: admin-focused inventory creation and form components.
+  - `developer`: grouping and group management features.
+  - `inventory`: inventory display, edit, upload, and grid components.
+  - `search`: search input, suggestions, and voice search.
 
 - `src/context`
-  - `AuthContext.jsx`: manages current user, login/logout, and `auth/me` fetch.
-  - `AdminAuthContext.jsx`: admin access verification state.
-  - `ToastContext.jsx`: global toast notifications.
+  - `AuthContext.jsx`: manages login, signup, logout, and current user state.
+  - `AdminAuthContext.jsx`: computes admin access based on `user?.isAdmin`.
+  - `ToastContext.jsx`: global toast notification state.
 
 - `src/services`
-  - `apiClient.js`: Axios client with base URL and interceptors.
-  - `errorHandler.js`: API error parser.
+  - `apiClient.js`: Axios client and common request setup.
+  - `errorHandler.js`: API error parsing.
 
 - `src/constants`
-  - `env.js`: environment-aware API and static URLs.
-  - `apiEndpoints.js`: backend endpoint definitions.
-  - `appConstants.js`: app constants.
+  - `env.js`: dynamic API/static host URL resolution.
+  - `apiEndpoints.js`: endpoint paths used by services.
+  - `appConstants.js`: app constants like `ALL_TYPES_ID`.
 
 - `src/hooks`
-  - `useDebounce.js`: debounces value updates.
-  - `useSiteGate.js`: site unlock state.
+  - `useSearch.js`: debounced search input state.
+  - `useSiteGate.js`: temporary site unlock gate.
 
 - `src/utils`
-  - `classNames.js`, `cropImage.js`, `download.js`, `share.js`: utility functions.
-
-- `src/styles`
-  - `variables.css`, `global.css`: global styling.
+  - `download.js`, `share.js`, `cropImage.js`, `classNames.js`: utility helpers.
 
 ## Feature modules
 
 ### Inventory
-- `src/features/inventory/components`: inventory card, grid, edit modal, photo upload modal, image preview, etc.
-- `src/features/inventory/hooks/useInventories.js`: fetches inventory list, supports pagination, search and developer filters, error state, local patching.
-- `src/features/inventory/services/inventoryService.js`: wrapper around API endpoints for inventories.
-- Provides inventory browsing, saving, deleting, editing, and photo upload flows.
+- `InventoryGrid` renders inventory cards, handles infinite scroll, preview, saved-only view, and admin management actions.
+- `InventoryCard` displays item details, save/report controls, and optional admin edit/delete behavior.
+- `useInventories` fetches inventory lists, handles search vs list mode, pagination, and error states.
+- `inventoryService` wraps inventory API calls.
 
 ### Grouping / Developer
-- `src/features/developer/pages/GroupingInventoriesPage.jsx`: UI for selecting inventories and adding/removing group tags.
-- `src/features/developer/components`: manage groups modal, group filter chips, group type input.
-- `src/features/developer/hooks/useGroups.js`: loads groups from backend.
-- `src/features/developer/services/groupService.js`: calls group endpoints.
-- Handles group creation, group deletion, add/remove inventories to groups.
+- `GroupingInventoriesPage` provides inventory selection, group add/remove UI, and group filters.
+- `useGroups` loads group metadata and inventory counts.
+- `groupService` calls backend group endpoints.
+- Group state is used to filter inventories and manage inventory tags.
 
 ### Search
-- `src/features/search/components/SearchBar/SearchBar.jsx`: input component with voice search support and suggestions.
-- `src/features/search/hooks/useSearch.js`: search term state + debounce.
-- `src/features/search/hooks/useSuggestions.js`: autocomplete suggestions and fuzzy fallback.
-- Search is used by `HomePage` and grouping page.
+- `SearchBar` is the search input component with voice search support.
+- `useSearch` debounces term updates before API calls.
+- `useSuggestions` fetches autocomplete suggestions from the backend.
+- Search results update inventory list using `useInventories`.
 
 ### Admin
-- `src/features/admin/pages/AdminInventoryFormPage.jsx`: page to add new inventory items.
-- `src/features/admin/components/DeveloperBatchInventoryForm`: bulk add inventory using developer, sector, project rows, card IDs, and images.
-- `src/features/admin/services/adminService.js`: verify admin code, create inventory, fetch next card number.
-- Admin code is used for protected delete actions and access modal.
+- `AdminInventoryFormPage` hosts admin inventory creation flows.
+- `DeveloperBatchInventoryForm` handles bulk inventory entry and file upload.
+- `adminService` fetches next card number and submits inventory create requests.
 
-## State management
+## Context providers
 
-- Context API is used for global state:
-  - `AuthContext` for user authentication state.
-  - `ToastContext` for toast messages.
-  - `AdminAuthContext` for admin code verification state.
+- `AuthProvider` loads current user from `/auth/me` and exposes `loginWithGoogle`, `login`, `signup`, and `logout`.
+- `AdminAuthProvider` uses `user?.isAdmin` to determine `isAdminAuthenticated`.
+- `ToastProvider` displays notifications across the app.
 
-- Local component state is used extensively with `useState` for UI state such as dialogs, selected inventory, form fields, menu open state, and loading.
-- Data fetching and logic are isolated in custom hooks:
-  - `useInventories` for inventory list fetching and pagination.
-  - `useGroups` for group list fetching.
-  - `useSearch` for search term debounce.
-  - `useSuggestions` for suggestion fetch and fuzzy logic.
+## Admin-only gating
 
-- `react-hook-form` is used in the admin batch inventory form for complex form handling.
+- `MainLayout` only shows admin navigation links when `isAdminAuthenticated` is true.
+- `InventoryGrid` only enables admin controls when `canManage` is true.
+- Admin gating in UI is based on DB-driven `Users.IsAdmin`, not a separate frontend secret.
 
 ## Routing structure
 
-Defined in `src/routes/AppRoutes.jsx` inside `MainLayout`.
+Defined in `src/routes/AppRoutes.jsx` under `MainLayout`.
 
 Routes:
 - `/` → `HomePage`
@@ -105,11 +93,10 @@ Routes:
 - `/profile` → `ProfilePage`
 - `*` → `NotFoundPage`
 
-`MainLayout.jsx` includes site navigation, login button/modal, and page wrapper.
+## Notes on state and API
 
-## Notes on routing / state
-
-- Frontend uses `HashRouter` in `AppProviders.jsx`.
-- API base URL is dynamic and uses proxy in development.
-- Login uses `GoogleLoginButton` inside `LoginModal`, but auth state is stored in a cookie and fetched from `/auth/me`.
-- Some components such as `InventoryGrid` still use direct fetch in places instead of centralized service calls.
+- Frontend uses `HashRouter`.
+- `ENV.API_BASE_URL` is dynamic: uses proxy in development and full backend URL in production.
+- `AuthContext` stores login state via secure cookies and refreshes user data from `/auth/me`.
+- Some frontend code mixes direct `fetch()` calls with centralized `apiClient` usage.
+- Temporary admin UI patterns exist, including inline edit flows and direct inventory delete actions.

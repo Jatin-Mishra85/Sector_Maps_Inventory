@@ -1,41 +1,38 @@
-Summary: This document notes cleanup actions and suspicious code issues found during the scan.
+# KNOWN ISSUES / PENDING WORK
 
-# Known Issues and Cleanup
+## Confirmed issues
 
-## Cleanup / suspicious findings
+- `backend/src/services/interactions.service.js` has nested duplicate `reportInventory` definitions. This is a real bug and can break report handling.
+- `frontend/src/features/inventory/components/InventoryGrid/InventoryGrid.jsx` bypasses centralized API service for saved inventory lookups by using a direct `fetch()` call.
+- `frontend/src/features/inventory/components/InventoryGrid/InventoryGrid.jsx` still uses temporary delete behavior through `inventoryService.remove`, which is not fully abstracted.
+- `frontend/src/features/search/components/SearchBar/SearchBar.jsx` has suggestion UI logic disabled (`showDropdown = false`) despite backend suggestion support.
+- `backend/src/repositories/group.repository.js` contains console debug statements in `findOrCreateByName`, which should be removed for production.
 
-- `backend/src/services/interactions.service.js` contains nested duplicate `reportInventory` function blocks. This is a clear code bug and may break the module export.
-- `frontend/src/features/inventory/components/InventoryGrid/InventoryGrid.jsx` uses direct `fetch('/api/v1/interactions/saved', ...)` instead of the central `apiClient` service.
-- `frontend/src/features/inventory/components/InventoryGrid/InventoryGrid.jsx` also imports `inventoryService` for delete actions, but delete is a temporary UI path rather than a fully abstracted feature.
-- `frontend/src/features/inventory/hooks/useInventories.js` has detailed item mapping comments and resolves relative URLs, but the service call shape handling is inconsistent between `response.data` and plain array payload. This is a maintenance concern.
-- `frontend/src/features/search/components/SearchBar/SearchBar.jsx` hides the dropdown with `const showDropdown = false`, meaning suggestion UI is disabled even though suggestion logic is active.
-- `backend/src/repositories/group.repository.js` has console.debug-style logs in `findOrCreateByName`, which are suspicious for production code.
+## Risky/incomplete flows
 
-## Potential inconsistencies / risks
+- Auth state is mixed:
+  - `AuthContext` handles login and current user.
+  - `AdminAuthContext` gates UI from `user.isAdmin`.
+  - Some admin pages note that admin-code gate is intentionally removed, but backend write routes remain protected.
+- Backend image API exists, but frontend appears to upload images only through inventory create/update paths.
+- `frontend/src/features/admin/components/DeveloperBatchInventoryForm/DeveloperBatchInventoryForm.jsx` may accept invalid or incomplete user input without stronger validation.
+- `search.repository.js` includes an `inventoryType` filter branch that frontend does not currently supply.
+- `backend/src/database/connection.js` resets the pool on error, but transient MSSQL failures could still affect requests if not tested thoroughly.
 
-- `auth.controller.js` catches Google login errors and returns hardcoded `401` with generic message while the service may produce more specific errors.
-- `auth.service.js` requires `GOOGLE_CLIENT_ID` and `JWT_SECRET`; if missing, auth flow will fail entirely.
-- `azureBlob.config.js` throws if `AZURE_STORAGE_CONNECTION_STRING` is missing, making image upload highly environment-dependent.
-- `admin.service.js` requires `ADMIN_ACCESS_CODE`; if not configured, it returns 500 and blocks the admin verification path.
-- `backend/src/database/connection.js` relies on the pool event error handler to reset pool. If not carefully tested, transient DB errors may still cause request failures.
-- `search.repository.js` contains an `inventoryType` filter assumption on `i.UnitType`, but frontend does not appear to pass this filter consistently.
-- `frontend/src/features/admin/components/DeveloperBatchInventoryForm/DeveloperBatchInventoryForm.jsx` is a complex form that can create entries with blank project names or card IDs if not validated properly.
-- `frontend/src/context/AdminAuthContext.jsx` is used for admin gate state, but the page comments indicate admin code gates were intentionally removed in some places. This may cause inconsistent UI access control.
+## Known technical debt and temporary UI
 
-## Missing or unclear behavior
+- `InventoryCard` and `InventoryGrid` contain temporary admin-edit flows and local override state.
+- `useInventories.js` handles both raw array and wrapped API response shapes, which is fragile.
+- `SearchBar` suggestion dropdown is implemented but hidden by the UI state.
+- `useSiteGate.js` is a temporary seed gate that should be removed once a real admin panel exists.
+- `developer.routes.js`, `sector.routes.js`, `project.routes.js`, `group.routes.js`, `image.routes.js`, and `Inventorygroup.routes.js` are all write-protected but may not be fully used by the current frontend.
 
-- No frontend route or page for developer or project management beyond grouping and inventory addition.
-- The backend has `image` endpoints, but frontend appears to use only inventory image upload and not standalone image management.
-- `frontend/src/pages/HomePage.jsx` sets `savedOnly` state but no dedicated saved items API in services; saved-only filtering is implemented client-side by `InventoryGrid`.
-- Purpose of `backend/src/repositories/Inventorygroup.repository.js` and `backend/src/routes/Inventorygroup.routes.js` is only partially exposed in frontend code. There is no clear frontend usage of those direct inventory-group endpoints.
-- `frontend/src/components/PromoBanner/PromoBanner.jsx` and certain CSS files are not referenced in the feature docs, but likely serve UI branding. Exact purpose unclear from route scan.
+## Suggested cleanup
 
-## Recommended cleanup actions
-
-- Fix `interactions.service.js` duplicate function definitions.
-- Standardize API calls through `apiClient` or central fetch helpers rather than mixing `fetch()` and Axios.
-- Remove debug `console.log` statements in backend repository code.
-- Re-enable or remove the hidden suggestions dropdown in `SearchBar`.
-- Consolidate `InventoryGrid` temporary and permanent flows to avoid duplicate delete/update code.
-- Add explicit validation in `DeveloperBatchInventoryForm` for required card number fields.
-- Clarify usage of `InventoryGroup` direct endpoints or remove the unused service layer if not used.
+- Fix duplicate function bug in `interactions.service.js`.
+- Standardize API requests through `apiClient` or shared fetch wrappers.
+- Remove debug logs and temporary comments from backend repository code.
+- Decide whether search suggestions should be visible; if yes, enable dropdown logic.
+- Consolidate temporary admin UI flows into a consistent admin panel.
+- Validate card number, project, and group fields more strictly in admin forms.
+- Document or remove unused inventory-group direct endpoints.

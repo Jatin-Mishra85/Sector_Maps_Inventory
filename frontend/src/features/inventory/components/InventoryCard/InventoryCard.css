@@ -630,3 +630,81 @@
   display: flex;
   gap: 6px;
 }
+
+
+/* ============================================================
+   Add to the end of InventoryCard.css
+   Poster (no-image state) + Camera/Gallery picker overlay
+   ============================================================ */
+
+/* Poster image shown instead of the empty fallback, when there's no photo */
+.inv-card__thumb-fallback-poster {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Camera/Gallery picker — sits on top of the 92x88 thumb, admin only.
+   Sized compact since the thumb itself is small. */
+.inv-card__photo-picker {
+  position: absolute;
+  inset: 0;
+  background: rgba(224, 224, 224, 0.97);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+}
+
+.inv-card__photo-picker-back {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.7);
+  color: #222;
+  cursor: pointer;
+  padding: 0;
+}
+
+.inv-card__photo-picker-options {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.inv-card__photo-picker-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #222;
+  padding: 0;
+}
+
+.inv-card__photo-picker-option svg {
+  width: 17px;
+  height: 17px;
+}
+
+.inv-card__photo-picker-option span {
+  font-family: var(--font-body);
+  font-size: 7.5px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.inv-card__hidden-file-input {
+  display: none;
+}

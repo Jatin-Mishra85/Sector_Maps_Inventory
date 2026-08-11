@@ -11,6 +11,14 @@ const PLACEHOLDER_IMAGES = Array.from(
   (_, i) => `/placeholders/placeholder-${i + 1}.jpg`
 );
 
+// Poster shown inside the thumb when there is NO uploaded image yet.
+// Admin (canManage=true) sees the "tap to add photo" poster.
+// Everyone else sees the plain "no photo" poster.
+// Alag folder — existing placeholders/ wali files se koi lena dena nahi:
+//   public/photo-posters/admin-add-photo-poster.jpg
+//   public/photo-posters/no-photo-poster.jpg
+const NO_PHOTO_POSTER = '/photo-posters/no-photo-poster.png';
+
 function getPlaceholderUrl(id) {
   const str = String(id ?? '');
   let hash = 0;
@@ -73,6 +81,13 @@ function InventoryCard({
   const [shareMenuOpenUpward, setShareMenuOpenUpward] = useState(false);
   const shareMenuRef = useRef(null);
   const shareBtnRef = useRef(null);
+
+  // --- Camera / Gallery picker overlay (admin-only) — shown when the
+  // "add photo" poster is tapped. Same pop-up idea as WhatsApp's attach menu.
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const pickerRef = useRef(null);
+  const galleryInputRef = useRef(null);
+  const cameraInputRef = useRef(null);
 
   // --- Card No (cardId) inline edit state — Grouping page only (selectable mode) ---
   const [isEditingCardId, setIsEditingCardId] = useState(false);
@@ -152,14 +167,15 @@ const [localFieldOverrides, setLocalFieldOverrides] = useState({});
     Number(cardIdDraft) !== Number(displayedCardId);
 
   useEffect(() => {
-    if (!menuOpen && !shareMenuOpen) return undefined;
+    if (!menuOpen && !shareMenuOpen && !pickerOpen) return undefined;
     const handleClickOutside = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false);
       if (shareMenuRef.current && !shareMenuRef.current.contains(e.target)) setShareMenuOpen(false);
+      if (pickerRef.current && !pickerRef.current.contains(e.target)) setPickerOpen(false);
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [menuOpen, shareMenuOpen]);
+  }, [menuOpen, shareMenuOpen, pickerOpen]);
 
   // Smart positioning for the 3-dot menu — runs on EVERY screen size now
   // (mobile included), so the menu is always a small anchored popover
@@ -289,31 +305,24 @@ const [localFieldOverrides, setLocalFieldOverrides] = useState({});
 const handleShareImage = async (e) => {
   e.stopPropagation();
   setShareMenuOpen(false);
-  alert('1. handler fired, imageUrl=' + imageUrl);
   if (!imageUrl) {
     showToast('Is inventory ki koi image nahi hai.', 'error');
     return;
   }
   try {
     const response = await fetch(imageUrl);
-    alert('2. fetch done, status=' + response.status);
     const blob = await response.blob();
-    alert('3. blob size=' + blob.size + ' type=' + blob.type);
     const file = new File([blob], `${topLabel || 'inventory'}.jpg`, {
       type: blob.type || 'image/jpeg',
     });
 
-    alert('4. canShare=' + (navigator.canShare && navigator.canShare({ files: [file] })));
-
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
       await navigator.share({ files: [file], title: middleLabel || topLabel });
-      alert('5. share() resolved');
     } else {
       await downloadFile(imageUrl, `${topLabel || 'inventory'}.jpg`);
       showToast('Is device par image share nahi ho sakti — download kar di gayi.', 'info');
     }
   } catch (err) {
-    alert('ERROR: ' + err.name + ' - ' + err.message);
     showToast('Image share nahi ho payi. Dobara try karo.', 'error');
   }
 };
@@ -348,10 +357,36 @@ const handleShareImage = async (e) => {
       return;
     }
     if (showPhotoPlaceholder) {
-      if (canManage) onAddPhoto?.(inventory);
+      // Sirf admin ke liye camera/gallery picker khulta hai.
+      // Normal user ko sirf poster dikhta hai, click par kuch nahi hota.
+      if (canManage) setPickerOpen(true);
       return;
     }
     onPreview(inventory);
+  };
+
+  // --- Camera / Gallery picker handlers (admin only) ---
+  const openGallery = (e) => {
+    e.stopPropagation();
+    galleryInputRef.current?.click();
+  };
+
+  const openCamera = (e) => {
+    e.stopPropagation();
+    cameraInputRef.current?.click();
+  };
+
+  const closePicker = (e) => {
+    e.stopPropagation();
+    setPickerOpen(false);
+  };
+
+  const handlePickedFile = (e) => {
+    const file = e.target.files?.[0];
+    console.log('[DEBUG] file picked in card =', file); // TEMP — hata denge baad me
+    e.target.value = ''; // reset, taaki same file dobara select karne par bhi onChange fire ho
+    setPickerOpen(false);
+    if (file) onAddPhoto?.(inventory, file);
   };
 
   // --- Card No inline edit handlers ---
@@ -528,38 +563,74 @@ const handleShareImage = async (e) => {
                   : `Preview image of ${middleLabel || topLabel || 'inventory'}`
             }
           >
-
-
-{/* ========================Temprory disable ============================== */}
-            {/* {!showPhotoPlaceholder ? (
+            {!showPhotoPlaceholder ? (
               <img
-                src={placeholderThumbUrl}
+                src={imageUrl}
                 alt={middleLabel || topLabel || 'Inventory'}
                 loading="lazy"
                 onError={() => setImgError(true)}
               />
-            ) : ( */}
-
-{/* ============================================================================================================= */}
-
-
-
-
-
-
-{!showPhotoPlaceholder ? (
-  <img
-    src={imageUrl}
-    alt={middleLabel || topLabel || 'Inventory'}
-    loading="lazy"
-    onError={() => setImgError(true)}
-  />
-) : (
-              <div className="inv-card__thumb-fallback" aria-hidden="true" />
+            ) : (
+              <img
+                className="inv-card__thumb-fallback-poster"
+                src={canManage ? NO_PHOTO_POSTER: NO_PHOTO_POSTER}
+                alt={canManage ? 'Add photo' : 'No photo available'}
+                loading="lazy"
+              />
             )}
           </button>
 
+          {/* Camera / Gallery picker — admin only, opens when the poster is tapped */}
+          {canManage && pickerOpen && (
+            <div className="inv-card__photo-picker" ref={pickerRef} onClick={(e) => e.stopPropagation()}>
+              <button
+                type="button"
+                className="inv-card__photo-picker-back"
+                onClick={closePicker}
+                aria-label="Close"
+              >
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" aria-hidden="true">
+                  <path d="M15 5 8 12l7 7" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
 
+              <div className="inv-card__photo-picker-options">
+                <button type="button" className="inv-card__photo-picker-option" onClick={openGallery}>
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" strokeWidth="1.8" />
+                    <circle cx="8.5" cy="9.5" r="1.6" stroke="currentColor" strokeWidth="1.6" />
+                    <path d="m5 17 4.5-4.5L12 15l3-3 4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <span>Gallery</span>
+                </button>
+
+                <button type="button" className="inv-card__photo-picker-option" onClick={openCamera}>
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+                    <circle cx="12" cy="13" r="3.3" stroke="currentColor" strokeWidth="1.8" />
+                  </svg>
+                  <span>Camera</span>
+                </button>
+              </div>
+
+              {/* Hidden file inputs — gallery button opens normal picker, camera button opens device camera */}
+              <input
+                ref={galleryInputRef}
+                type="file"
+                accept="image/*"
+                className="inv-card__hidden-file-input"
+                onChange={handlePickedFile}
+              />
+              <input
+                ref={cameraInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="inv-card__hidden-file-input"
+                onChange={handlePickedFile}
+              />
+            </div>
+          )}
         </div>
         
           {selectable && (

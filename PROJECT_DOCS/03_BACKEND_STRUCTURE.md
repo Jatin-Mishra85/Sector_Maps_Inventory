@@ -1,147 +1,87 @@
-Summary: This document explains the backend folder structure, request flow, and database entities used by the app.
+# BACKEND STRUCTURE
 
-# Backend Structure
+## Main backend folders
 
-## Major folders and purpose
+- `backend/src/server.js`
+  - Connects to SQL Server with `connectDB()`.
+  - Starts the Express server on `process.env.PORT || 5000`.
 
-- `src/app.js`
-  - Configures Express middleware, CORS, cookie parsing, static file serving, routes, and global error handlers.
+- `backend/src/app.js`
+  - Configures global middleware.
   - Uses `helmet`, `cors`, `cookie-parser`, `express.json()`, `express.urlencoded()`.
-  - Mounts API under `/api/v1`.
+  - Serves static uploads at `/uploads`.
+  - Mounts API routes under `/api/v1`.
+  - Includes health check `/health`.
 
-- `src/server.js`
-  - Connects to MSSQL via `connectDB()`.
-  - Starts HTTP server and handles graceful shutdown.
-  - Handles unhandled rejections and uncaught exceptions.
+- `backend/src/routes/`
+  - Mounts each feature set under `/api/v1`.
+  - Contains: `auth.routes.js`, `developer.routes.js`, `sector.routes.js`, `project.routes.js`, `group.routes.js`, `inventory.routes.js`, `image.routes.js`, `Inventorygroup.routes.js`, `search.routes.js`, `interactions.routes.js`.
 
-- `src/routes`
-  - Each feature has its own route file.
-  - `index.routes.js` combines them under `/api/v1`.
+- `backend/src/controllers/`
+  - Controllers handle HTTP request/response.
+  - They call services and return JSON.
 
-- `src/controllers`
-  - Handle HTTP requests, call services, return JSON responses.
-  - Controllers are lightweight and mostly pass data to services.
+- `backend/src/services/`
+  - Services contain business logic, validation, and coordination.
+  - They call repositories and handle domain rules.
 
-- `src/services`
-  - Business logic layer.
-  - Validate input, call repositories, enforce rules.
-  - Examples: `inventory.service.js`, `group.service.js`, `interactions.service.js`, `auth.service.js`, `admin.service.js`, `search.service.js`.
+- `backend/src/repositories/`
+  - Repositories execute raw SQL queries.
+  - They map repository methods to table operations.
 
-- `src/repositories`
-  - Direct SQL access layer using `mssql`.
-  - Each repository maps to one or more SQL tables.
-  - Repositories contain raw SQL queries and parameter binding.
+- `backend/src/database/connection.js`
+  - Manages MSSQL connection pool.
+  - Exposes `connectDB()`, `getPool()`, `closeDB()`, and `sql`.
 
-- `src/database/connection.js`
-  - Manages MSSQL pool connection.
-  - Exposes `connectDB`, `getPool`, `closeDB`, and `sql`.
+- `backend/src/config/`
+  - `app.config.js` — environment flags.
+  - `db.config.js` — SQL Server connection config.
+  - `azureBlob.config.js` — Azure upload helper.
+  - `multer.config.js` — in-memory file upload config.
 
-- `src/config`
-  - `app.config.js`: environment flags and port.
-  - `db.config.js`: MSSQL connection settings.
-  - `azureBlob.config.js`: Azure Blob Storage upload helper.
-  - `multer.config.js`: file upload middleware using in-memory storage.
+- `backend/src/middleware/`
+  - `auth.middleware.js` — attaches `req.user`, `requireAuth`, `requireAdmin`.
+  - `requestLogger.middleware.js` — request logging.
+  - `notFound.middleware.js` — 404 handler.
+  - `error.middleware.js` — error formatter.
 
-- `src/middleware`
-  - `auth.middleware.js`: attaches user from JWT cookie and requires auth for protected routes.
-  - `requestLogger.middleware.js`: logs incoming requests.
-  - `notFound.middleware.js`: 404 handler.
-  - `error.middleware.js`: error formatter.
+- `backend/src/utils/`
+  - Helpers for API responses, async wrapping, logging, and errors.
 
-- `src/utils`
-  - `apiResponse.util.js`: API success response helper.
-  - `apiError.util.js`: error helper.
-  - `asyncHandler.util.js`: wrapper for async route handlers.
-  - `logger.util.js`: logging helper.
+## Route and auth flow
 
-## Layered architecture
+- `backend/src/app.js` uses `attachUser` before all routes.
+- `attachUser` reads `auth_token` cookie, verifies JWT with `JWT_SECRET`, and loads user from `Users`.
+- Protected backend actions use:
+  - `requireAuth` — any logged-in user.
+  - `requireAdmin` — only users with `Users.IsAdmin = 1`.
 
-The backend follows a route → controller → service → repository → DB pattern.
+## Admin-protected backend route groups
 
-1. Route file defines endpoint and middleware.
-2. Controller receives request and sends JSON response.
-3. Service validates and processes business logic.
-4. Repository executes SQL against the database.
-5. Database tables store persisted data.
+- `developer.routes.js`: POST/PUT/DELETE require `requireAdmin`.
+- `sector.routes.js`: POST/PUT/DELETE require `requireAdmin`.
+- `project.routes.js`: POST/PUT/DELETE require `requireAdmin`.
+- `group.routes.js`: POST/PUT/DELETE and add/remove inventory actions require `requireAdmin`.
+- `inventory.routes.js`: POST/PUT/DELETE require `requireAdmin`.
+- `image.routes.js`: POST/PUT/DELETE require `requireAdmin`.
+- `Inventorygroup.routes.js`: POST/DELETE require `requireAdmin`.
 
-Example: `POST /api/v1/inventories`
-- `inventory.routes.js` → `inventory.controller.create`
-- `inventory.controller.create` → `inventory.service.createInventory`
-- `inventory.service.createInventory` → `inventory.repository.create`
-- `inventory.repository.create` → SQL inserts into `Inventory`, `Developers`, `Sectors`, `Projects`, `Images`, and `InventoryGroups`.
+## Public / auth-based route groups
 
-## Database tables / entities
+- `auth.routes.js`: login/signup/logout and `me` endpoint.
+- `search.routes.js`: public inventory search and suggest.
+- `interactions.routes.js`
+  - save/unsave/saved require `requireAuth`.
+  - report is public.
 
-The code indicates these database entities:
+## Database schema summary
 
-- `Users`
-  - Columns used: `UserId`, `GoogleId`, `Email`, `Name`, `Picture`.
-  - Used for Google login and saved inventory/report tracking.
+See `PROJECT_DOCS/08_DATABASE_SCHEMA.md` for table names, columns, types, and relationships.
 
-- `Developers`
-  - Columns: `DeveloperId`, `DeveloperName`.
-  - Inventory items link to developers.
+## Notes and warnings
 
-- `Sectors`
-  - Columns: `SectorId`, `SectorName`.
-  - Inventory items link to sectors.
-
-- `Projects`
-  - Columns: `ProjectId`, `ProjectName`.
-  - Inventory items link to projects.
-
-- `Images`
-  - Columns: `ImageId`, `ImagePath`.
-  - Inventory image metadata stored here.
-
-- `Inventory`
-  - Columns: `InventoryId`, `DeveloperId`, `SectorId`, `ProjectId`, `ImageId`, `DisplaySequence`, `Price`, `AreaSqFt`, `UnitType`, `Status`, `Description`.
-  - Main inventory item table.
-  - `DisplaySequence` acts as Card No and must be unique.
-
-- `Groups`
-  - Columns: `GroupId`, `GroupName`, `CreatedAt`.
-  - Used for grouping/tagging inventory items.
-
-- `InventoryGroups`
-  - Junction table linking inventories and groups: `InventoryId`, `GroupId`.
-  - Many-to-many relation between `Inventory` and `Groups`.
-
-- `SavedInventories`
-  - Columns: `UserId`, `InventoryId`.
-  - Stores favorites/saved status for authenticated users.
-
-- `ReportedInventories`
-  - Columns: `UserId`, `InventoryId`, `Reason`, `Details`.
-  - Stores user reports on inventory items.
-
-## Entity relationships
-
-- `Inventory` has optional foreign keys: `DeveloperId`, `SectorId`, `ProjectId`, `ImageId`.
-- `Inventory` is many-to-many with `Groups` via `InventoryGroups`.
-- `SavedInventories` is many-to-many between `Users` and `Inventory`.
-- `ReportedInventories` tracks reports from `Users` against `Inventory`.
-
-## Notes on service behavior
-
-- `auth.service.js` verifies Google ID token and creates a `Users` row if needed.
-- `admin.service.js` validates `ADMIN_ACCESS_CODE` from environment.
-- `interactions.service.js` validates inventory IDs, report reasons, and detail length.
-- `search.repository.js` searches across developers, sectors, projects, and group names.
-- `inventory.repository.js` creates authors/sectors/projects/groups on demand when saving inventory.
-- `group.repository.js` prevents duplicate `InventoryGroups` entries with an `IF NOT EXISTS` insert.
-- `image.service.js` and `image.controller.js` manage image metadata, but active image uploads use `inventory.controller.js` + Azure Blob.
-
-## Notes on backend security and suspicious behavior
-
-- Auth middleware attaches `req.user` from JWT cookie and protects save/unsave/saved endpoints.
-- `reportInventory` can be called without authentication, but still records `UserId` if available.
-- Some controllers use try/catch and return status 500 for unexpected errors.
-- `group.repository.js` has console debug logs for creation paths.
-
-## Config details
-
-- `db.config.js` uses MSSQL environment variables and offers TLS/trust config.
-- `azureBlob.config.js` requires `AZURE_STORAGE_CONNECTION_STRING` and writes to a container.
-- `multer.config.js` only allows JPEG/PNG and caps uploads at 15 MB.
-- `app.config.js` exposes `isProduction`, `isDevelopment`, `port`, and `appName`.
+- The backend assumes a production cross-domain setup with `sameSite: none` and `secure: true` for cookies.
+- `azureBlob.config.js` throws if `AZURE_STORAGE_CONNECTION_STRING` is missing.
+- `auth.service.js` depends on `GOOGLE_CLIENT_ID` and `JWT_SECRET`.
+- `app.js` accepts origins from `FRONTEND_URL` and local LAN origins.
+- There are some temporary or debugging artifacts in the code, such as direct fetch usage in frontend and debug logs in group repository.

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import ImageCropModal from '../../../../components/common/ImageCropModal/ImageCropModal';
 import { inventoryService } from '../../services/inventoryService';
 import { resolveImageUrl } from '../../hooks/useInventories';
@@ -11,7 +11,7 @@ import { useToast } from '../../../../context/ToastContext';
 // lene ke baad crop/rotate editor dikhta hai; "Confirm" par existing
 // "edit inventory image" upload flow (inventoryService.updateWithImage)
 // reuse hota hai — koi naya endpoint nahi.
-export default function InventoryPhotoUploadModal({ inventory, onUploaded, onClose }) {
+export default function InventoryPhotoUploadModal({ inventory, onUploaded, onClose, file = null }) {
   const { showToast } = useToast();
   const cameraInputRef = useRef(null);
   const [pendingImageSrc, setPendingImageSrc] = useState(null);
@@ -26,16 +26,29 @@ export default function InventoryPhotoUploadModal({ inventory, onUploaded, onClo
   // in both StrictMode-dev and normal production behavior.
   const hasTriggeredCameraRef = useRef(false);
 
-  useEffect(() => {
+  // useLayoutEffect isliye — useEffect tab tak chalta hai jab tak original
+  // click ka "user activation" browser me khatam ho chuka hota hai, isliye
+  // gallery/camera dialog block ho jaata tha ("File chooser dialog can only
+  // be shown with a user activation"). useLayoutEffect click ke saath hi
+  // (sync) chalta hai, activation abhi zinda rehta hai.
+  useLayoutEffect(() => {
+    console.log('[DEBUG] modal mounted, file =', file); // TEMP — hata denge baad me
     if (hasTriggeredCameraRef.current) return;
     hasTriggeredCameraRef.current = true;
+    // Agar InventoryCard ke naye Camera/Gallery picker se pehle hi file mil
+    // chuki hai, to dobara camera mat kholo — seedha crop screen dikhao.
+    if (file) {
+      setPendingImageSrc(URL.createObjectURL(file));
+      return;
+    }
     cameraInputRef.current?.click();
-  }, []);
+  }, [file]);
 
   // Agar user native camera/gallery dialog cancel kar de, koi file select
   // nahi hoti — window par focus wapas aane par thoda rukk ke check karo,
   // agar kuch nahi mila to modal band kar do.
   useEffect(() => {
+    if (file) return undefined; // file pehle se hai, native camera dialog khula hi nahi
     const handleWindowFocus = () => {
       window.setTimeout(() => {
         if (!cameraInputRef.current?.files?.length && !pendingImageSrc && !isUploading) {
@@ -45,7 +58,7 @@ export default function InventoryPhotoUploadModal({ inventory, onUploaded, onClo
     };
     window.addEventListener('focus', handleWindowFocus);
     return () => window.removeEventListener('focus', handleWindowFocus);
-  }, [pendingImageSrc, isUploading, onClose]);
+  }, [pendingImageSrc, isUploading, onClose, file]);
 
   const handleFilePicked = (e) => {
     const file = e.target.files?.[0] || null;

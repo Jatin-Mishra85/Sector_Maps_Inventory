@@ -1,87 +1,84 @@
-Summary: This document explains what the project is, its main purpose, and the high-level frontend/backend architecture.
+# PROJECT OVERVIEW
 
-# Overview
+## Project kya karta hai
+Sector_Maps_Inventory ek real estate inventory management system hai jo:
 
-Sector Maps Inventory is a real estate inventory management tool built to manage properties, developers, sectors, and project listings. It appears focused on allowing inventory items to be added in bulk, grouped/tagged, searched, saved, and reported.
+- Developers, sectors, projects, aur inventory items ko manage karta hai.
+- Inventory items ko card number, price, area, status, description, aur image ke saath store karta hai.
+- Users ko inventory search, save/bookmark, report, aur group/tag karne ka support deta hai.
+- Admin users ko inventory add/update/delete, developer/sector/project/group management, aur inventory grouping controls deta hai.
+- Frontend React/Vite app ko backend Node/Express/MSSQL API ke saath connect karta hai.
 
-## Purpose
-
-- Manage real estate inventory data for developers and projects.
-- Store inventory items with associated developer, sector, project, price, area, status, image, and group tags.
-- Provide a frontend UI for browsing, searching, grouping, and saving listings.
-- Support admin actions like adding inventory, verifying access codes, and deleting listings.
-- Allow users to login with Google for saved items and reporting.
-
-## Tech Stack
-
-- Frontend:
-  - React 19
-  - Vite 8
-  - React Router DOM 7
-  - React Hook Form
-  - React Icons
-  - react-easy-crop
-  - @react-oauth/google
-  - Axios
+## Tech stack
 
 - Backend:
   - Node.js
   - Express
   - MSSQL (`mssql` package)
-  - Azure Blob Storage (`@azure/storage-blob`)
   - Google OAuth (`google-auth-library`)
-  - JWT (`jsonwebtoken`)
-  - Multer for file uploads
-  - Helmet, CORS, cookie-parser, morgan
+  - JSON Web Tokens (`jsonwebtoken`)
+  - Cookie auth via `cookie-parser`
+  - File upload via `multer` (in-memory)
+  - Azure Blob Storage via `@azure/storage-blob`
+  - Security middleware: `helmet`, `cors`
 
-- Deployment:
-  - Frontend appears intended for Vite deployment (possible Vercel production hosting mentioned in user request, but config uses local dev proxy and dynamic host detection).
-  - Backend uses environment-based config and Azure Blob Storage for images.
+- Frontend:
+  - React 19
+  - Vite 8
+  - React Router DOM 7
+  - `react-hook-form`
+  - `@react-oauth/google`
+  - Axios
+  - React icons, crop and upload UI components
 
-## High-level Architecture
+- Database / infra:
+  - Microsoft SQL Server
+  - Azure Blob Storage for image files
+  - Email notifications via Gmail SMTP with `nodemailer`
 
-Frontend and backend are separate applications inside the repository.
+## Folder structure
 
-Frontend folder structure flows like this:
-- `src/main.jsx` → bootstraps app
-- `src/app/App.jsx` → wraps app providers and routes
-- `src/routes/AppRoutes.jsx` → defines route pages inside `MainLayout`
-- `src/pages/*` → page-level screens
-- `src/features/*` → feature modules for inventory, developer grouping, admin, search
-- `src/components/*` → reusable UI components and common widgets
-- `src/context/*` → global app context providers
-- `src/services/*` → shared http client and error handling
-- `src/constants/*`, `src/hooks/*`, `src/utils/*`
+### Root structure
+- `backend/`
+- `frontend/`
+- `PROJECT_DOCS/`
 
-Backend folder structure flows like this:
-- `src/server.js` → starts the server and database connection
-- `src/app.js` → initializes express, middleware, routes and error handling
-- `src/routes/index.routes.js` → mounts feature routes under `/api/v1`
-- `src/controllers/*` → request handlers
-- `src/services/*` → business logic and validation
-- `src/repositories/*` → raw SQL database access
-- `src/database/connection.js` → MSSQL pool management
-- `src/config/*` → environment, DB, multer, Azure Blob settings
-- `src/middleware/*` → auth, logging, not-found, error handlers
+### Backend top levels
+- `backend/src/server.js` — app start and DB connect
+- `backend/src/app.js` — express app, middleware, CORS, routes
+- `backend/src/routes/` — route files mounted under `/api/v1`
+- `backend/src/controllers/` — request handlers
+- `backend/src/services/` — business logic and validation
+- `backend/src/repositories/` — direct DB SQL queries
+- `backend/src/config/` — app, DB, multer, Azure settings
+- `backend/src/middleware/` — auth, logging, errors
+- `backend/src/database/connection.js` — MSSQL connection pool
 
-## Text-based Folder Flow
+### Frontend top levels
+- `frontend/src/main.jsx` — React root bootstrap
+- `frontend/src/app/AppProviders.jsx` — global providers, router
+- `frontend/src/routes/AppRoutes.jsx` — app route definitions
+- `frontend/src/pages/` — screen pages
+- `frontend/src/features/` — feature modules
+- `frontend/src/components/` — reusable UI components
+- `frontend/src/context/` — auth and toast contexts
+- `frontend/src/services/` — API client and error handling
+- `frontend/src/constants/` — API endpoints and env constants
+- `frontend/src/hooks/` — custom hooks
 
-Frontend:
-- `main.jsx` → `App.jsx` → `AppProviders.jsx` → `AppRoutes.jsx` → page component
-- Page component → feature hooks/services/components
-- Feature services use `src/services/apiClient.js` and `src/constants/apiEndpoints.js`
+## Important project flow
 
-Backend:
-- `server.js` → `connectDB()` → launches `app.js`
-- `app.js` → global middleware → `routes/index.routes.js`
-- `index.routes.js` → `/api/v1/*` routes
-- route file → specific controller
-- controller → service
-- service → repository + DB
-- repository → direct MS SQL queries
+- Frontend app uses `HashRouter` and `AuthProvider`.
+- `AuthContext` fetches `/auth/me` and maintains login state.
+- Backend uses cookie-based JWT auth stored in `auth_token`.
+- Admin state is derived from `Users.IsAdmin` and exposed through `AdminAuthContext`.
+- Inventory creation/update uses multipart image upload and Azure Blob Storage.
+- Search works by keyword across developers, sectors, projects, and group names.
 
-## Notes
-
-- The backend uses both cookie-based auth and JWT stored in cookie `auth_token`.
-- Images are uploaded via multer memory storage and then uploaded to Azure Blob.
-- Some frontend features are marked as temporary or in-progress.
+## Related docs
+- `PROJECT_DOCS/08_DATABASE_SCHEMA.md`
+- `PROJECT_DOCS/09_AUTHORIZATION.md`
+- `PROJECT_DOCS/10_DEPLOYMENT.md`
+- `PROJECT_DOCS/04_API_ENDPOINTS.md`
+- `PROJECT_DOCS/02_FRONTEND_STRUCTURE.md`
+- `PROJECT_DOCS/03_BACKEND_STRUCTURE.md`
