@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { ENV } from '../../../../constants/env';
 import './InventoryGrid.css';
 import InventoryCard from '../InventoryCard/InventoryCard';
 import InventoryCardSkeleton from '../InventoryCardSkeleton/InventoryCardSkeleton';
@@ -46,7 +47,7 @@ export default function InventoryGrid({
       setSavedIds(new Set());
       return;
     }
-    fetch('/api/v1/interactions/saved', { credentials: 'include' })
+    fetch(`${ENV.API_BASE_URL}/interactions/saved`, { credentials: 'include' })
       .then((r) => r.json())
       .then((data) => setSavedIds(new Set(data.data || [])))
       .catch(() => {});
