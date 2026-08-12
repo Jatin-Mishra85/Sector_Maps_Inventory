@@ -538,6 +538,9 @@ const handleShareImage = async (e) => {
 
       <div className="inv-card__body">
     <div className="inv-card__thumb-wrap">
+          {canManage && !selectable && (
+            <span className="inv-card__admin-id-badge">#{displayedCardId ?? '—'}</span>
+          )}
           {canManage && !selectable && !showPhotoPlaceholder && (
             <button
               type="button"

@@ -1,18 +1,3 @@
-/* =========================================================
-   MAIN LAYOUT — blue theme, transparent header + textured drawer
-   Palette:
-   --ml-blue-deep    #1B3A6B  (deep navy, text/anchor)
-   --ml-blue         #2F6FED  (primary electric blue accent)
-   --ml-blue-bright  #6EA8FF  (bright highlight blue)
-   --ml-blue-soft    rgba(47,111,237,0.14)
-   --ml-blue-darker  #0F1F3D  (dark logo/hover accent)
-   --ml-hover-dark   #14284D  (hover state color)
-   --ml-bg-light     #F3F8FF  (drawer bg top)
-   --ml-bg-light-2   #E6EFFF  (drawer bg bottom)
-   --ml-border       #D7E4FA
-   --ml-text-dark    #16223D
-   ========================================================= */
-
 :root {
   --ml-blue-deep: #1B3A6B;
   --ml-blue: #2F6FED;
