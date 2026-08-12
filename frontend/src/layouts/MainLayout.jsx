@@ -57,6 +57,9 @@ export default function MainLayout() {
                 <NavLink to="/reports" className={navLinkClass}>Reports</NavLink>
               </>
             )}
+            {user?.isSuperAdmin && (
+              <NavLink to="/superadmin" className={navLinkClass}>Manage Users</NavLink>
+            )}
 
             {user ? (
               <NavLink to="/profile" className="main-layout__profile-chip" aria-label={`Profile: ${user.name}`}>
@@ -101,6 +104,9 @@ export default function MainLayout() {
             <NavLink to="/grouping" className={navLinkClass} onClick={closeMenu}>Grouping</NavLink>
             <NavLink to="/reports" className={navLinkClass} onClick={closeMenu}>Reports</NavLink>
           </>
+        )}
+        {user?.isSuperAdmin && (
+          <NavLink to="/superadmin" className={navLinkClass} onClick={closeMenu}>Manage Users</NavLink>
         )}
 
         <div className="main-layout__nav-divider" />

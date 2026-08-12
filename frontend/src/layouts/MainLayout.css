@@ -20,6 +20,7 @@
   --ml-bg-light-2: #E6EFFF;
   --ml-border: #D7E4FA;
   --ml-text-dark: #16223D;
+  --ml-header-grad: linear-gradient(120deg, #EAF1FF 0%, #F7F3FF 55%, #FFF1F6 100%);
 }
 
 .main-layout__container {
@@ -50,7 +51,8 @@
   gap: var(--space-3);
   height: 60px; /* Reduced base mobile height to secure header space */
   min-width: 0;
-  background-color:#F5F2EC;
+  background: var(--ml-header-grad);
+  border-bottom: 1px solid var(--ml-border);
 }
 
 /* ===== Brand / logo — always visible, priority piece ===== */
@@ -72,7 +74,7 @@
   flex-shrink: 0;
   border-radius: var(--radius-md);
   color: var(--ml-blue);
-  background: blue;
+  background: linear-gradient(135deg, var(--ml-blue), var(--ml-blue-bright));
 }
 
 .main-layout__logo img {
@@ -178,6 +180,10 @@
 .main-layout__hamburger:hover {
   background-color: var(--ml-blue-soft);
   box-shadow: 0 0 0 6px rgba(47, 111, 237, 0.06);
+}
+
+.main-layout__nav--mobile-open::after {
+  content: '';
 }
 
 .main-layout__hamburger:active {

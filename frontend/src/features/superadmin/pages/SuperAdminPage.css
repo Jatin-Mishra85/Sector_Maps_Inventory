@@ -1,0 +1,63 @@
+.superadmin-page {
+  padding: var(--space-4);
+}
+
+.superadmin-page__title {
+  margin-bottom: var(--space-4);
+}
+
+.superadmin-page__status {
+  font-size: var(--font-size-sm);
+}
+
+.superadmin-page__status--error {
+  color: var(--color-error, red);
+}
+
+.superadmin-page__table-wrap {
+  overflow-x: auto;
+}
+
+.superadmin-page__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+}
+
+.superadmin-page__table th,
+.superadmin-page__table td {
+  text-align: left;
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.superadmin-page__table th {
+  font-weight: 600;
+  background: var(--color-surface);
+}
+
+.superadmin-page__toggle {
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: transparent;
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+}
+
+.superadmin-page__toggle--on {
+  background: #2F6FED;
+  color: #fff;
+  border-color: #2F6FED;
+}
+
+.superadmin-page__toggle--blocked {
+  background: #c23b3b;
+  color: #fff;
+  border-color: #c23b3b;
+}
+
+.superadmin-page__badge {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}

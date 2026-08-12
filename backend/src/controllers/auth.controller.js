@@ -20,6 +20,7 @@ function mapUser(user) {
         name: user.name ?? user.Name,
         picture: user.picture ?? user.Picture,
         isAdmin: !!(user.isAdmin ?? user.IsAdmin),
+        isSuperAdmin: !!(user.isSuperAdmin ?? user.IsSuperAdmin),
     };
 }
 
@@ -36,7 +37,7 @@ async function googleLogin(req, res) {
         res.status(200).json({ success: true, message: 'Logged in successfully', data: mapUser(user) });
     } catch (err) {
         console.error('Google login error:', err);
-        res.status(401).json({ success: false, message: 'Google login failed.' });
+        res.status(err.statusCode || 401).json({ success: false, message: err.message || 'Google login failed.' });
     }
 }
 
@@ -62,7 +63,7 @@ async function login(req, res) {
         res.cookie(COOKIE_NAME, token, cookieOptions());
         res.status(200).json({ success: true, message: 'Logged in successfully', data: mapUser(user) });
     } catch (err) {
-        res.status(401).json({ success: false, message: err.message || 'Login failed.' });
+        res.status(err.statusCode || 401).json({ success: false, message: err.message || 'Login failed.' });
     }
 }
 

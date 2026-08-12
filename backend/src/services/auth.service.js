@@ -40,6 +40,12 @@ async function loginWithGoogle(idToken) {
         }
     }
 
+    if (user.IsBlocked) {
+        const err = new Error('Your account has been blocked.');
+        err.statusCode = 403;
+        throw err;
+    }
+
     const token = generateToken(user);
     return { user, token };
 }
@@ -86,6 +92,12 @@ async function loginWithEmailPassword({ email, password }) {
         throw new Error('Invalid email or password.');
     }
 
+    if (user.IsBlocked) {
+        const err = new Error('Your account has been blocked.');
+        err.statusCode = 403;
+        throw err;
+    }
+
     const token = generateToken(user);
     return { user, token };
 }
@@ -93,12 +105,14 @@ async function loginWithEmailPassword({ email, password }) {
 async function getUserById(userId) {
     const user = await authRepository.findById(userId);
     if (!user) return null;
+    if (user.IsBlocked) return null; // blocked -> treat as logged out
     return {
         userId: user.UserId,
         email: user.Email,
         name: user.Name,
         picture: user.Picture,
         isAdmin: !!user.IsAdmin,
+        isSuperAdmin: !!user.IsSuperAdmin,
     };
 }
 
