@@ -43,6 +43,8 @@
   height: 60px;
   min-width: 0;
   background: var(--ml-header-grad);
+  border-bottom: 1px solid var(--ml-blue-soft);
+  box-shadow: 0 1px 0 rgba(111, 143, 122, 0.28), 0 4px 14px rgba(63, 84, 73, 0.10);
 }
 
 /* ===== Brand / logo — always visible, priority piece ===== */
