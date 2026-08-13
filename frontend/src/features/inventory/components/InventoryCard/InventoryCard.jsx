@@ -842,6 +842,47 @@ const handleShareImage = async (e) => {
                   )}
                 </div>
 
+                {canManage && (
+                  isEditingCardId ? (
+                    <div className="inv-card__cardid-actions" onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="number"
+                        className="inv-card__cardid-input"
+                        value={cardIdDraft}
+                        onChange={(e) => setCardIdDraft(e.target.value)}
+                        autoFocus
+                        disabled={savingCardId}
+                      />
+                      <button type="button" className="inv-card__cardid-cancel-btn" onClick={handleCancelEditCardId} disabled={savingCardId} aria-label="Cancel card number edit">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" aria-hidden="true">
+                          <path d="M6 6l12 12M18 6 6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                        </svg>
+                      </button>
+                      <button type="button" className="inv-card__cardid-save-btn" onClick={handleSaveCardId} disabled={!isCardIdChanged || savingCardId} aria-label="Save card number">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" aria-hidden="true">
+                          <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      className="inv-card__edit-cardid-btn"
+                      onClick={handleStartEditCardId}
+                      aria-label="Edit card number"
+                    >
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" aria-hidden="true">
+                        <path
+                          d="M4 20h4L18.5 9.5a2.1 2.1 0 0 0-3-3L5 17v3Z"
+                          stroke="currentColor"
+                          strokeWidth="1.8"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </button>
+                  )
+                )}
+
                 <div className="inv-card__menu-wrap" ref={menuRef}>
                   <button
                     type="button"

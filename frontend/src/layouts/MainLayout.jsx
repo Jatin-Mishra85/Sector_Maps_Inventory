@@ -5,6 +5,7 @@ import { useSiteGate } from '../hooks/useSiteGate';
 import { useAuth } from '../context/AuthContext';
 import { useAdminAuth } from '../context/AdminAuthContext';
 import LoginModal from '../components/LoginModal/LoginModal';
+import { useInstallPrompt } from '../hooks/useInstallPrompt';
 import companyLogo from '../assets/logo/company-logo.png'; 
 
 
@@ -15,6 +16,7 @@ export default function MainLayout() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
   const navigate = useNavigate();
+  const { canInstall, promptInstall } = useInstallPrompt();
 
   const closeMenu = () => setMenuOpen(false);
 
@@ -59,6 +61,17 @@ export default function MainLayout() {
             )}
             {user?.isSuperAdmin && (
               <NavLink to="/superadmin" className={navLinkClass}>Manage Users</NavLink>
+            )}
+
+            {canInstall && (
+              <button type="button" className="main-layout__login-btn" onClick={promptInstall}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '6px', verticalAlign: 'middle' }}>
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                Install App
+              </button>
             )}
 
             {user ? (
@@ -110,6 +123,21 @@ export default function MainLayout() {
         )}
 
         <div className="main-layout__nav-divider" />
+
+        {canInstall && (
+          <button
+            type="button"
+            className="main-layout__nav-link"
+            onClick={promptInstall}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '6px', verticalAlign: 'middle' }}>
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            Install App
+          </button>
+        )}
 
         {user ? (
           <>

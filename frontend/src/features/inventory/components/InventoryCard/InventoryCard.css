@@ -722,3 +722,18 @@
   border-radius: 10px;
   pointer-events: none;
 }
+
+.inv-card__edit-cardid-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: none;
+  background: transparent;
+  color: #555;
+  cursor: pointer;
+}
+.inv-card__edit-cardid-btn:hover {
+  color: #000;
+}
