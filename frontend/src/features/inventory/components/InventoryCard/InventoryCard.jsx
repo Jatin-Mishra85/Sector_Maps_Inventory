@@ -7,7 +7,7 @@ import { InventoryActionsSave, InventoryActionsReport } from '../../../../compon
 import { inventoryService } from '../../services/inventoryService';
 
 const PLACEHOLDER_IMAGES = Array.from(
-  { length: 10 },
+  { length: 4 },
   (_, i) => `/placeholders/placeholder-${i + 1}.jpg`
 );
 
@@ -568,7 +568,7 @@ const handleShareImage = async (e) => {
           >
             {!showPhotoPlaceholder ? (
               <img
-                src={imageUrl}
+                src={placeholderThumbUrl}
                 alt={middleLabel || topLabel || 'Inventory'}
                 loading="lazy"
                 onError={() => setImgError(true)}
