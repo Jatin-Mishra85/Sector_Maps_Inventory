@@ -40,15 +40,29 @@
 
 ## Admin authority
 
-- Admin status is stored in the database on the `Users` table as `IsAdmin`.
-- There is no backend admin code in the `Users` table; if `IsAdmin = 1`, the user is admin.
-- Admin status is assigned manually via SQL/SSMS by setting `Users.IsAdmin = 1`.
+### Role Hierarchy *(UPDATED)*
+
+| Role | Database Flag | Capabilities | Assignment |
+|------|---------------|--------------|-----------|
+| **SuperAdmin** | `IsSuperAdmin = 1` | All admin + user management | Manual DB or frontend admin panel |
+| **Admin** | `IsAdmin = 1` | Create/manage inventory, groups | Frontend admin panel (SuperAdmin only) |
+| **User** | `IsAdmin = 0, IsSuperAdmin = 0` | Browse, save, report | Signup / OAuth |
+| **Blocked** | `IsBlocked = 1` | Cannot login | SuperAdmin can block/unblock |
+
+**Constraint**: `IsSuperAdmin` users must also have `IsAdmin = 1` (hierarchy enforcement in database).
+
+- Admin status is stored in the database on the `Users` table as `IsAdmin` and `IsSuperAdmin`.
+- There is no backend admin code in the `Users` table; roles are DB-driven.
+- Admin status is assigned via:
+  - Manual SQL/SSMS (direct update)
+  - Frontend admin panel (SuperAdmin only) *(NEW)*
 
 ## Backend auth middleware
 
 - `attachUser` reads `auth_token`, verifies JWT, and loads the user from the database.
 - `requireAuth` rejects if `req.user` is missing.
 - `requireAdmin` rejects if `req.user` is missing or `req.user.isAdmin` is falsy.
+- `requireSuperAdmin` *(NEW)* rejects if `req.user` is missing or `req.user.isSuperAdmin` is falsy.
 
 ## Routes requiring auth vs admin
 
@@ -80,9 +94,21 @@
 - `DELETE /api/v1/images/:id`
 - `POST /api/v1/inventory-groups`
 - `DELETE /api/v1/inventory-groups/:inventoryId/:groupId`
+- `GET /api/v1/interactions/reports` *(NEW - View all reports)*
+
+### requireSuperAdmin *(NEW)*
+- `GET /api/v1/admin/users` — List all users
+- `PATCH /api/v1/admin/users/:userId/toggle-admin` — Promote/demote admin
+- `PATCH /api/v1/admin/users/:userId/toggle-block` — Block/unblock user account
 
 ## Notes
 
-- `interactions/report` is public and can be sent without login.
+- `interactions/report` is public and can be sent without login. Email notifications sent asynchronously.
+- `interactions/save` and `interactions/unsave` require `requireAuth` for logged-in users.
+- `interactions/saved` returns saved inventory IDs for current user (requires auth).
 - Admin-only UI gating uses `AdminAuthContext` based on `user.isAdmin`, but backend routes enforce admin rights regardless of frontend gating.
-- There is no separate admin login; admin is a property on the regular user record.
+- SuperAdmin user management is protected by `requireSuperAdmin` middleware.
+- There is no separate admin login; admin and superadmin are properties on the regular user record.
+- Blocked users (`IsBlocked = 1`) cannot login; attempting to login returns an error.
+- SuperAdmin cannot be demoted, blocked, or have their status modified via API (DB integrity protection).
+- Email notifications for reports are sent via Gmail SMTP (fire-and-forget pattern; failures are logged but do not affect user).

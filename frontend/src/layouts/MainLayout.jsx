@@ -70,7 +70,7 @@ export default function MainLayout() {
                   <polyline points="7 10 12 15 17 10" />
                   <line x1="12" y1="15" x2="12" y2="3" />
                 </svg>
-                Install App
+                Add Shortcut
               </button>
             )}
 
@@ -90,6 +90,17 @@ export default function MainLayout() {
               </button>
             )}
           </nav>
+
+          {canInstall && (
+            <button
+              type="button"
+              className="main-layout__shortcut-btn"
+              onClick={promptInstall}
+              aria-label="Add Shortcut"
+            >
+              Add Shortcut
+            </button>
+          )}
 
           <button
             type="button"
@@ -124,20 +135,6 @@ export default function MainLayout() {
 
         <div className="main-layout__nav-divider" />
 
-        {canInstall && (
-          <button
-            type="button"
-            className="main-layout__nav-link"
-            onClick={promptInstall}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '6px', verticalAlign: 'middle' }}>
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="7 10 12 15 17 10" />
-              <line x1="12" y1="15" x2="12" y2="3" />
-            </svg>
-            Install App
-          </button>
-        )}
 
         {user ? (
           <>

@@ -530,3 +530,35 @@
     transition: none !important;
   }
 }
+
+
+/* ===== Add Shortcut button — mobile only, outside hamburger drawer ===== */
+.main-layout__shortcut-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 11px;
+  border-radius: 8px;
+  border: 1px solid var(--ml-border);
+  background: var(--ml-bg-light);
+  color: var(--ml-blue-deep);
+  font-weight: 600;
+  font-size: 11px;
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.main-layout__shortcut-btn:active {
+  background: var(--ml-bg-light-2);
+  border-color: var(--ml-blue-bright);
+}
+
+@media (min-width: 768px) {
+  .main-layout__shortcut-btn {
+    display: none;
+  }
+}

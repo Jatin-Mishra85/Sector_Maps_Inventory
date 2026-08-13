@@ -45,10 +45,24 @@ GET | `/api/v1/search/suggest` | Suggest developers/sectors/projects/groups | No
 POST | `/api/v1/interactions/save` | Save inventory for current user | Auth
 DELETE | `/api/v1/interactions/unsave/:inventoryId` | Unsave inventory for current user | Auth
 GET | `/api/v1/interactions/saved` | Get saved inventory IDs for user | Auth
-POST | `/api/v1/interactions/report` | Report inventory item | No
+POST | `/api/v1/interactions/report` | Report inventory item (public) | No
+GET | `/api/v1/interactions/reports` | Get all reports (admin dashboard) | SuperAdmin
+GET | `/api/v1/admin/users` | List all users with admin status | SuperAdmin
+PATCH | `/api/v1/admin/users/:userId/toggle-admin` | Make/remove user as admin | SuperAdmin
+PATCH | `/api/v1/admin/users/:userId/toggle-block` | Block/unblock user account | SuperAdmin
+
+## Authentication & Authorization
+
+### Auth Levels
+- **No Auth**: Public endpoints (browse, search, report)
+- **Auth**: Requires user login (save, unsave, view saved)
+- **Admin**: Requires `Users.IsAdmin = 1`
+- **SuperAdmin**: Requires `Users.IsSuperAdmin = 1` (user management only)
 
 ## Notes
 
 - `POST /api/v1/inventories` and `PUT /api/v1/inventories/:id` use `upload.single('image')` and in-memory multer to accept image files.
 - `POST /api/v1/interactions/report` is intentionally public; it records `UserId` only if the user is logged in.
+- Report emails are sent asynchronously (fire-and-forget) and do not block API responses.
+- SuperAdmin routes are protected by `requireSuperAdmin` middleware in `auth.middleware.js`.
 - Admin gating is enforced by backend middleware `requireAdmin` in `auth.middleware.js`.

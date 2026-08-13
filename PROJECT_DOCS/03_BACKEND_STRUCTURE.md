@@ -15,7 +15,7 @@
 
 - `backend/src/routes/`
   - Mounts each feature set under `/api/v1`.
-  - Contains: `auth.routes.js`, `developer.routes.js`, `sector.routes.js`, `project.routes.js`, `group.routes.js`, `inventory.routes.js`, `image.routes.js`, `Inventorygroup.routes.js`, `search.routes.js`, `interactions.routes.js`.
+  - Contains: `auth.routes.js`, `developer.routes.js`, `sector.routes.js`, `project.routes.js`, `group.routes.js`, `inventory.routes.js`, `image.routes.js`, `Inventorygroup.routes.js`, `search.routes.js`, `interactions.routes.js` *(NEW)*, `admin.routes.js` *(NEW)*.
 
 - `backend/src/controllers/`
   - Controllers handle HTTP request/response.
@@ -24,6 +24,10 @@
 - `backend/src/services/`
   - Services contain business logic, validation, and coordination.
   - They call repositories and handle domain rules.
+  - **New Services** *(NEW)*:
+    - `email.service.js` — Gmail SMTP integration for report notifications.
+    - `interactions.service.js` — Save/unsave/report logic.
+    - `admin.service.js` — User management (promote admin, block accounts).
 
 - `backend/src/repositories/`
   - Repositories execute raw SQL queries.
@@ -40,7 +44,7 @@
   - `multer.config.js` — in-memory file upload config.
 
 - `backend/src/middleware/`
-  - `auth.middleware.js` — attaches `req.user`, `requireAuth`, `requireAdmin`.
+  - `auth.middleware.js` — attaches `req.user`, `requireAuth`, `requireAdmin`, `requireSuperAdmin` *(NEW)*.
   - `requestLogger.middleware.js` — request logging.
   - `notFound.middleware.js` — 404 handler.
   - `error.middleware.js` — error formatter.
@@ -55,6 +59,7 @@
 - Protected backend actions use:
   - `requireAuth` — any logged-in user.
   - `requireAdmin` — only users with `Users.IsAdmin = 1`.
+  - `requireSuperAdmin` *(NEW)* — only users with `Users.IsSuperAdmin = 1`.
 
 ## Admin-protected backend route groups
 
@@ -70,9 +75,14 @@
 
 - `auth.routes.js`: login/signup/logout and `me` endpoint.
 - `search.routes.js`: public inventory search and suggest.
-- `interactions.routes.js`
+- `interactions.routes.js` *(NEW)*:
   - save/unsave/saved require `requireAuth`.
   - report is public.
+  - reports endpoint (view all) requires `requireSuperAdmin`.
+- `admin.routes.js` *(NEW)*:
+  - `/users` (GET) requires `requireSuperAdmin` — list all users.
+  - `/users/:userId/toggle-admin` (PATCH) requires `requireSuperAdmin` — promote/demote admin.
+  - `/users/:userId/toggle-block` (PATCH) requires `requireSuperAdmin` — block/unblock user.
 
 ## Database schema summary
 

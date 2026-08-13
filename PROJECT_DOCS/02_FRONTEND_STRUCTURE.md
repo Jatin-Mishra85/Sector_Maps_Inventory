@@ -20,13 +20,18 @@
 
 - `src/features`
   - `admin`: admin-focused inventory creation and form components.
+    - `AdminInventoryFormPage.jsx`: Create/edit inventory items
+    - `ReportsPage.jsx`: View and manage user reports *(NEW)*
+    - `DeveloperBatchInventoryForm.jsx`: Bulk inventory entry
   - `developer`: grouping and group management features.
   - `inventory`: inventory display, edit, upload, and grid components.
   - `search`: search input, suggestions, and voice search.
+  - `superadmin`: user management and system administration *(NEW)*
+    - `SuperAdminPage.jsx`: Manage users, promote to admin, block accounts
 
 - `src/context`
   - `AuthContext.jsx`: manages login, signup, logout, and current user state.
-  - `AdminAuthContext.jsx`: computes admin access based on `user?.isAdmin`.
+  - `AdminAuthContext.jsx`: computes admin access based on `user?.isAdmin` *(NEW)*.
   - `ToastContext.jsx`: global toast notification state.
 
 - `src/services`
@@ -69,12 +74,25 @@
 - `AdminInventoryFormPage` hosts admin inventory creation flows.
 - `DeveloperBatchInventoryForm` handles bulk inventory entry and file upload.
 - `adminService` fetches next card number and submits inventory create requests.
+- `ReportsPage` displays all user-submitted reports with filtering and status tracking.
+
+### SuperAdmin *(NEW)*
+- `SuperAdminPage` provides user management dashboard.
+- Features: view all users, promote/demote admin status, block/unblock accounts.
+- `superAdminService` calls admin user management endpoints.
+
+### User Interactions *(NEW)*
+- Save/unsave functionality in `InventoryActions` component.
+- Report submission form with reason and details.
+- Async email notifications sent to admin addresses on report submission.
+- Saved inventory IDs cached for UI indication.
 
 ## Context providers
 
 - `AuthProvider` loads current user from `/auth/me` and exposes `loginWithGoogle`, `login`, `signup`, and `logout`.
 - `AdminAuthProvider` uses `user?.isAdmin` to determine `isAdminAuthenticated`.
 - `ToastProvider` displays notifications across the app.
+- `AdminAuthContext` also exposes `isSuperAdmin` for user management features.
 
 ## Admin-only gating
 
