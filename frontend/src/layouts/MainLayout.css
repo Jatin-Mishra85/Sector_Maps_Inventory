@@ -62,7 +62,8 @@
   flex-shrink: 0;
   border-radius: var(--radius-md);
   color: #fff;
-  background: linear-gradient(135deg, var(--ml-blue-deep), var(--ml-blue-darker));
+  /* background: linear-gradient(135deg, var(--ml-blue-deep), var(--ml-blue-darker)); */
+  background: blue;
 }
 
 .main-layout__logo img {
