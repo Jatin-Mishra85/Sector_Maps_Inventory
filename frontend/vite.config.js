@@ -4,6 +4,7 @@ import basicSsl from '@vitejs/plugin-basic-ssl';
 
 export default defineConfig({
   plugins: [react(), basicSsl()],
+   base: "/mapsheet/",
   server: {
     port: 5173,
     host: true,
