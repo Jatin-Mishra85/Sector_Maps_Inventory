@@ -7,8 +7,8 @@ import { InventoryActionsSave, InventoryActionsReport } from '../../../../compon
 import { inventoryService } from '../../services/inventoryService';
 
 const PLACEHOLDER_IMAGES = Array.from(
-  { length: 4 },
-  (_, i) => `/placeholders/placeholder-${i + 1}.jpg`
+  { length: 1 },
+  (_, i) => `${import.meta.env.BASE_URL}placeholders/placeholder-${i + 1}.jpg`
 );
 
 // Poster shown inside the thumb when there is NO uploaded image yet.
@@ -17,7 +17,7 @@ const PLACEHOLDER_IMAGES = Array.from(
 // Alag folder — existing placeholders/ wali files se koi lena dena nahi:
 //   public/photo-posters/admin-add-photo-poster.jpg
 //   public/photo-posters/no-photo-poster.jpg
-const NO_PHOTO_POSTER = '/photo-posters/no-photo-poster.png';
+const NO_PHOTO_POSTER = `${import.meta.env.BASE_URL}photo-posters/no-photo-poster.png`;
 
 function getPlaceholderUrl(id) {
   const str = String(id ?? '');
