@@ -1,0 +1,146 @@
+.feedback-page {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 24px 16px 60px;
+}
+
+.feedback-page__title {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+.feedback-page__form {
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 32px;
+}
+
+.feedback-page__label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  margin-top: 14px;
+}
+
+.feedback-page__star-input button,
+.feedback-page__star-display span {
+  font-size: 26px;
+  color: #d9d9d9;
+}
+
+.feedback-page__star-input {
+  display: flex;
+  gap: 4px;
+}
+
+.feedback-page__star-input button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.feedback-page__star--filled {
+  color: #f5a623 !important;
+}
+
+.feedback-page__textarea {
+  width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.feedback-page__error {
+  color: #d92d20;
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+.feedback-page__submit-btn {
+  margin-top: 16px;
+  background: #1a73e8;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.feedback-page__submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.feedback-page__status {
+  color: #777;
+  font-size: 14px;
+}
+
+.feedback-page__card {
+  display: flex;
+  gap: 12px;
+  padding: 16px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.feedback-page__avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.feedback-page__avatar--fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1a73e8;
+  color: #fff;
+  font-weight: 600;
+}
+
+.feedback-page__card-body {
+  flex: 1;
+}
+
+.feedback-page__card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.feedback-page__card-name {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.feedback-page__card-date {
+  font-size: 12px;
+  color: #999;
+}
+
+.feedback-page__star-display {
+  margin: 4px 0;
+}
+
+.feedback-page__star-display span {
+  font-size: 16px;
+}
+
+.feedback-page__card-message {
+  font-size: 14px;
+  color: #333;
+  margin-top: 4px;
+}

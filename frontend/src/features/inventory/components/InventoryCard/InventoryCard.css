@@ -737,3 +737,19 @@
 .inv-card__edit-cardid-btn:hover {
   color: #000;
 }
+
+
+
+.inv-card__menu-chevron {
+  margin-left: auto;
+  opacity: 0.5;
+}
+
+.inv-card__menu-back {
+  color: #777 !important;
+  font-size: 12.5px !important;
+}
+
+.inv-card__menu-back svg {
+  opacity: 0.7;
+}

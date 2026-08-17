@@ -36,6 +36,7 @@ export default function ReportsPage() {
             <thead>
               <tr>
                 <th>Date</th>
+                <th>Card No</th>
                 <th>User</th>
                 <th>Report</th>
               </tr>
@@ -43,12 +44,13 @@ export default function ReportsPage() {
             <tbody>
               {reports.length === 0 ? (
                 <tr>
-                  <td colSpan={3} className="reports-page__empty">Koi report nahi mila.</td>
+                  <td colSpan={4} className="reports-page__empty">Koi report nahi mila.</td>
                 </tr>
               ) : (
                 reports.map((r) => (
                   <tr key={r.ReportId}>
                     <td>{new Date(r.ReportedAt).toLocaleString()}</td>
+                    <td>#{r.CardId ?? '—'}</td>
                     <td>{r.UserName || r.UserEmail || 'Anonymous'}</td>
                     <td>
                       <strong>{r.Reason}</strong>

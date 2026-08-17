@@ -67,7 +67,8 @@
   border-radius: var(--radius-md);
   color: #fff;
   /* Logo color intentionally fixed and excluded from the sage palette swap */
-  background: var(--ml-logo-color);
+  /* background: var(--ml-logo-color); */
+  background: #1a7dff;
 }
 
 .main-layout__logo img {
@@ -541,24 +542,25 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 5px 11px;
-  border-radius: 8px;
-  border: 1px solid var(--ml-border);
-  background: var(--ml-bg-light);
-  color: var(--ml-blue-deep);
-  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(120deg, var(--ml-blue-deep), var(--ml-blue-darker));
+  color: #fff;
+  font-weight: 700;
   font-size: 11px;
   line-height: 1.2;
   white-space: nowrap;
   cursor: pointer;
   flex-shrink: 0;
-  transition: background-color 0.15s ease, border-color 0.15s ease;
+  box-shadow: 0 4px 12px rgba(46, 64, 56, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
   -webkit-tap-highlight-color: transparent;
 }
 
 .main-layout__shortcut-btn:active {
-  background: var(--ml-bg-light-2);
-  border-color: var(--ml-blue-bright);
+  transform: translateY(1px) scale(0.97);
+  box-shadow: 0 2px 6px rgba(46, 64, 56, 0.3);
 }
 
 @media (min-width: 768px) {

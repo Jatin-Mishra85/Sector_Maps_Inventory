@@ -52,6 +52,7 @@ export default function MainLayout() {
 
           <nav className="main-layout__nav main-layout__nav--desktop">
             <NavLink to="/" end className={navLinkClass}>Home</NavLink>
+            <NavLink to="/feedback" className={navLinkClass}>Feedback</NavLink>
             {isAdminAuthenticated && (
               <>
                 <NavLink to="/admin" className={navLinkClass}>Add Inventory</NavLink>
@@ -122,6 +123,7 @@ export default function MainLayout() {
         className={`main-layout__nav main-layout__nav--mobile ${menuOpen ? 'main-layout__nav--mobile-open' : ''}`}
       >
         <NavLink to="/" end className={navLinkClass} onClick={closeMenu}>Home</NavLink>
+        <NavLink to="/feedback" className={navLinkClass} onClick={closeMenu}>Feedback</NavLink>
         {isAdminAuthenticated && (
           <>
             <NavLink to="/admin" className={navLinkClass} onClick={closeMenu}>Add Inventory</NavLink>

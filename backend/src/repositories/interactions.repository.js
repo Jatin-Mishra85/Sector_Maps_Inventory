@@ -52,9 +52,10 @@ async function reportInventory(userId, inventoryId, reason, details) {
 async function getAllReports() {
     const pool = await getPool();
     const result = await pool.request().query(`
-        SELECT r.ReportId, r.ReportedAt, r.Reason, r.Details, u.Name AS UserName, u.Email AS UserEmail
+        SELECT r.ReportId, r.ReportedAt, r.Reason, r.Details, u.Name AS UserName, u.Email AS UserEmail, i.DisplaySequence AS CardId
         FROM ReportedInventories r
         LEFT JOIN Users u ON u.UserId = r.UserId
+        LEFT JOIN Inventory i ON i.InventoryId = r.InventoryId
         ORDER BY r.ReportedAt DESC
     `);
     return result.recordset;

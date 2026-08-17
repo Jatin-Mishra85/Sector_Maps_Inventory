@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import apiClient from '../../services/apiClient';
 import { useAuth } from '../../context/AuthContext';
 
 const REPORT_REASONS = ['Wrong info', 'Spam', 'Duplicate', 'Other'];
@@ -18,15 +19,10 @@ export function InventoryActionsSave({ inventoryId, isSaved, onToggleSave, onClo
     setSaving(true);
     try {
       if (isSaved) {
-        await fetch(`/api/v1/interactions/unsave/${inventoryId}`, { method: 'DELETE', credentials: 'include' });
+        await apiClient.delete(`/interactions/unsave/${inventoryId}`);
         onToggleSave?.(inventoryId, false);
       } else {
-        await fetch('/api/v1/interactions/save', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ inventoryId }),
-        });
+        await apiClient.post('/interactions/save', { inventoryId });
         onToggleSave?.(inventoryId, true);
       }
     } catch (err) {
@@ -81,13 +77,8 @@ export function InventoryActionsReport({ inventoryId, onCloseMenu }) {
     }
     setReporting(true);
     try {
-      const res = await fetch('/api/v1/interactions/report', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ inventoryId, reason: selectedReason, details: trimmed }),
-      });
-      if (res.ok) setReported(true);
+      await apiClient.post('/interactions/report', { inventoryId, reason: selectedReason, details: trimmed });
+      setReported(true);
     } catch (err) {
       console.error('Report failed:', err);
     } finally {

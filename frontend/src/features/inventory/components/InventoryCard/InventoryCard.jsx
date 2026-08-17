@@ -1,10 +1,73 @@
 import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import './InventoryCard.css';
+import jsPDF from 'jspdf';
 import { downloadFile } from '../../../../utils/download';
 import { shareContent } from '../../../../utils/share';
 import { useToast } from '../../../../context/ToastContext';
 import { InventoryActionsSave, InventoryActionsReport } from '../../../../components/InventoryActions/InventoryActions';
 import { inventoryService } from '../../services/inventoryService';
+
+async function convertImageToJpegBlob(imageUrl) {
+  const response = await fetch(imageUrl);
+  const blob = await response.blob();
+
+  const dataUrl = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+
+  const img = await new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = reject;
+    image.src = dataUrl;
+  });
+
+  const canvas = document.createElement('canvas');
+  canvas.width = img.width;
+  canvas.height = img.height;
+  const ctx = canvas.getContext('2d');
+  // PNG transparent hoti hai — JPEG transparency support nahi karta,
+  // isliye pehle white background bhar do, warna transparent area black ho jayega.
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(img, 0, 0);
+
+  return new Promise((resolve) => {
+    canvas.toBlob((jpegBlob) => resolve(jpegBlob), 'image/jpeg', 0.92);
+  });
+}
+
+async function downloadImageAsPdf(imageUrl, filename) {
+  const response = await fetch(imageUrl);
+  const blob = await response.blob();
+  const isPng = blob.type.includes('png');
+
+  const dataUrl = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+
+  const img = await new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = reject;
+    image.src = dataUrl;
+  });
+
+  const pdf = new jsPDF({
+    orientation: img.width > img.height ? 'landscape' : 'portrait',
+    unit: 'px',
+    format: [img.width, img.height],
+  });
+  pdf.addImage(dataUrl, isPng ? 'PNG' : 'JPEG', 0, 0, img.width, img.height);
+  pdf.save(filename);
+}
+
 
 const PLACEHOLDER_IMAGES = Array.from(
   { length: 1 },
@@ -100,6 +163,8 @@ function InventoryCard({
   const [savingField, setSavingField] = useState(false);
   const [localImageRemoved, setLocalImageRemoved] = useState(false);
   const [deletingPhoto, setDeletingPhoto] = useState(false);
+  const [downloadOptionsOpen, setDownloadOptionsOpen] = useState(false);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
   const instanceIdRef = useRef(null);
   if (!instanceIdRef.current) instanceIdRef.current = Symbol('inv-card-instance');
 
@@ -165,6 +230,10 @@ const [localFieldOverrides, setLocalFieldOverrides] = useState({});
     cardIdDraft.trim() !== '' &&
     !Number.isNaN(Number(cardIdDraft)) &&
     Number(cardIdDraft) !== Number(displayedCardId);
+
+    useEffect(() => {
+    if (!menuOpen) setDownloadOptionsOpen(false);
+  }, [menuOpen]);
 
   useEffect(() => {
     if (!menuOpen && !shareMenuOpen && !pickerOpen) return undefined;
@@ -274,17 +343,40 @@ const [localFieldOverrides, setLocalFieldOverrides] = useState({});
     };
   }, [shareMenuOpen]);
 
-  const handleDownload = async (e) => {
+  const handleDownloadJpeg = async (e) => {
     e.stopPropagation();
-    setMenuOpen(false);
     if (!imageUrl) {
       showToast('Is inventory ki koi image nahi hai.', 'error');
       return;
     }
     try {
-      await downloadFile(imageUrl, `${topLabel || 'inventory'}.jpg`);
+      const jpegBlob = await convertImageToJpegBlob(imageUrl);
+      const blobUrl = URL.createObjectURL(jpegBlob);
+      await downloadFile(blobUrl, `${topLabel || 'inventory'}.jpg`);
+      URL.revokeObjectURL(blobUrl);
     } catch {
       showToast('Image download nahi ho payi. Dobara try karo.', 'error');
+    } finally {
+      setDownloadOptionsOpen(false);
+      setMenuOpen(false);
+    }
+  };
+
+  const handleDownloadPdf = async (e) => {
+    e.stopPropagation();
+    if (!imageUrl) {
+      showToast('Is inventory ki koi image nahi hai.', 'error');
+      return;
+    }
+    setDownloadingPdf(true);
+    try {
+      await downloadImageAsPdf(imageUrl, `${topLabel || 'inventory'}.pdf`);
+    } catch {
+      showToast('PDF download nahi ho paya. Dobara try karo.', 'error');
+    } finally {
+      setDownloadingPdf(false);
+      setDownloadOptionsOpen(false);
+      setMenuOpen(false);
     }
   };
 
@@ -920,20 +1012,64 @@ const handleShareImage = async (e) => {
                           onCloseMenu={() => setMenuOpen(false)}
                           onRequireLogin={onRequireLogin}
                         />
-                        <li>
-                          <button type="button" onClick={handleDownload} disabled={!imageUrl} role="menuitem">
-                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
-                              <path
-                                d="M12 4v11m0 0-4-4m4 4 4-4M5 19h14"
-                                stroke="currentColor"
-                                strokeWidth="1.8"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                            </svg>
-                            Download image
-                          </button>
-                        </li>
+                        {!downloadOptionsOpen ? (
+                          <li>
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); setDownloadOptionsOpen(true); }}
+                              disabled={!imageUrl}
+                              role="menuitem"
+                            >
+                              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
+                                <path
+                                  d="M12 4v11m0 0-4-4m4 4 4-4M5 19h14"
+                                  stroke="currentColor"
+                                  strokeWidth="1.8"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              </svg>
+                              Download image
+                              <svg className="inv-card__menu-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" aria-hidden="true">
+                                <path d="m9 6 6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                              </svg>
+                            </button>
+                          </li>
+                        ) : (
+                          <>
+                            <li>
+                              <button
+                                type="button"
+                                className="inv-card__menu-back"
+                                onClick={(e) => { e.stopPropagation(); setDownloadOptionsOpen(false); }}
+                                role="menuitem"
+                              >
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" aria-hidden="true">
+                                  <path d="m15 6-6 6 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                                Back
+                              </button>
+                            </li>
+                            <li>
+                              <button type="button" onClick={handleDownloadJpeg} role="menuitem">
+                                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
+                                  <rect x="3.5" y="3.5" width="17" height="17" rx="2.5" stroke="currentColor" strokeWidth="1.8" />
+                                  <path d="M7 15.5V8.5h2.2c1 0 1.7.65 1.7 1.6s-.7 1.6-1.7 1.6H7M13 15.5V8.5h1.8c1.5 0 2.4 1.1 2.4 3.5s-.9 3.5-2.4 3.5H13Z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                                JPEG image
+                              </button>
+                            </li>
+                            <li>
+                              <button type="button" onClick={handleDownloadPdf} disabled={downloadingPdf} role="menuitem">
+                                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
+                                  <path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8l-5-5Z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+                                  <path d="M14 3v4a1 1 0 0 0 1 1h4" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+                                </svg>
+                                {downloadingPdf ? 'Converting...' : 'PDF document'}
+                              </button>
+                            </li>
+                          </>
+                        )}
 
                         <InventoryActionsReport
                           inventoryId={id}

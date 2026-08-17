@@ -28,4 +28,7 @@ export const API_ENDPOINTS = {
   INTERACTIONS: {
     REPORTS: '/interactions/reports',
   },
+  FEEDBACK: {
+    BASE: '/feedback',
+  },
 };
