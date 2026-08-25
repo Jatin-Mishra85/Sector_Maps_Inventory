@@ -52,8 +52,8 @@ const resetView = useCallback(() => {
       resetView();
       setRotation(0);
       const el = containerRef.current;
-      if (el && !document.fullscreenElement) {
-        el.requestFullscreen?.().catch(() => {});
+      if (el && !document.fullscreenElement && el.requestFullscreen) {
+        el.requestFullscreen().catch(() => {});
       }
     } else if (document.fullscreenElement) {
       document.exitFullscreen?.().catch(() => {});
