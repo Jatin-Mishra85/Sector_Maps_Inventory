@@ -116,8 +116,8 @@
 
 .inv-card__photo-delete-btn {
   position: absolute;
-  top: 6px;
-  right: 6px;
+  top: 2px;
+  right: 2px;
   z-index: 2;
   width: 22px;
   height: 22px;
@@ -130,6 +130,13 @@
   color: #fff;
   cursor: pointer;
   touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.inv-card__photo-delete-btn::before {
+  content: '';
+  position: absolute;
+  inset: -11px; /* invisible padding — button dikhega 22px ka, lekin tap area ~44px ka banega */
 }
 
 .inv-card__photo-delete-btn:disabled {
