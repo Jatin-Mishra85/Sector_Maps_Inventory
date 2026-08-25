@@ -3,7 +3,7 @@
   inset: 0;
   height: 100dvh;
   width: 100vw;
-  z-index: var(--z-toast);
+  z-index: 9999999;
   background: rgba(15, 16, 20, 0.96);
   padding-top: env(safe-area-inset-top, 0px);
   padding-bottom: env(safe-area-inset-bottom, 0px);

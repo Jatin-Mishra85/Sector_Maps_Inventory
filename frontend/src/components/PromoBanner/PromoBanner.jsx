@@ -5,7 +5,7 @@ import companyLogo from '../../assets/logo/company-logo.png';
 
 const WEBSITE_URL = 'https://thebuilderbazar.com/';
 const ANDROID_APP_URL = 'https://play.google.com/store/apps/details?id=com.builderbazar.app';
-const IOS_APP_URL = 'https://apps.apple.com/app/id0000000000'; // TODO: replace with real App Store ID
+const IOS_APP_URL = 'https://apps.apple.com/in/app/the-builder-bazar/id6759222031';
 
 function getExploreUrl() {
   const ua = navigator.userAgent || '';

@@ -660,7 +660,12 @@ const handleShareImage = async (e) => {
           >
             {!showPhotoPlaceholder ? (
               <img
-                src={placeholderThumbUrl}
+                // src={placeholderThumbUrl} 
+                // for the placeholder
+
+ src={imageUrl}
+//  for the original img
+
                 alt={middleLabel || topLabel || 'Inventory'}
                 loading="lazy"
                 onError={() => setImgError(true)}
