@@ -51,6 +51,8 @@
   cursor: pointer;
   background: #efece6;
   transition: transform 0.15s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .inv-card__thumb:active {
@@ -698,6 +700,8 @@
   cursor: pointer;
   color: #222;
   padding: 0;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .inv-card__photo-picker-option svg {
