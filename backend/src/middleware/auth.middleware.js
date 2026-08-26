@@ -3,7 +3,9 @@ const authService = require('../services/auth.service');
 
 async function attachUser(req, res, next) {
     try {
-        const token = req.cookies?.auth_token;
+        const bearerHeader = req.headers.authorization;
+        const bearerToken = bearerHeader?.startsWith('Bearer ') ? bearerHeader.slice(7) : null;
+        const token = req.cookies?.auth_token || bearerToken;
         if (!token) return next();
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);

@@ -34,7 +34,7 @@ async function googleLogin(req, res) {
         const { user, token } = await authService.loginWithGoogle(idToken);
 
         res.cookie(COOKIE_NAME, token, cookieOptions());
-        res.status(200).json({ success: true, message: 'Logged in successfully', data: mapUser(user) });
+        res.status(200).json({ success: true, message: 'Logged in successfully', data: { ...mapUser(user), token } });
     } catch (err) {
         console.error('Google login error:', err);
         res.status(err.statusCode || 401).json({ success: false, message: err.message || 'Google login failed.' });
@@ -48,7 +48,7 @@ async function signup(req, res) {
         const { user, token } = await authService.registerWithEmail({ email, password, name });
 
         res.cookie(COOKIE_NAME, token, cookieOptions());
-        res.status(201).json({ success: true, message: 'Account created successfully', data: mapUser(user) });
+        res.status(201).json({ success: true, message: 'Account created successfully', data: { ...mapUser(user), token } });
     } catch (err) {
         res.status(400).json({ success: false, message: err.message || 'Signup failed.' });
     }
@@ -61,7 +61,7 @@ async function login(req, res) {
         const { user, token } = await authService.loginWithEmailPassword({ email, password });
 
         res.cookie(COOKIE_NAME, token, cookieOptions());
-        res.status(200).json({ success: true, message: 'Logged in successfully', data: mapUser(user) });
+        res.status(200).json({ success: true, message: 'Logged in successfully', data: { ...mapUser(user), token } });
     } catch (err) {
         res.status(err.statusCode || 401).json({ success: false, message: err.message || 'Login failed.' });
     }

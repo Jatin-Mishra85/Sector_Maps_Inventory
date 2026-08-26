@@ -9,8 +9,10 @@ export function AuthProvider({ children }) {
 
     const fetchMe = async () => {
         try {
+            const token = localStorage.getItem('authToken');
             const res = await fetch(`${ENV.API_BASE_URL}/auth/me`, {
                 credentials: 'include',
+                headers: token ? { Authorization: `Bearer ${token}` } : {},
             });
             const data = await res.json();
             setUser(data?.data || null);
@@ -35,6 +37,7 @@ export function AuthProvider({ children }) {
         });
         const data = await res.json();
         if (data.success) {
+            if (data.data?.token) localStorage.setItem('authToken', data.data.token);
             setUser(data.data);
         }
         return data;
@@ -50,6 +53,7 @@ export function AuthProvider({ children }) {
         });
         const data = await res.json();
         if (data.success) {
+            if (data.data?.token) localStorage.setItem('authToken', data.data.token);
             setUser(data.data);
         }
         return data;
@@ -65,6 +69,7 @@ export function AuthProvider({ children }) {
         });
         const data = await res.json();
         if (data.success) {
+            if (data.data?.token) localStorage.setItem('authToken', data.data.token);
             setUser(data.data);
         }
         return data;
@@ -79,6 +84,7 @@ export function AuthProvider({ children }) {
         } catch (err) {
             console.error('Logout error:', err);
         } finally {
+            localStorage.removeItem('authToken');
             setUser(null);
         }
     };
